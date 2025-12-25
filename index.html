@@ -24,8 +24,8 @@
 
     <div id="payment-screen">
         <h2 id="price-tag">К оплате: 0.00 руб</h2>
-        <button class="action-btn" onclick="startPay('SMILE')">😊 Оплата по улыбке (Таймер)</button>
-        <button class="action-btn" onclick="startPay('QR')">🔳 QR-код (Таймер)</button>
+        <button class="action-btn" onclick="startPay('SMILE')">😊 Оплата по улыбке</button>
+        <button class="action-btn" onclick="startPay('QR')">🔳 QR-код</button>
     </div>
     
     <div id="loading">
@@ -35,8 +35,8 @@
 
     <div id="success">
         <h1 style="color: #21a038;">Оплачено! Спасибо за покупку!</h1>
-        <!-- ИСПРАВЛЕННАЯ ССЫЛКА НА GIF (imgur надежнее) -->
-        <img src="i.imgur.com" class="cat-dance">
+        <!-- ОБНОВЛЕННАЯ ССЫЛКА НА GIF (с Giphy) -->
+        <img src="media.giphy.com" class="cat-dance">
         <button class="action-btn exit-btn" onclick="returnToWaitingScreen()">Выйти</button>
     </div>
 
@@ -75,6 +75,7 @@
         function returnToWaitingScreen() {
             // Скрываем все экраны и показываем ожидание
             document.getElementById('success').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
             document.getElementById('payment-screen').style.display = 'none';
             document.getElementById('wait-screen').style.display = 'block';
             
@@ -83,7 +84,7 @@
             fetch(`${FIREBASE_URL}/status/${terminalId}.json`, { method: 'DELETE' });
         }
 
-        // Эта функция обрабатывает нажатие кнопок "Улыбка" и "QR" (сейчас по таймеру)
+        // Эта функция обрабатывает нажатие кнопок "Улыбка" и "QR"
         function startPay(method) {
             document.getElementById('payment-screen').style.display = 'none';
             document.getElementById('loading').style.display = 'block';
