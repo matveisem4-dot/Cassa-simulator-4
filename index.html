@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -70,6 +70,12 @@
             }
         }
 
+        // Функция возврата в режим ожидания
+        function returnToWaitingScreen() {
+            document.getElementById('success').style.display = 'none';
+            document.getElementById('wait-screen').style.display = 'block';
+        }
+
         // Эти функции вызываются из HTML атрибутов onclick=""
         function showPayment(amount) {
             document.getElementById('wait-screen').style.display = 'none';
@@ -96,6 +102,10 @@
                     } catch (e) {
                         console.error("Ошибка при отправке статуса:", e);
                     }
+
+                    // НОВОЕ: Возвращаемся в режим ожидания через 5 секунд
+                    setTimeout(returnToWaitingScreen, 5000); 
+
                 }, 2000);
             }, 2000);
         }
