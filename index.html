@@ -59,7 +59,6 @@
         document.addEventListener('DOMContentLoaded', (event) => {
             terminalId = Math.floor(100000 + Math.random() * 900000);
             document.getElementById('my-id').innerText = terminalId;
-            // Устанавливаем корректный URL для QR-кода, ведущий на payment.html
             document.getElementById('qr-code-img').src = `api.qrserver.com{terminalId}`;
             setInterval(checkCommands, 2000); 
         });
@@ -70,7 +69,6 @@
                 const response_cmd = await fetch(`${FIREBASE_URL}/commands/${terminalId}.json`);
                 const commandData = await response_cmd.json();
                 
-                // Если пришла команда PAY и мы еще на экране ожидания, показываем выбор оплаты
                 if (commandData && commandData.command === 'PAY' && document.getElementById('wait-screen').style.display !== 'none') {
                     showPaymentScreen(commandData.amount);
                 }
@@ -78,7 +76,6 @@
                 const response_status = await fetch(`${FIREBASE_URL}/status/${terminalId}.json`);
                 const status = await response_status.json();
 
-                // Если пришел статус SUCCESS и мы не на экране успеха, показываем успех
                 if (status === "SUCCESS" && document.getElementById('success').style.display === 'none') {
                     showSuccessScreen();
                 }
@@ -98,7 +95,6 @@
         }
 
         function showSuccessScreen() {
-            // Скрываем все промежуточные экраны и показываем успех
             document.getElementById('payment-screen').style.display = 'none';
             document.getElementById('qr-screen').style.display = 'none';
             document.getElementById('loading').style.display = 'none';
@@ -106,13 +102,11 @@
         }
 
         function returnToWaitingScreen() {
-            // Скрываем все экраны и показываем ожидание
             document.getElementById('success').style.display = 'none';
             document.getElementById('payment-screen').style.display = 'none';
             document.getElementById('qr-screen').style.display = 'none';
             document.getElementById('wait-screen').style.display = 'block';
             
-            // Очищаем статус/команды из Firebase
             fetch(`${FIREBASE_URL}/commands/${terminalId}.json`, { method: 'DELETE' });
             fetch(`${FIREBASE_URL}/status/${terminalId}.json`, { method: 'DELETE' });
         }
