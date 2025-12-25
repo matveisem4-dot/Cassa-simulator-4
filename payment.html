@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оплата СберБанк</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f0f0; }
+        .payment-container { background: white; padding: 40px; border-radius: 10px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .pay-button { background: #21a038; border: none; padding: 15px 30px; border-radius: 8px; color: white; font-size: 18px; cursor: pointer; margin-top: 20px; }
+        .pay-button:hover { background: #1a752c; }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <h1>Подтверждение оплаты</h1>
+        <p>Вы собираетесь оплатить заказ на **Терминале №<span id="term-id">...</span>**.</p>
+        <button class="pay-button" onclick="confirmPayment()">Подтвердить оплату</button>
+    </div>
+
+    <script>
+        const FIREBASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
+        let terminalId = null;
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            // Получаем ID терминала из URL параметров
+            const urlParams = new URLSearchParams(window.location.search);
+            terminalId = urlParams.get('terminalId');
+            if (terminalId) {
+                document.getElementById('term-id').innerText = terminalId;
+            } else {
+                document.getElementById('term-id').innerText = "Ошибка ID";
+            }
+        });
+
+        async function confirmPayment() {
+            if (!terminalId) return;
+
+            // Отправляем статус УСПЕХ в Firebase
+            try {
+                await fetch(`${FIREBASE_URL}/status/${terminalId}.json`, {
+                    method: 'PUT', 
+                    body: JSON.stringify("SUCCESS")
+                });
+                alert("Оплата прошла успешно! Можете закрыть это окно.");
+                // Опционально можно закрыть окно автоматически:
+                // window.close(); 
+            } catch (e) {
+                alert("Ошибка оплаты. Попробуйте снова.");
+            }
+        }
+    </script>
+</body>
+</html>
