@@ -10,10 +10,11 @@
         .terminal-id { position: absolute; bottom: 20px; left: 20px; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 5px; font-size: 12px; color: #888; }
         .action-btn { background: #21a038; border: none; padding: 20px; border-radius: 15px; color: white; font-size: 18px; cursor: pointer; width: 80%; margin: 10px; }
         .exit-btn { background: #555; }
-        #loading, #success, #payment-screen, #qr-screen { display: none; }
+        #loading, #success, #wait-screen, #payment-screen, #qr-screen { display: none; }
         .cat-dance { width: 250px; margin-top: 20px; }
         .loader { border: 4px solid #333; border-top: 4px solid #21a038; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #qr-code-img { width: 200px; height: 200px; margin: 20px auto; }
     </style>
 </head>
 <body>
@@ -22,21 +23,30 @@
         <h2>Ожидание заказа...</h2>
     </div>
 
+    <!-- Экран выбора оплаты (появляется первым после заказа) -->
     <div id="payment-screen">
         <h2 id="price-tag">К оплате: 0.00 руб</h2>
-        <button class="action-btn" onclick="startPay('SMILE')">😊 Оплата по улыбке</button>
-        <button class="action-btn" onclick="startPay('QR')">🔳 QR-код</button>
+        <button class="action-btn" onclick="showQR()">🔳 QR-код для оплаты</button>
     </div>
     
+    <!-- Экран QR-кода (появляется после нажатия кнопки выше) -->
+    <div id="qr-screen">
+        <h2>Отсканируйте QR-код</h2>
+        <img id="qr-code-img" src="">
+        <p>Отсканируйте код для перехода на страницу банка.</p>
+        <p>Мы ждем подтверждения оплаты от банка...</p>
+        <button class="action-btn exit-btn" onclick="returnToWaitingScreen()">Отмена заказа</button>
+    </div>
+
     <div id="loading">
         <div class="loader"></div>
         <p id="status-text">Связь с банком...</p>
     </div>
 
+    <!-- Экран успеха (появляется после подтверждения с сайта банка) -->
     <div id="success">
         <h1 style="color: #21a038;">Оплачено! Спасибо за покупку!</h1>
-        <!-- ОБНОВЛЕННАЯ ССЫЛКА НА GIF (с Giphy) -->
-        <img src="media.giphy.com" class="cat-dance">
+        <img src="i.imgur.com" class="cat-dance">
         <button class="action-btn exit-btn" onclick="returnToWaitingScreen()">Выйти</button>
     </div>
 
@@ -49,59 +59,62 @@
         document.addEventListener('DOMContentLoaded', (event) => {
             terminalId = Math.floor(100000 + Math.random() * 900000);
             document.getElementById('my-id').innerText = terminalId;
+            // Устанавливаем корректный URL для QR-кода, ведущий на payment.html
+            document.getElementById('qr-code-img').src = `api.qrserver.com{terminalId}`;
             setInterval(checkCommands, 2000); 
         });
 
         async function checkCommands() {
             if (!terminalId) return;
             try {
-                const response = await fetch(`${FIREBASE_URL}/commands/${terminalId}.json`);
-                const data = await response.json();
+                const response_cmd = await fetch(`${FIREBASE_URL}/commands/${terminalId}.json`);
+                const commandData = await response_cmd.json();
                 
-                // Проверяем, что команда пришла, и терминал находится в режиме ожидания
-                if (data && data.command === 'PAY' && document.getElementById('wait-screen').style.display !== 'none') {
-                    showPaymentScreen(data.amount);
+                // Если пришла команда PAY и мы еще на экране ожидания, показываем выбор оплаты
+                if (commandData && commandData.command === 'PAY' && document.getElementById('wait-screen').style.display !== 'none') {
+                    showPaymentScreen(commandData.amount);
                 }
+
+                const response_status = await fetch(`${FIREBASE_URL}/status/${terminalId}.json`);
+                const status = await response_status.json();
+
+                // Если пришел статус SUCCESS и мы не на экране успеха, показываем успех
+                if (status === "SUCCESS" && document.getElementById('success').style.display === 'none') {
+                    showSuccessScreen();
+                }
+
             } catch (e) {}
         }
         
-        // Показывает экран выбора оплаты с кнопками
         function showPaymentScreen(amount) {
             document.getElementById('wait-screen').style.display = 'none';
             document.getElementById('payment-screen').style.display = 'block';
             document.getElementById('price-tag').innerText = `К оплате: ${amount} руб`;
         }
+        
+        function showQR() {
+            document.getElementById('payment-screen').style.display = 'none';
+            document.getElementById('qr-screen').style.display = 'block';
+        }
+
+        function showSuccessScreen() {
+            // Скрываем все промежуточные экраны и показываем успех
+            document.getElementById('payment-screen').style.display = 'none';
+            document.getElementById('qr-screen').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('success').style.display = 'block';
+        }
 
         function returnToWaitingScreen() {
             // Скрываем все экраны и показываем ожидание
             document.getElementById('success').style.display = 'none';
-            document.getElementById('loading').style.display = 'none';
             document.getElementById('payment-screen').style.display = 'none';
+            document.getElementById('qr-screen').style.display = 'none';
             document.getElementById('wait-screen').style.display = 'block';
             
-            // Очищаем статус/команды из Firebase, чтобы система была готова к новому заказу
+            // Очищаем статус/команды из Firebase
             fetch(`${FIREBASE_URL}/commands/${terminalId}.json`, { method: 'DELETE' });
             fetch(`${FIREBASE_URL}/status/${terminalId}.json`, { method: 'DELETE' });
-        }
-
-        // Эта функция обрабатывает нажатие кнопок "Улыбка" и "QR"
-        function startPay(method) {
-            document.getElementById('payment-screen').style.display = 'none';
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('status-text').innerText = method === 'SMILE' ? "Смотрите в камеру..." : "Сканируйте QR/Связь с банком...";
-
-            setTimeout(async () => {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('success').style.display = 'block';
-                
-                // Отправляем кассе статус УСПЕХ
-                try {
-                    await fetch(`${FIREBASE_URL}/status/${terminalId}.json`, {
-                        method: 'PUT', body: JSON.stringify("SUCCESS")
-                    });
-                } catch (e) {}
-
-            }, 3000); // Симуляция оплаты занимает 3 секунды
         }
     </script>
 </body>
