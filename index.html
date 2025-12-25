@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Платежный Терминал</title>
+    <style>
+        body { margin: 0; background: #000; font-family: sans-serif; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #terminal-ui { width: 100%; max-width: 400px; text-align: center; }
+        .terminal-id { position: absolute; bottom: 20px; left: 20px; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 5px; font-size: 12px; color: #888; }
+        .smile-btn { background: #21a038; border: none; padding: 20px; border-radius: 15px; color: white; font-size: 18px; cursor: pointer; width: 80%; margin: 10px; }
+        .qr-btn { background: #333; border: none; padding: 20px; border-radius: 15px; color: white; font-size: 18px; cursor: pointer; width: 80%; margin: 10px; }
+        #loading, #success, #payment-screen { display: none; }
+        .cat-dance { width: 250px; margin-top: 20px; }
+        .loader { border: 4px solid #333; border-top: 4px solid #21a038; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="wait-screen">
+        <h2>Ожидание чека...</h2>
+    </div>
+
+    <div id="payment-screen">
+        <h2 id="price-tag">К оплате: 0.00 руб</h2>
+        <button class="smile-btn" onclick="startPay('SMILE')">😊 Оплата по улыбке</button>
+        <button class="qr-btn" onclick="startPay('QR')">🔳 QR-код</button>
+    </div>
+
+    <div id="loading">
+        <div class="loader"></div>
+        <p id="status-text">Загрузка данных...</p>
+    </div>
+
+    <div id="success">
+        <h1 style="color: #21a038;">Оплачено!</h1>
+        <img src="media.tenor.com" class="cat-dance">
+    </div>
+
+    <div class="terminal-id">ID Терминала: <span id="my-id">Генерация...</span></div>
+
+    <script>
+        const terminalId = Math.floor(100000 + Math.random() * 900000);
+        document.getElementById('my-id').innerText = terminalId;
+
+        // Функция опроса "базы" (замените URL на свой Firebase или используйте мой для теста)
+        // Для полноценного проекта тут нужен реальный URL Firebase
+        async function checkCommands() {
+            try {
+                const response = await fetch(`xn----7sbfozwgiv7c.firebaseio.com{terminalId}.json`);
+                const data = await response.json();
+                
+                if (data && data.command === 'PAY') {
+                    showPayment(data.amount);
+                }
+            } catch (e) {}
+        }
+
+        setInterval(checkCommands, 2000); // Проверяем команды каждые 2 сек
+
+        function showPayment(amount) {
+            document.getElementById('wait-screen').style.display = 'none';
+            document.getElementById('payment-screen').style.display = 'block';
+            document.getElementById('price-tag').innerText = `К оплате: ${amount} руб`;
+        }
+
+        function startPay(method) {
+            document.getElementById('payment-screen').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('status-text').innerText = method === 'SMILE' ? "Смотрите в камеру..." : "Сканируйте QR...";
+
+            setTimeout(() => {
+                document.getElementById('status-text').innerText = "Связь с банком...";
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('success').style.display = 'block';
+                    // Отправляем кассе статус УСПЕХ
+                    fetch(`xn----7sbfozwgiv7c.firebaseio.com{terminalId}/status.json`, {
+                        method: 'PUT', body: JSON.stringify("SUCCESS")
+                    });
+                }, 2000);
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
