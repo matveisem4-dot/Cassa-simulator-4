@@ -105,19 +105,10 @@
             document.getElementById('payment-screen').style.display = 'block';
             document.getElementById('price-tag').innerText = `К оплате: ${amount} руб`;
         }
-        
-        function showQR() {
-            // *** ИСПРАВЛЕННАЯ ЛОГИКА ГЕНЕРАЦИИ QR-КОДА ***
-            // Ссылка, которую должен содержать QR-код (ведет на страницу payment.html)
-            const bankUrl = `payment.html?terminalId=${terminalId}`;
             
             // Генерируем URL картинки QR-кода, используя внешний API 
             // Это правильный формат с http:// и ${}
             const qrApiUrl = http://api.qrserver.com${encodeURIComponent(bankUrl)};
-            
-            // Присваиваем сгенерированный URL источнику изображения
-            const qrImg = document.getElementById('qr-code-img');
-    qrImg.src = qrApiUrl;
             
             hideAllScreens();
     document.getElementById('qr-screen').style.display = 'block';
