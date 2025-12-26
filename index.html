@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Платежный Терминал</title>
     <style>
-        /* Стили остались без изменений */
         body { margin: 0; background: #000; font-family: sans-serif; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; }
         #terminal-ui { width: 100%; max-width: 400px; text-align: center; }
         .terminal-id { position: absolute; bottom: 20px; left: 20px; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 5px; font-size: 12px; color: #888; }
         .action-btn { background: #21a038; border: none; padding: 20px; border-radius: 15px; color: white; font-size: 18px; cursor: pointer; width: 80%; margin: 10px; }
         .exit-btn { background: #555; }
-        #loading, #success, #wait-screen, #payment-screen, #qr-screen { display: none; }
+        /* Убедимся, что все экраны изначально скрыты, кроме wait-screen */
+        #loading, #success, #payment-screen, #qr-screen { display: none; }
+        #wait-screen { display: block; }
+
         .cat-dance { width: 250px; margin-top: 20px; }
         .loader { border: 4px solid #333; border-top: 4px solid #21a038; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -31,9 +33,6 @@
     <div id="qr-screen">
         <h2>Отсканируйте QR-код</h2>
         <img id="qr-code-img" src="" alt="QR Code">
-        <p>Отсканируйте код или **перейдите по ссылке** ниже для оплаты.</p>
-        <!-- Ссылка теперь ведет на payment.html -->
-        <a id="payment-link" href="#" target="_blank" style="color: #21a038; word-break: break-all;">Открыть сайт банка</a>
         <p>Мы ждем подтверждения оплаты от банка...</p>
         <button class="action-btn exit-btn" onclick="returnToWaitingScreen()">Отмена заказа</button>
     </div>
@@ -45,7 +44,7 @@
 
     <div id="success">
         <h1 style="color: #21a038;">Оплачено! Спасибо за покупку!</h1>
-        <img src="success.jpg" class="cat-dance">
+        <img src="success.jpg" class="cat-dance" alt="Success animation">
         <button class="action-btn exit-btn" onclick="returnToWaitingScreen()">Выйти</button>
     </div>
 
@@ -59,32 +58,48 @@
         document.addEventListener('DOMContentLoaded', (event) => {
             terminalId = Math.floor(100000 + Math.random() * 900000);
             document.getElementById('my-id').innerText = terminalId;
+            // Начинаем регулярную проверку команд из Firebase
             setInterval(checkCommands, 2000); 
         });
 
+        function hideAllScreens() {
+            document.getElementById('wait-screen').style.display = 'none';
+            document.getElementById('payment-screen').style.display = 'none';
+            document.getElementById('qr-screen').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('success').style.display = 'none';
+        }
+
+        // Эта функция вызывается каждые 2 секунды
         async function checkCommands() {
             if (!terminalId) return;
             try {
-                const response_cmd = await fetch(`${FIREBASE_URL}/commands/${terminalId}.json`);
-                const commandData = await response_cmd.json();
+                // 1. Проверяем наличие команды PAY
+                const cmdResponse = await fetch(`${FIREBASE_URL}/commands/${terminalId}.json`);
+                const commandData = await cmdResponse.json();
                 
+                // Если пришла команда PAY и мы не на экране оплаты/QR/успеха
                 if (commandData && commandData.command === 'PAY' && document.getElementById('wait-screen').style.display !== 'none') {
                     showPaymentScreen(commandData.amount);
                 }
 
-                const response_status = await fetch(`${FIREBASE_URL}/status/${terminalId}.json`);
-                const status = await response_status.json();
+                // 2. Проверяем статус оплаты
+                const statusResponse = await fetch(`${FIREBASE_URL}/status/${terminalId}.json`);
+                const status = await statusResponse.json();
 
+                // Если пришел статус SUCCESS, показываем экран успеха
                 if (status === "SUCCESS" && document.getElementById('success').style.display === 'none') {
                     showSuccessScreen();
                 }
 
-            } catch (e) {}
+            } catch (e) {
+                // Можно добавить обработку ошибок сети здесь
+            }
         }
         
         function showPaymentScreen(amount) {
             currentAmount = amount;
-            document.getElementById('wait-screen').style.display = 'none';
+            hideAllScreens();
             document.getElementById('payment-screen').style.display = 'block';
             document.getElementById('price-tag').innerText = `К оплате: ${amount} руб`;
         }
@@ -96,25 +111,23 @@
             const qrApiUrl = `api.qrserver.com{encodeURIComponent(bankUrl)}&size=200x200&color=21a038`;
             
             document.getElementById('qr-code-img').src = qrApiUrl;
-            document.getElementById('payment-link').href = bankUrl;
             
-            document.getElementById('payment-screen').style.display = 'none';
+            hideAllScreens();
             document.getElementById('qr-screen').style.display = 'block';
         }
 
         function showSuccessScreen() {
-            document.getElementById('payment-screen').style.display = 'none';
-            document.getElementById('qr-screen').style.display = 'none';
-            document.getElementById('loading').style.display = 'none';
+            hideAllScreens();
             document.getElementById('success').style.display = 'block';
+            // После успешной оплаты терминал ждет, пока пользователь нажмет "Выйти", 
+            // чтобы очистить Firebase и вернуться к ожиданию нового заказа.
         }
 
         function returnToWaitingScreen() {
-            document.getElementById('success').style.display = 'none';
-            document.getElementById('payment-screen').style.display = 'none';
-            document.getElementById('qr-screen').style.display = 'none';
+            hideAllScreens();
             document.getElementById('wait-screen').style.display = 'block';
             
+            // Очищаем Firebase от статусов и команд
             fetch(`${FIREBASE_URL}/commands/${terminalId}.json`, { method: 'DELETE' });
             fetch(`${FIREBASE_URL}/status/${terminalId}.json`, { method: 'DELETE' });
         }
