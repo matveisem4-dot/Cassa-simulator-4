@@ -137,5 +137,32 @@
             fetch(`${FIREBASE_URL}/status/${terminalId}.json`, { method: 'DELETE' });
         }
     </script>
+            let currentQRCode = null; // Переменная для хранения текущего экземпляра QR-кода
+
+        function showQR() {
+            // Если предыдущий QR-код уже был нарисован, очистим контейнер
+            if (currentQRCode) {
+                document.getElementById('qrcode-container').innerHTML = '';
+            }
+
+            // Ссылка, которую должен содержать QR-код
+            const bankUrl = `payment.html?terminalId=${terminalId}`;
+            
+            // Генерируем QR-код с помощью библиотеки qrcode.js
+            currentQRCode = new QRCode(document.getElementById("qrcode-container"), {
+                text: bankUrl,
+                width: 200,
+                height: 200,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
+            hideAllScreens();
+            document.getElementById('qr-screen').style.display = 'block';
+        }
+
+        // ... (остальные ваши функции: showSuccessScreen, returnToWaitingScreen) ...
+    </script>
 </body>
 </html>
