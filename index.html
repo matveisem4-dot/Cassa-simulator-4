@@ -32,7 +32,7 @@
     
     <div id="qr-screen">
         <h2>Отсканируйте QR-код</h2>
-       const qrApiUrl = https://api.qrserver.com{encodeURIComponent(bankUrl)}&size=200x200&color=21a038`;
+        <img id="qr-code-img" src="" alt="QR Code">
         <p>Мы ждем подтверждения оплаты от банка...</p>
         <button class="action-btn exit-btn" onclick="returnToWaitingScreen()">Отмена заказа</button>
     </div>
@@ -56,6 +56,7 @@
         let currentAmount = 0;
         const FIREBASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
 
+        // Оборачиваем весь JS-код в DOMContentLoaded, чтобы элементы успели загрузиться
         document.addEventListener('DOMContentLoaded', (event) => {
             terminalId = Math.floor(100000 + Math.random() * 900000);
             document.getElementById('my-id').innerText = terminalId;
