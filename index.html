@@ -112,7 +112,10 @@
             const bankUrl = `payment.html?terminalId=${terminalId}`;
             
             // Генерируем URL картинки QR-кода, используя внешний API 
-            const qrApiUrl = `api.qrserver.com{encodeURIComponent(bankUrl)}&size=200x200&color=21a038`;
+            // Это API-адрес, который вы предоставили
+            /** **НАЧАЛО API ССЫЛКИ** */
+            const qrApiUrl = `api.qrserver.com{encodeURIComponent(bankUrl)}`;
+            /** **КОНЕЦ API ССЫЛКИ** */
             
             // Присваиваем сгенерированный URL источнику изображения
             document.getElementById('qr-code-img').src = qrApiUrl;
