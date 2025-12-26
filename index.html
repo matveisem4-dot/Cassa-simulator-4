@@ -109,7 +109,7 @@
         function showQR() {
             // *** ИСПРАВЛЕННАЯ ЛОГИКА ГЕНЕРАЦИИ QR-КОДА ***
             // Ссылка, которую должен содержать QR-код (ведет на страницу payment.html)
-            const bankUrl = https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=payment.html?terminalId=${terminalId}`;
+            const bankUrl = `payment.html?terminalId=${terminalId}`;
             
             // Генерируем URL картинки QR-кода, используя внешний API 
             // Это API-адрес, который вы предоставили
