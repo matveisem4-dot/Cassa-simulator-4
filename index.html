@@ -14,7 +14,7 @@
         #loading, #success, #payment-screen, #qr-screen { display: none; }
         #wait-screen { display: block; }
 
-        .cat-dance { width: 250px; margin-top: 20px; }
+        /* .cat-dance { width: 250px; margin-top: 20px; } */
         .loader { border: 4px solid #333; border-top: 4px solid #21a038; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #qr-code-img { width: 200px; height: 200px; margin: 20px auto; }
@@ -44,7 +44,8 @@
 
     <div id="success">
         <h1 style="color: #21a038;">Оплачено! Спасибо за покупку!</h1>
-        <img src="success.jpg" class="cat-dance" alt="Success animation">
+        <!-- <img src="success.jpg" class="cat-dance" alt="Success animation"> -->
+        <p>🎉 🎉 🎉</p>
         <button class="action-btn exit-btn" onclick="returnToWaitingScreen()">Выйти</button>
     </div>
 
@@ -105,11 +106,14 @@
         }
         
         function showQR() {
-            // *** Ссылка теперь ведет на payment.html с параметром terminalId ***
+            // *** ИСПРАВЛЕННАЯ ЛОГИКА ГЕНЕРАЦИИ QR-КОДА ***
+            // Ссылка, которую должен содержать QR-код (ведет на страницу payment.html)
             const bankUrl = `payment.html?terminalId=${terminalId}`;
             
+            // Генерируем URL картинки QR-кода, используя внешний API 
             const qrApiUrl = `api.qrserver.com{encodeURIComponent(bankUrl)}&size=200x200&color=21a038`;
             
+            // Присваиваем сгенерированный URL источнику изображения
             document.getElementById('qr-code-img').src = qrApiUrl;
             
             hideAllScreens();
@@ -119,8 +123,6 @@
         function showSuccessScreen() {
             hideAllScreens();
             document.getElementById('success').style.display = 'block';
-            // После успешной оплаты терминал ждет, пока пользователь нажмет "Выйти", 
-            // чтобы очистить Firebase и вернуться к ожиданию нового заказа.
         }
 
         function returnToWaitingScreen() {
