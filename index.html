@@ -32,7 +32,7 @@
     <!-- Экран QR-кода (появляется после нажатия кнопки выше) -->
     <div id="qr-screen">
         <h2>Отсканируйте QR-код</h2>
-        <img id="qr-code-img" src="">
+        <img id="qr-code-img" src="" alt="QR Code">
         <p>Отсканируйте код для перехода на страницу банка.</p>
         <p>Мы ждем подтверждения оплаты от банка...</p>
         <button class="action-btn exit-btn" onclick="returnToWaitingScreen()">Отмена заказа</button>
@@ -46,7 +46,6 @@
     <!-- Экран успеха (появляется после подтверждения с сайта банка) -->
     <div id="success">
         <h1 style="color: #21a038;">Оплачено! Спасибо за покупку!</h1>
-        <!-- ИСПОЛЬЗУЕМ ЛОКАЛЬНЫЙ ФАЙЛ success.jpg -->
         <img src="success.jpg" class="cat-dance">
         <button class="action-btn exit-btn" onclick="returnToWaitingScreen()">Выйти</button>
     </div>
@@ -54,14 +53,14 @@
     <div class="terminal-id">ID Терминала: <span id="my-id">Генерация...</span></div>
 
     <script>
-        let terminalId; 
+        let terminalId;
+        let currentAmount = 0; // Добавлена переменная для хранения текущей суммы
         const FIREBASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
 
         document.addEventListener('DOMContentLoaded', (event) => {
             terminalId = Math.floor(100000 + Math.random() * 900000);
             document.getElementById('my-id').innerText = terminalId;
-            document.getElementById('qr-code-img').src = `api.qrserver.com{terminalId}`;
-            setInterval(checkCommands, 2000); 
+            setInterval(checkCommands, 2000);
         });
 
         async function checkCommands() {
@@ -85,12 +84,17 @@
         }
         
         function showPaymentScreen(amount) {
+            currentAmount = amount; // Сохраняем сумму
             document.getElementById('wait-screen').style.display = 'none';
             document.getElementById('payment-screen').style.display = 'block';
             document.getElementById('price-tag').innerText = `К оплате: ${amount} руб`;
         }
         
         function showQR() {
+            // *** ИСПРАВЛЕННАЯ ЛОГИКА ГЕНЕРАЦИИ QR-КОДА ***
+            const qrApiUrl = `api.qrserver.com{currentAmount}_TID_${terminalId}`;
+            document.getElementById('qr-code-img').src = qrApiUrl;
+            
             document.getElementById('payment-screen').style.display = 'none';
             document.getElementById('qr-screen').style.display = 'block';
         }
