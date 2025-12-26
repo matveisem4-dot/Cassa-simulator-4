@@ -32,7 +32,7 @@
     
     <div id="qr-screen">
         <h2>Отсканируйте QR-код</h2>
-        <img id="qr-code-img" src="https://" alt="QR Code">
+        <img id="qr-code-img" src="https://"${encodeURIComponent(bankurl)} alt="QR Code">
         <p>Мы ждем подтверждения оплаты от банка...</p>
         <button class="action-btn exit-btn" onclick="returnToWaitingScreen()">Отмена заказа</button>
     </div>
@@ -113,7 +113,7 @@
             
             // Генерируем URL картинки QR-кода, используя внешний API 
             // Это правильный формат с http:// и ${}
-            const qrApiUrl = `https://api.qrserver.com{encodeURIComponent(bankUrl)}`;
+            const qrApiUrl = `https://api.qrserver.com${encodeURIComponent(bankurl)}
             
             // Присваиваем сгенерированный URL источнику изображения
             document.getElementById('qr-code-img').src = qrApiUrl;
