@@ -17,7 +17,7 @@
         /* .cat-dance { width: 250px; margin-top: 20px; } */
         .loader { border: 4px solid #333; border-top: 4px solid #21a038; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #qr-code-img { width: 200px; height: 200px; margin: 20px auto; }
+        /* Удалили #qr-code-img стили, так как используем div */
     </style>
 </head>
 <body>
@@ -32,7 +32,8 @@
     
     <div id="qr-screen">
         <h2>Отсканируйте QR-код</h2>
-        <img id="qr-code-img" src="https://"${encodeURIComponent(bankurl)} alt="QR Code">
+        <!-- Используем div для отрисовки QR-кода библиотекой qrcode.js -->
+        <div id="qrcode-container" style="margin: 20px auto; width: 200px; height: 200px;"></div>
         <p>Мы ждем подтверждения оплаты от банка...</p>
         <button class="action-btn exit-btn" onclick="returnToWaitingScreen()">Отмена заказа</button>
     </div>
@@ -51,10 +52,15 @@
 
     <div class="terminal-id">ID Терминала: <span id="my-id">Генерация...</span></div>
 
+    <!-- 1. Подключаем библиотеку qrcode.js перед вашим основным скриптом -->
+    <script src="cdnjs.cloudflare.com"></script>
+
+    <!-- 2. Ваш основной JavaScript-код с исправленной функцией showQR -->
     <script>
         let terminalId;
         let currentAmount = 0;
         const FIREBASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
+        let currentQRCode = null; // Переменная для хранения текущего экземпляра QR-кода
 
         // Оборачиваем весь JS-код в DOMContentLoaded, чтобы элементы успели загрузиться
         document.addEventListener('DOMContentLoaded', (event) => {
@@ -105,31 +111,8 @@
             document.getElementById('payment-screen').style.display = 'block';
             document.getElementById('price-tag').innerText = `К оплате: ${amount} руб`;
         }
-            
-            // Генерируем URL картинки QR-кода, используя внешний API 
-            // Это правильный формат с http:// и ${}
-            const qrApiUrl = http://api.qrserver.com${encodeURIComponent(bankUrl)};
-            
-            hideAllScreens();
-    document.getElementById('qr-screen').style.display = 'block';
-        }
-
-        function showSuccessScreen() {
-            hideAllScreens();
-            document.getElementById('success').style.display = 'block';
-        }
-
-        function returnToWaitingScreen() {
-            hideAllScreens();
-            document.getElementById('wait-screen').style.display = 'block';
-            
-            // Очищаем Firebase от статусов и команд
-            fetch(`${FIREBASE_URL}/commands/${terminalId}.json`, { method: 'DELETE' });
-            fetch(`${FIREBASE_URL}/status/${terminalId}.json`, { method: 'DELETE' });
-        }
-    </script>
-            let currentQRCode = null; // Переменная для хранения текущего экземпляра QR-кода
-
+        
+        // ИСПРАВЛЕННАЯ ЕДИНСТВЕННАЯ ФУНКЦИЯ showQR()
         function showQR() {
             // Если предыдущий QR-код уже был нарисован, очистим контейнер
             if (currentQRCode) {
@@ -153,7 +136,19 @@
             document.getElementById('qr-screen').style.display = 'block';
         }
 
-        // ... (остальные ваши функции: showSuccessScreen, returnToWaitingScreen) ...
+        function showSuccessScreen() {
+            hideAllScreens();
+            document.getElementById('success').style.display = 'block';
+        }
+
+        function returnToWaitingScreen() {
+            hideAllScreens();
+            document.getElementById('wait-screen').style.display = 'block';
+            
+            // Очищаем Firebase от статусов и команд
+            fetch(`${FIREBASE_URL}/commands/${terminalId}.json`, { method: 'DELETE' });
+            fetch(`${FIREBASE_URL}/status/${terminalId}.json`, { method: 'DELETE' });
+        }
     </script>
 </body>
 </html>
