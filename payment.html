@@ -23,7 +23,6 @@
         let terminalId = null;
 
         document.addEventListener('DOMContentLoaded', (event) => {
-            // Получаем ID терминала из URL параметров
             const urlParams = new URLSearchParams(window.location.search);
             terminalId = urlParams.get('terminalId');
             if (terminalId) {
@@ -36,14 +35,12 @@
         async function confirmPayment() {
             if (!terminalId) return;
 
-            // Отправляем статус УСПЕХ в Firebase
             try {
                 await fetch(`${FIREBASE_URL}/status/${terminalId}.json`, {
                     method: 'PUT', 
                     body: JSON.stringify("SUCCESS")
                 });
                 alert("Оплата прошла успешно! Терминал обновит статус автоматически.");
-                // Окно можно закрыть вручную
             } catch (e) {
                 alert("Ошибка оплаты. Проверьте правила Firebase.");
             }
