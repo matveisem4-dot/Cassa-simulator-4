@@ -3,47 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Оплата СберБанк</title>
+    <title>Оплата заказа</title>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f0f0; }
-        .payment-container { background: white; padding: 40px; border-radius: 10px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .pay-button { background: #21a038; border: none; padding: 15px 30px; border-radius: 8px; color: white; font-size: 18px; cursor: pointer; margin-top: 20px; }
-        .pay-button:hover { background: #1a752c; }
+        body { margin: 0; background: #000; font-family: sans-serif; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; text-align: center; }
+        .status-btn { background: #21a038; border: none; padding: 20px; border-radius: 15px; color: white; font-size: 18px; cursor: pointer; width: 80%; margin: 10px; }
+        .cancel-btn { background: #555; }
     </style>
 </head>
 <body>
-    <div class="payment-container">
-        <h1>Подтверждение оплаты</h1>
-        <p>Нажмите кнопку ниже, чтобы подтвердить оплату заказа на **Терминале №<span id="term-id">...</span>**.</p>
-        <button class="pay-button" onclick="confirmPayment()">Подтвердить оплату</button>
+    <div id="payment-page">
+        <h1 id="status-title">Ожидание подтверждения...</h1>
+        <p>Терминал ID: <span id="terminal-id-display"></span></p>
+        <button class="status-btn" onclick="sendSuccessStatus()">✅ Подтвердить оплату</button>
+        <button class="status-btn cancel-btn" onclick="window.close()">Закрыть</button>
     </div>
 
     <script>
         const FIREBASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        let terminalId = null;
+        let terminalId;
 
         document.addEventListener('DOMContentLoaded', (event) => {
+            // Получаем ID терминала из URL-параметров (например, ?terminalId=123456)
             const urlParams = new URLSearchParams(window.location.search);
             terminalId = urlParams.get('terminalId');
+            
             if (terminalId) {
-                document.getElementById('term-id').innerText = terminalId;
+                document.getElementById('terminal-id-display').innerText = terminalId;
             } else {
-                document.getElementById('term-id').innerText = "Ошибка ID";
+                document.getElementById('status-title').innerText = "Ошибка: ID терминала не найден.";
             }
         });
 
-        async function confirmPayment() {
+        function sendSuccessStatus() {
             if (!terminalId) return;
 
-            try {
-                await fetch(`${FIREBASE_URL}/status/${terminalId}.json`, {
-                    method: 'PUT', 
-                    body: JSON.stringify("SUCCESS")
-                });
-                alert("Оплата прошла успешно! Терминал обновит статус автоматически.");
-            } catch (e) {
-                alert("Ошибка оплаты. Проверьте правила Firebase.");
-            }
+            // Отправляем статус SUCCESS обратно в Firebase
+            fetch(`${FIREBASE_URL}/status/${terminalId}.json`, {
+                method: 'PUT', // Используем PUT для обновления статуса
+                body: JSON.stringify("SUCCESS"),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('status-title').innerText = "Оплата подтверждена!";
+                    // Можно автоматически закрыть окно через несколько секунд
+                    setTimeout(() => window.close(), 3000); 
+                }
+            })
+            .catch(error => {
+                alert("Ошибка связи с базой данных Firebase: " + error.message);
+            });
         }
     </script>
 </body>
