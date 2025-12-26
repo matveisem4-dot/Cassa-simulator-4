@@ -113,13 +113,14 @@
             
             // Генерируем URL картинки QR-кода, используя внешний API 
             // Это правильный формат с http:// и ${}
-            const qrApiUrl = `https://api.qrserver.com${encodeURIComponent(bankurl)}`
+            const qrApiUrl = `api.qrserver.com{encodeURIComponent(bankUrl)}`;
             
             // Присваиваем сгенерированный URL источнику изображения
-            document.getElementById('qr-code-img').src = qrApiUrl;
+            const qrImg = document.getElementById('qr-code-img');
+    qrImg.src = qrApiUrl;
             
             hideAllScreens();
-            document.getElementById('qr-screen').style.display = 'block';
+    document.getElementById('qr-screen').style.display = 'block';
         }
 
         function showSuccessScreen() {
