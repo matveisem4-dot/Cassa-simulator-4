@@ -107,12 +107,16 @@
         }
         
         function showQR() {
-            // *** ИСПОЛЬЗУЕМ СТАТИЧНУЮ КАРТИНКУ ВМЕСТО ГЕНЕРАТОРА ***
-            // Замените './qr_code.png' на путь к вашему файлу изображения (например: 'images/my_qr.jpg' или 'imgur.com')
-            const staticImageUrl = 'i.imgur.com'; 
+            // *** ИСПРАВЛЕННАЯ ЛОГИКА ГЕНЕРАЦИИ QR-КОДА ***
+            // Ссылка, которую должен содержать QR-код (ведет на страницу payment.html)
+            const bankUrl = `https://payment.html?terminalId=${terminalId}`;
             
-            // Присваиваем статичную ссылку источнику изображения
-            document.getElementById('qr-code-img').src = staticImageUrl;
+            // Генерируем URL картинки QR-кода, используя внешний API 
+            // Это правильный формат с http:// и ${}
+            const qrApiUrl = `https://api.qrserver.com{encodeURIComponent(bankUrl)}`;
+            
+            // Присваиваем сгенерированный URL источнику изображения
+            document.getElementById('qr-code-img').src = qrApiUrl;
             
             hideAllScreens();
             document.getElementById('qr-screen').style.display = 'block';
