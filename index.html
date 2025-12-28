@@ -28,13 +28,13 @@
         <button class="action-btn" onclick="showQR()">🔳 QR-код для оплаты</button>
     </div>
     
-    <div id="qr-screen">
-        <h2>Отсканируйте QR-код</h2>
-        <!-- Контейнер для отрисовки QR-кода библиотекой -->
-        <div id="qrcode-container" style="margin: 20px auto; width: 200px; height: 200px;"></div>
-        <p>Мы ждем подтверждения оплаты от банка...</p>
-        <button class="action-btn exit-btn" onclick="returnToWaitingScreen()">Отмена заказа</button>
-    </div>
+   <div id="qr-screen">
+    <h2>Отсканируйте QR-код</h2>
+    <!-- Убираем сложный src, оставляем пустой или заглушку -->
+    <img id="qr-code-img" src="" alt="QR Code">
+    <p>Мы ждем подтверждения оплаты от банка...</p>
+    <button class="action-btn exit-btn" onclick="returnToWaitingScreen()">Отмена заказа</button>
+</div>
 
     <div id="loading">
         <div class="loader"></div>
@@ -97,22 +97,23 @@
         }
         
         // Корректная функция showQR() использует библиотеку без ошибок синтаксиса
-        function showQR() {
-            if (currentQRCode) {
-                document.getElementById('qrcode-container').innerHTML = '';
-            }
-            const bankUrl = `payment.html?terminalId=${terminalId}`;
-            currentQRCode = new QRCode(document.getElementById("qrcode-container"), {
-                text: bankUrl,
-                width: 200,
-                height: 200,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
-            hideAllScreens();
-            document.getElementById('qr-screen').style.display = 'block';
-        }
+       function showQR() {
+    // 1. Ссылка, которая будет зашифрована в QR-коде
+    // Убедитесь, что путь к payment.html верный (относительно этого файла)
+    const bankUrl = `payment.html?terminalId=${terminalId}`;
+    
+    // 2. Формируем правильный URL для API генератора QR-кодов
+    // Используем бесплатный сервис goqr.me (api.qrserver.com)
+    const qrApiUrl = `api.qrserver.com{encodeURIComponent(bankUrl)}`;
+    
+    // 3. Устанавливаем адрес картинке
+    const qrImg = document.getElementById('qr-code-img');
+    qrImg.src = qrApiUrl;
+    
+    // Показываем экран
+    hideAllScreens();
+    document.getElementById('qr-screen').style.display = 'block';
+}
 
         function showSuccessScreen() {
             hideAllScreens();
