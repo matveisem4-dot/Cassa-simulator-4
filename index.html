@@ -97,25 +97,36 @@
         }
         
         // Корректная функция showQR() использует библиотеку без ошибок синтаксиса
-       function showQR() {
-    // 1. Ссылка, которая будет зашифрована в QR-коде
-    // Убедитесь, что путь к payment.html верный (относительно этого файла)
-    const bankUrl = `payment.html?terminalId=${terminalId}`;
-    
-    // 2. Формируем ПРАВИЛЬНЫЙ URL для API генератора QR-кодов
-    // Используем бесплатный сервис api.qrserver.com
-    // Обязательно используем протокол https:// и кодируем URL для безопасности
-    const qrApiUrl = `api.qrserver.com{encodeURIComponent(bankUrl)}`;
-    
-    // 3. Устанавливаем адрес картинке
-    const qrImg = document.getElementById('qr-code-img');
-    qrImg.src = qrApiUrl;
-    
-    // Показываем экран
-    hideAllScreens();
-    document.getElementById('qr-screen').style.display = 'block';
-}
+              function showQR() {
+            // Удаляем старый тег <img>, который был в HTML
+            const qrScreen = document.getElementById('qr-screen');
+            const oldImg = document.getElementById('qr-code-img');
+            if (oldImg) {
+                oldImg.remove();
+            }
 
+            // Создаем новый div, куда библиотека поместит QR-код
+            const newQrDiv = document.createElement('div');
+            newQrDiv.id = 'qrcode-container';
+            qrScreen.insertBefore(newQrDiv, qrScreen.children[1]); // Вставляем после заголовка
+
+            // Определяем содержимое QR-кода
+            const bankUrl = `payment.html?terminalId=${terminalId}`;
+
+            // Используем вашу локальную библиотеку qrcode.min.js для генерации
+            new QRCode(document.getElementById("qrcode-container"), {
+                text: bankUrl,
+                width: 150,
+                height: 150,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            // Показываем экран
+            hideAllScreens();
+            document.getElementById('qr-screen').style.display = 'block';
+        }
         function showSuccessScreen() {
             hideAllScreens();
             document.getElementById('success').style.display = 'block';
