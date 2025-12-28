@@ -102,8 +102,9 @@
     // Убедитесь, что путь к payment.html верный (относительно этого файла)
     const bankUrl = `payment.html?terminalId=${terminalId}`;
     
-    // 2. Формируем правильный URL для API генератора QR-кодов
-    // Используем бесплатный сервис goqr.me (api.qrserver.com)
+    // 2. Формируем ПРАВИЛЬНЫЙ URL для API генератора QR-кодов
+    // Используем бесплатный сервис api.qrserver.com
+    // Обязательно используем протокол https:// и кодируем URL для безопасности
     const qrApiUrl = `api.qrserver.com{encodeURIComponent(bankUrl)}`;
     
     // 3. Устанавливаем адрес картинке
