@@ -13,8 +13,9 @@
         .qr-frame canvas { display: block; width: 280px !important; height: 280px !important; }
         .price-text { font-size: 48px; color: #00ff41; font-weight: 800; }
         .terminal-info-badge { position: absolute; bottom: 25px; left: 25px; background: rgba(255, 255, 255, 0.05); padding: 8px 15px; border-radius: 8px; font-size: 14px; color: #666666; }
+        
         #btn-exit {
-            display: none; /* Скрыта по умолчанию */
+            display: none;
             margin-top: 30px;
             padding: 15px 40px;
             font-size: 20px;
@@ -53,7 +54,6 @@
 
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        // Убедитесь, что эта ссылка ведет на ваш сайт оплаты
         const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
 
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000);
@@ -65,16 +65,19 @@
         function changeScreen(targetId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(targetId).classList.add('active');
+            // Обновляем текущее состояние экрана
             if(targetId === 'screen-wait') currentScreen = 'wait';
             if(targetId === 'screen-pay') currentScreen = 'pay';
             if(targetId === 'screen-success') currentScreen = 'success';
         }
 
-        // Возврат на главный экран без перезагрузки страницы
         async function returnToWaitScreen() {
-            document.getElementById('btn-exit').style.display = 'none';
+            // 1. Сначала удаляем всё из Firebase, чтобы Python не подхватил старый статус
             await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
             await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
+            
+            // 2. Сбрасываем интерфейс
+            document.getElementById('btn-exit').style.display = 'none';
             changeScreen('screen-wait');
         }
 
@@ -87,44 +90,43 @@
 
         async function checkSync() {
             try {
-                if (currentScreen === 'success') return;
+                // Если мы уже на экране успеха, не нужно проверять новые команды оплаты
+                if (currentScreen === 'success') {
+                    return; 
+                }
 
+                // Проверяем команду PAY (только если мы на экране ожидания)
                 if (currentScreen === 'wait') {
                     const cmdResp = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
                     const cmdData = await cmdResp.json();
 
                     if (cmdData && cmdData.command === "PAY") {
-                        const amountNeeded = cmdData.amount || "0";
-                        document.getElementById('amount-val').innerText = amountNeeded + " РУБ";
-                        
-                        // Записываем сумму в статус, чтобы сайт оплаты мог её прочитать
-                        await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
-                            method: 'PUT',
-                            body: JSON.stringify({ state: "WAITING", requiredAmount: amountNeeded })
-                        });
-
+                        document.getElementById('amount-val').innerText = (cmdData.amount || "0") + " РУБ";
                         generateQRCode(PAYMENT_GATEWAY_URL);
                         changeScreen('screen-pay');
                     }
                 }
 
+                // Проверяем статус SUCCESS (только если мы на экране оплаты)
                 if (currentScreen === 'pay') {
                     const statResp = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
                     const statData = await statResp.json();
 
-                    if (statData && statData.state === "SUCCESS") {
+                    if (statData === "SUCCESS") {
                         changeScreen('screen-success');
+                        // Появление кнопки через 3 секунды
                         setTimeout(() => {
                             document.getElementById('btn-exit').style.display = 'inline-block';
-                        }, 3000); // 3 секунды задержки
+                        }, 3000);
                     }
                 }
+
             } catch (e) {
-                console.error("Ошибка связи:", e);
+                console.error("Ошибка сети:", e);
             }
         }
 
-        setInterval(checkSync, 2000); // Проверяем статус каждые 2 секунды
+        setInterval(checkSync, 2000);
     </script>
 </body>
 </html>
