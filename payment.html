@@ -10,6 +10,7 @@
         input { width: 100%; padding: 15px; margin: 15px 0; border: 2px solid #ddd; border-radius: 10px; font-size: 20px; text-align: center; box-sizing: border-box; }
         button { width: 100%; padding: 15px; background: #21a038; color: white; border: none; border-radius: 10px; font-size: 18px; cursor: pointer; }
         button:disabled { background: #ccc; }
+        #msg { margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -17,37 +18,48 @@
     <div class="pay-card">
         <h2>Оплата терминала</h2>
         <p>Введите ID, который вы видите на экране</p>
-        <input type="number" id="term-id-input" placeholder="0000" maxlength="4">
-        <button id="pay-btn" onclick="sendPayment()">ОПЛАТИТЬ 100 РУБ.</button>
+        <input type="number" id="input-terminal-id" placeholder="0000" maxlength="4">
+        <button id="pay-btn" onclick="sendPaymentSuccessSignal()">ОПЛАТИТЬ</button>
         <p id="msg"></p>
     </div>
 
     <script>
-        const FIREBASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
+        // --- ОБЯЗАТЕЛЬНО С HTTPS:// ---
+        const FIREBASE_STATUS_URL = "cassa-simulator-4-default-rtdb.firebaseio.com";
 
-        async function sendPayment() {
-            const id = document.getElementById('term-id-input').value;
+        async function sendPaymentSuccessSignal() {
+            const enteredId = document.getElementById('input-terminal-id').value.trim();
             const btn = document.getElementById('pay-btn');
             const msg = document.getElementById('msg');
 
-            if (!id) return alert("Введите ID!");
+            if (!enteredId || enteredId.length < 4) {
+                return alert("Пожалуйста, введите полный ID терминала.");
+            }
 
             btn.disabled = true;
-            btn.innerText = "Обработка...";
+            msg.innerText = "Отправка подтверждения...";
+            msg.style.color = "orange";
 
             try {
-                // Отправляем в Firebase сигнал SUCCESS для этого ID
-                const response = await fetch(`${FIREBASE_URL}/status/${id}.json`, {
+                const response = await fetch(FIREBASE_STATUS_URL + enteredId + ".json", {
                     method: 'PUT',
-                    body: JSON.stringify("SUCCESS")
+                    body: JSON.stringify("SUCCESS"),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
 
                 if (response.ok) {
-                    msg.innerHTML = "<span style='color:green'>Оплачено! Терминал активирован.</span>";
-                    btn.innerText = "Готово";
+                    msg.innerText = "ОПЛАЧЕНО! Терминал получил сигнал.";
+                    msg.style.color = "green";
+                    btn.style.display = 'none'; 
+                } else {
+                    throw new Error('Ошибка сети или Firebase не принял данные.');
                 }
+
             } catch (e) {
-                alert("Ошибка связи");
+                msg.innerText = "Ошибка: не удалось связаться с базой данных.";
+                msg.style.color = "red";
                 btn.disabled = false;
             }
         }
