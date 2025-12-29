@@ -39,9 +39,8 @@
     </div>
 
     <script>
-        // --- КОНФИГУРАЦИЯ С ИСПРАВЛЕННЫМИ АДРЕСАМИ ---
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        // ВОТ ВАШ РЕАЛЬНЫЙ АДРЕС САЙТА ОПЛАТЫ
+        // ВОТ ТВОЙ РЕАЛЬНЫЙ АДРЕС:
         const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
         const GOOGLE_QR_API = "chart.googleapis.com";
 
@@ -63,7 +62,6 @@
                     const finalAmount = commandData.amount || "0";
                     document.getElementById('amount-val').innerText = finalAmount + " РУБ";
                     
-                    // Генерация QR-кода с правильным HTTPS адресом
                     const qrFullLink = GOOGLE_QR_API + encodeURIComponent(PAYMENT_GATEWAY_URL);
                     document.getElementById('qr-image-element').src = qrFullLink;
                     
