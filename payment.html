@@ -3,58 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Оплата заказа</title>
+    <title>Оплата по ID</title>
     <style>
-        body { margin: 0; background: #000; font-family: sans-serif; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; text-align: center; }
-        .status-btn { background: #21a038; border: none; padding: 20px; border-radius: 15px; color: white; font-size: 18px; cursor: pointer; width: 80%; margin: 10px; }
-        .cancel-btn { background: #555; }
+        body { font-family: sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .pay-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 320px; text-align: center; }
+        input { width: 100%; padding: 15px; margin: 15px 0; border: 2px solid #ddd; border-radius: 10px; font-size: 20px; text-align: center; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #21a038; color: white; border: none; border-radius: 10px; font-size: 18px; cursor: pointer; }
+        button:disabled { background: #ccc; }
     </style>
 </head>
 <body>
-    <div id="payment-page">
-        <h1 id="status-title">Ожидание подтверждения...</h1>
-        <p>Терминал ID: <span id="terminal-id-display"></span></p>
-        <button class="status-btn" onclick="sendSuccessStatus()">✅ Подтвердить оплату</button>
-        <button class="status-btn cancel-btn" onclick="window.close()">Закрыть</button>
+
+    <div class="pay-card">
+        <h2>Оплата терминала</h2>
+        <p>Введите ID, который вы видите на экране</p>
+        <input type="number" id="term-id-input" placeholder="0000" maxlength="4">
+        <button id="pay-btn" onclick="sendPayment()">ОПЛАТИТЬ 100 РУБ.</button>
+        <p id="msg"></p>
     </div>
 
     <script>
         const FIREBASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        let terminalId;
 
-        document.addEventListener('DOMContentLoaded', (event) => {
-            // Получаем ID терминала из URL-параметров (например, ?terminalId=123456)
-            const urlParams = new URLSearchParams(window.location.search);
-            terminalId = urlParams.get('terminalId');
-            
-            if (terminalId) {
-                document.getElementById('terminal-id-display').innerText = terminalId;
-            } else {
-                document.getElementById('status-title').innerText = "Ошибка: ID терминала не найден.";
-            }
-        });
+        async function sendPayment() {
+            const id = document.getElementById('term-id-input').value;
+            const btn = document.getElementById('pay-btn');
+            const msg = document.getElementById('msg');
 
-        function sendSuccessStatus() {
-            if (!terminalId) return;
+            if (!id) return alert("Введите ID!");
 
-            // Отправляем статус SUCCESS обратно в Firebase
-            fetch(`${FIREBASE_URL}/status/${terminalId}.json`, {
-                method: 'PUT', // Используем PUT для обновления статуса
-                body: JSON.stringify("SUCCESS"),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => {
+            btn.disabled = true;
+            btn.innerText = "Обработка...";
+
+            try {
+                // Отправляем в Firebase сигнал SUCCESS для этого ID
+                const response = await fetch(`${FIREBASE_URL}/status/${id}.json`, {
+                    method: 'PUT',
+                    body: JSON.stringify("SUCCESS")
+                });
+
                 if (response.ok) {
-                    document.getElementById('status-title').innerText = "Оплата подтверждена!";
-                    // Можно автоматически закрыть окно через несколько секунд
-                    setTimeout(() => window.close(), 3000); 
+                    msg.innerHTML = "<span style='color:green'>Оплачено! Терминал активирован.</span>";
+                    btn.innerText = "Готово";
                 }
-            })
-            .catch(error => {
-                alert("Ошибка связи с базой данных Firebase: " + error.message);
-            });
+            } catch (e) {
+                alert("Ошибка связи");
+                btn.disabled = false;
+            }
         }
     </script>
 </body>
