@@ -10,18 +10,18 @@
         .screen { display: none; }
         .active { display: block; }
         .qr-frame { background: #ffffff; padding: 25px; border-radius: 20px; display: inline-block; margin: 20px auto; }
+        /* qrcode.js генерирует не img, а div или canvas */
         .qr-frame canvas { display: block; width: 280px !important; height: 280px !important; }
         .price-text { font-size: 48px; color: #00ff41; font-weight: 800; }
         .terminal-info-badge { position: absolute; bottom: 25px; left: 25px; background: rgba(255, 255, 255, 0.05); padding: 8px 15px; border-radius: 8px; font-size: 14px; color: #666666; }
-        
-        #btn-exit {
-            display: none;
-            margin-top: 30px;
-            padding: 15px 40px;
-            font-size: 20px;
-            font-weight: bold;
-            color: #000;
+        /* Стиль для новой кнопки */
+        #exit-button {
+            display: none; /* Изначально скрываем кнопку */
+            margin-top: 40px;
+            padding: 15px 30px;
+            font-size: 18px;
             background-color: #00ff41;
+            color: #000;
             border: none;
             border-radius: 10px;
             cursor: pointer;
@@ -36,93 +36,100 @@
         </div>
         <div id="screen-pay" class="screen">
             <div id="amount-val" class="price-text">0.00 РУБ</div>
-            <div class="qr-frame" id="qrcode-container"></div>
+            <div class="qr-frame" id="qrcode-container">
+                <!-- Сюда qrcode.js вставит наш код -->
+            </div>
             <p style="font-size: 20px;">Сканируйте QR и введите ID на телефоне</p>
             <p style="color: #00ff41; font-size: 22px;">ID ТЕРМИНАЛА: <span id="display-id-center"></span></p>
         </div>
         <div id="screen-success" class="screen">
             <h1 style="color: #00ff41;">✅ ОПЛАЧЕНО</h1>
             <p>Спасибо! Возьмите ваш товар.</p>
-            <button id="btn-exit" onclick="returnToWaitScreen()">ВЫЙТИ</button>
+            <!-- Кнопка, которая появится через 3 секунды -->
+            <button id="exit-button" onclick="goToHomeScreen()">Выйти на главный экран</button>
         </div>
     </div>
     <div class="terminal-info-badge">
         ID: <span id="terminal-id-corner">ГЕНЕРАЦИЯ...</span>
     </div>
 
+    <!-- Подключаем библиотеку qrcode.js через CDN (https://) -->
     <script src="cdnjs.cloudflare.com"></script>
 
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
+        // ВОТ ВАШ РЕАЛЬНЫЙ АДРЕС САЙТА ОПЛАТЫ
         const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
 
+        // Генерируем ID только один раз при первой загрузке страницы
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000);
         document.getElementById('terminal-id-corner').innerText = MY_TERMINAL_ID;
         document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
 
-        let currentScreen = 'wait'; 
-
         function changeScreen(targetId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(targetId).classList.add('active');
-            // Обновляем текущее состояние экрана
-            if(targetId === 'screen-wait') currentScreen = 'wait';
-            if(targetId === 'screen-pay') currentScreen = 'pay';
-            if(targetId === 'screen-success') currentScreen = 'success';
         }
 
-        async function returnToWaitScreen() {
-            // 1. Сначала удаляем всё из Firebase, чтобы Python не подхватил старый статус
-            await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
-            await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
+        // НОВАЯ ФУНКЦИЯ: возвращает на главный (WAIT) экран без перезагрузки страницы
+        async function goToHomeScreen() {
+            // Очищаем данные Firebase на всякий случай перед возвратом на главный экран
+            await fetch(FIREBASE_BASE_URL + "/commands/" + MY_TERMINAL_ID + ".json", { method: 'DELETE' });
+            await fetch(FIREBASE_BASE_URL + "/status/" + MY_TERMINAL_ID + ".json", { method: 'DELETE' });
             
-            // 2. Сбрасываем интерфейс
-            document.getElementById('btn-exit').style.display = 'none';
+            // Скрываем кнопку снова
+            document.getElementById('exit-button').style.display = 'none';
+            
+            // Переключаемся на экран ожидания
             changeScreen('screen-wait');
         }
 
         function generateQRCode(url) {
+            // Очищаем предыдущий код, если он был
             document.getElementById('qrcode-container').innerHTML = ''; 
+            
+            // Генерируем новый QR-код с помощью библиотеки
             new QRCode(document.getElementById("qrcode-container"), {
-                text: url, width: 280, height: 280, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H
+                text: url,
+                width: 280,
+                height: 280,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
             });
         }
 
         async function checkSync() {
             try {
-                // Если мы уже на экране успеха, не нужно проверять новые команды оплаты
-                if (currentScreen === 'success') {
-                    return; 
+                const commandResponse = await fetch(FIREBASE_BASE_URL + "/commands/" + MY_TERMINAL_ID + ".json");
+                const commandData = await commandResponse.json();
+
+                if (commandData && commandData.command === "PAY") {
+                    const finalAmount = commandData.amount || "0";
+                    document.getElementById('amount-val').innerText = finalAmount + " РУБ";
+                    
+                    generateQRCode(PAYMENT_GATEWAY_URL);
+                    
+                    changeScreen('screen-pay');
                 }
 
-                // Проверяем команду PAY (только если мы на экране ожидания)
-                if (currentScreen === 'wait') {
-                    const cmdResp = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
-                    const cmdData = await cmdResp.json();
+                const statusResponse = await fetch(FIREBASE_BASE_URL + "/status/" + MY_TERMINAL_ID + ".json");
+                const statusData = await statusResponse.json();
 
-                    if (cmdData && cmdData.command === "PAY") {
-                        document.getElementById('amount-val').innerText = (cmdData.amount || "0") + " РУБ";
-                        generateQRCode(PAYMENT_GATEWAY_URL);
-                        changeScreen('screen-pay');
-                    }
+                if (statusData === "SUCCESS") {
+                    changeScreen('screen-success');
+                    
+                    // Таймер на 3 секунды
+                    setTimeout(async () => {
+                        // Показываем кнопку "Выйти"
+                        document.getElementById('exit-button').style.display = 'block';
+                        
+                        // Очистку Firebase лучше вынести в goToHomeScreen()
+                    }, 3000); // 3000 миллисекунд = 3 секунды
                 }
 
-                // Проверяем статус SUCCESS (только если мы на экране оплаты)
-                if (currentScreen === 'pay') {
-                    const statResp = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
-                    const statData = await statResp.json();
-
-                    if (statData === "SUCCESS") {
-                        changeScreen('screen-success');
-                        // Появление кнопки через 3 секунды
-                        setTimeout(() => {
-                            document.getElementById('btn-exit').style.display = 'inline-block';
-                        }, 3000);
-                    }
-                }
-
-            } catch (e) {
-                console.error("Ошибка сети:", e);
+            } catch (error) {
+                console.error("ОШИБКА СВЯЗИ:", error);
             }
         }
 
