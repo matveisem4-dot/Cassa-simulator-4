@@ -10,7 +10,6 @@
         .screen { display: none; }
         .active { display: block; }
         .qr-frame { background: #ffffff; padding: 25px; border-radius: 20px; display: inline-block; margin: 20px auto; }
-        /* qrcode.js генерирует не img, а div или canvas */
         .qr-frame canvas { display: block; width: 280px !important; height: 280px !important; }
         .price-text { font-size: 48px; color: #00ff41; font-weight: 800; }
         .terminal-info-badge { position: absolute; bottom: 25px; left: 25px; background: rgba(255, 255, 255, 0.05); padding: 8px 15px; border-radius: 8px; font-size: 14px; color: #666666; }
@@ -40,12 +39,12 @@
     </div>
 
     <!-- Подключаем библиотеку qrcode.js через CDN (https://) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="cdnjs.cloudflare.com"></script>
 
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        // ВОТ ВАШ РЕАЛЬНЫЙ АДРЕС САЙТА ОПЛАТЫ
-        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
+        // ВОТ ВАШ НОВЫЙ, ПРАВИЛЬНЫЙ АДРЕС САЙТА ОПЛАТЫ
+        const PAYMENT_GATEWAY_URL = "https://matveisem4-dot.github.io/PaymentSite/payment.html"; 
 
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000);
         document.getElementById('terminal-id-corner').innerText = MY_TERMINAL_ID;
@@ -57,10 +56,7 @@
         }
 
         function generateQRCode(url) {
-            // Очищаем предыдущий код, если он был
             document.getElementById('qrcode-container').innerHTML = ''; 
-            
-            // Генерируем новый QR-код с помощью библиотеки
             new QRCode(document.getElementById("qrcode-container"), {
                 text: url,
                 width: 280,
@@ -79,10 +75,7 @@
                 if (commandData && commandData.command === "PAY") {
                     const finalAmount = commandData.amount || "0";
                     document.getElementById('amount-val').innerText = finalAmount + " РУБ";
-                    
-                    // Генерируем QR-код на лету
                     generateQRCode(PAYMENT_GATEWAY_URL);
-                    
                     changeScreen('screen-pay');
                 }
 
