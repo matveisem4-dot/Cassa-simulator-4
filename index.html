@@ -2,29 +2,16 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Платежный Терминал 2025</title>
     <style>
-        body { margin: 0; background-color: #000000; font-family: sans-serif; color: #ffffff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        body { margin: 0; background-color: #000; font-family: sans-serif; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         #ui-wrapper { text-align: center; width: 100%; }
         .screen { display: none; }
         .active { display: block; }
-        .qr-frame { background: #ffffff; padding: 25px; border-radius: 20px; display: inline-block; margin: 20px auto; }
-        .qr-frame canvas { display: block; width: 280px !important; height: 280px !important; }
+        .qr-frame { background: #fff; padding: 20px; border-radius: 20px; display: inline-block; margin: 20px auto; }
+        .qr-frame canvas { display: block; width: 250px !important; height: 250px !important; }
         .price-text { font-size: 48px; color: #00ff41; font-weight: 800; }
-        .terminal-info-badge { position: absolute; bottom: 25px; left: 25px; background: rgba(255, 255, 255, 0.05); padding: 8px 15px; border-radius: 8px; font-size: 14px; color: #666666; }
-        #btn-exit {
-            display: none; /* Скрыта по умолчанию */
-            margin-top: 30px;
-            padding: 15px 40px;
-            font-size: 20px;
-            font-weight: bold;
-            color: #000;
-            background-color: #00ff41;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-        }
+        #btn-exit { display: none; margin-top: 30px; padding: 15px 40px; font-size: 20px; background-color: #00ff41; color: #000; border: none; border-radius: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -36,41 +23,32 @@
         <div id="screen-pay" class="screen">
             <div id="amount-val" class="price-text">0.00 РУБ</div>
             <div class="qr-frame" id="qrcode-container"></div>
-            <p style="font-size: 20px;">Сканируйте QR и введите ID на телефоне</p>
+            <p>Сканируйте QR или введите ID на сайте</p>
             <p style="color: #00ff41; font-size: 22px;">ID ТЕРМИНАЛА: <span id="display-id-center"></span></p>
         </div>
         <div id="screen-success" class="screen">
             <h1 style="color: #00ff41;">✅ ОПЛАЧЕНО</h1>
-            <p>Спасибо! Возьмите ваш товар.</p>
+            <p>Возьмите ваш товар.</p>
             <button id="btn-exit" onclick="returnToWaitScreen()">ВЫЙТИ</button>
         </div>
     </div>
-    <div class="terminal-info-badge">
-        ID: <span id="terminal-id-corner">ГЕНЕРАЦИЯ...</span>
-    </div>
 
     <script src="cdnjs.cloudflare.com"></script>
-
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        // Убедитесь, что эта ссылка ведет на ваш сайт оплаты
-        const PAYMENT_GATEWAY_URL = "https://matveisem4-dot.github.io/PaymentSite/payment.html"; 
+        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
 
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000);
-        document.getElementById('terminal-id-corner').innerText = MY_TERMINAL_ID;
         document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
 
-        let currentScreen = 'wait'; 
+        let currentScreen = 'wait';
 
         function changeScreen(targetId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(targetId).classList.add('active');
-            if(targetId === 'screen-wait') currentScreen = 'wait';
-            if(targetId === 'screen-pay') currentScreen = 'pay';
-            if(targetId === 'screen-success') currentScreen = 'success';
+            currentScreen = targetId.replace('screen-', '');
         }
 
-        // Возврат на главный экран без перезагрузки страницы
         async function returnToWaitScreen() {
             document.getElementById('btn-exit').style.display = 'none';
             await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
@@ -78,53 +56,36 @@
             changeScreen('screen-wait');
         }
 
-        function generateQRCode(url) {
-            document.getElementById('qrcode-container').innerHTML = ''; 
-            new QRCode(document.getElementById("qrcode-container"), {
-                text: url, width: 280, height: 280, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H
-            });
-        }
-
         async function checkSync() {
             try {
-                if (currentScreen === 'success') return;
-
                 if (currentScreen === 'wait') {
-                    const cmdResp = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
-                    const cmdData = await cmdResp.json();
-
-                    if (cmdData && cmdData.command === "PAY") {
-                        const amountNeeded = cmdData.amount || "0";
-                        document.getElementById('amount-val').innerText = amountNeeded + " РУБ";
-                        
-                        // Записываем сумму в статус, чтобы сайт оплаты мог её прочитать
+                    const r = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
+                    const d = await r.json();
+                    if (d && d.command === "PAY") {
+                        document.getElementById('amount-val').innerText = d.amount + " РУБ";
                         await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
-                            method: 'PUT',
-                            body: JSON.stringify({ state: "WAITING", requiredAmount: amountNeeded })
+                            method: 'PUT', body: JSON.stringify({ state: "WAITING", requiredAmount: d.amount })
                         });
-
-                        generateQRCode(PAYMENT_GATEWAY_URL);
+                        // Генерируем QR со ссылкой + ID
+                        document.getElementById('qrcode-container').innerHTML = '';
+                        new QRCode(document.getElementById("qrcode-container"), {
+                            text: `${PAYMENT_GATEWAY_URL}?id=${MY_TERMINAL_ID}`,
+                            width: 250, height: 250
+                        });
                         changeScreen('screen-pay');
                     }
                 }
-
                 if (currentScreen === 'pay') {
-                    const statResp = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
-                    const statData = await statResp.json();
-
-                    if (statData && statData.state === "SUCCESS") {
+                    const r = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
+                    const d = await r.json();
+                    if (d && d.state === "SUCCESS") {
                         changeScreen('screen-success');
-                        setTimeout(() => {
-                            document.getElementById('btn-exit').style.display = 'inline-block';
-                        }, 3000); // 3 секунды задержки
+                        setTimeout(() => { document.getElementById('btn-exit').style.display = 'inline-block'; }, 3000);
                     }
                 }
-            } catch (e) {
-                console.error("Ошибка связи:", e);
-            }
+            } catch (e) { console.error("Ошибка:", e); }
         }
-
-        setInterval(checkSync, 2000); // Проверяем статус каждые 2 секунды
+        setInterval(checkSync, 2000);
     </script>
 </body>
 </html>
