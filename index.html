@@ -54,14 +54,13 @@
     </div>
 
     <!-- Подключаем библиотеку qrcode.js через CDN (https://) -->
-    <script src="cdnjs.cloudflare.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
         // ВОТ ВАШ РЕАЛЬНЫЙ АДРЕС САЙТА ОПЛАТЫ
-        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
+        const PAYMENT_GATEWAY_URL = "https://matveisem4-dot.github.io/PaymentSite/payment.html"; 
 
-        // Генерируем ID только один раз при первой загрузке страницы
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000);
         document.getElementById('terminal-id-corner').innerText = MY_TERMINAL_ID;
         document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
@@ -71,17 +70,9 @@
             document.getElementById(targetId).classList.add('active');
         }
 
-        // НОВАЯ ФУНКЦИЯ: возвращает на главный (WAIT) экран без перезагрузки страницы
-        async function goToHomeScreen() {
-            // Очищаем данные Firebase на всякий случай перед возвратом на главный экран
-            await fetch(FIREBASE_BASE_URL + "/commands/" + MY_TERMINAL_ID + ".json", { method: 'DELETE' });
-            await fetch(FIREBASE_BASE_URL + "/status/" + MY_TERMINAL_ID + ".json", { method: 'DELETE' });
-            
-            // Скрываем кнопку снова
-            document.getElementById('exit-button').style.display = 'none';
-            
-            // Переключаемся на экран ожидания
-            changeScreen('screen-wait');
+        // НОВАЯ ФУНКЦИЯ: возвращает на главный экран (перезагружает страницу в данном случае)
+        function goToHomeScreen() {
+            location.reload(); 
         }
 
         function generateQRCode(url) {
@@ -118,13 +109,17 @@
 
                 if (statusData === "SUCCESS") {
                     changeScreen('screen-success');
-                    
-                    // Таймер на 3 секунды
+                    // !!! ИЗМЕНЕНИЯ ЗДЕСЬ !!!
+                    // Таймер на 3 секунды, после которого появляется кнопка
                     setTimeout(async () => {
-                        // Показываем кнопку "Выйти"
+                        // 1. Делаем кнопку видимой
                         document.getElementById('exit-button').style.display = 'block';
                         
-                        // Очистку Firebase лучше вынести в goToHomeScreen()
+                        // 2. Очищаем данные из Firebase
+                        await fetch(FIREBASE_BASE_URL + "/commands/" + MY_TERMINAL_ID + ".json", { method: 'DELETE' });
+                        await fetch(FIREBASE_BASE_URL + "/status/" + MY_TERMINAL_ID + ".json", { method: 'DELETE' });
+                        
+                        // Мы НЕ делаем location.reload() автоматически
                     }, 3000); // 3000 миллисекунд = 3 секунды
                 }
 
