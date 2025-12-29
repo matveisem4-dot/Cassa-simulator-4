@@ -2,16 +2,30 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Платежный Терминал 2025</title>
     <style>
-        body { margin: 0; background-color: #000; font-family: sans-serif; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        body { margin: 0; background-color: #000000; font-family: sans-serif; color: #ffffff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         #ui-wrapper { text-align: center; width: 100%; }
         .screen { display: none; }
         .active { display: block; }
-        .qr-frame { background: #fff; padding: 20px; border-radius: 20px; display: inline-block; margin: 20px auto; }
-        .qr-frame canvas { display: block; width: 250px !important; height: 250px !important; }
+        .qr-frame { background: #ffffff; padding: 25px; border-radius: 20px; display: inline-block; margin: 20px auto; min-width: 250px; min-height: 250px; }
+        .qr-frame canvas, .qr-frame img { display: block; margin: 0 auto; width: 250px !important; height: 250px !important; }
         .price-text { font-size: 48px; color: #00ff41; font-weight: 800; }
-        #btn-exit { display: none; margin-top: 30px; padding: 15px 40px; font-size: 20px; background-color: #00ff41; color: #000; border: none; border-radius: 10px; cursor: pointer; }
+        .terminal-info-badge { position: absolute; bottom: 25px; left: 25px; background: rgba(255, 255, 255, 0.05); padding: 8px 15px; border-radius: 8px; font-size: 14px; color: #666666; }
+        
+        #btn-exit {
+            display: none;
+            margin-top: 30px;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #000;
+            background-color: #00ff41;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -23,68 +37,119 @@
         <div id="screen-pay" class="screen">
             <div id="amount-val" class="price-text">0.00 РУБ</div>
             <div class="qr-frame" id="qrcode-container"></div>
-            <p>Сканируйте QR или введите ID на сайте</p>
+            <p style="font-size: 20px;">Сканируйте QR и введите ID на телефоне</p>
             <p style="color: #00ff41; font-size: 22px;">ID ТЕРМИНАЛА: <span id="display-id-center"></span></p>
         </div>
         <div id="screen-success" class="screen">
             <h1 style="color: #00ff41;">✅ ОПЛАЧЕНО</h1>
-            <p>Возьмите ваш товар.</p>
+            <p>Спасибо! Возьмите ваш товар.</p>
             <button id="btn-exit" onclick="returnToWaitScreen()">ВЫЙТИ</button>
         </div>
     </div>
+    <div class="terminal-info-badge">
+        ID: <span id="terminal-id-corner">ГЕНЕРАЦИЯ...</span>
+    </div>
 
+    <!-- Загружаем библиотеку QRCode ПЕРЕД основным скриптом -->
     <script src="cdnjs.cloudflare.com"></script>
+
     <script>
+        // 1. Константы
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
         const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
 
+        // 2. Генерация постоянного ID (меняется только при F5)
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000);
+        document.getElementById('terminal-id-corner').innerText = MY_TERMINAL_ID;
         document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
 
         let currentScreen = 'wait';
 
+        // 3. Функция смены экранов
         function changeScreen(targetId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(targetId).classList.add('active');
-            currentScreen = targetId.replace('screen-', '');
+            const target = document.getElementById(targetId);
+            if (target) {
+                target.classList.add('active');
+                currentScreen = targetId.replace('screen-', '');
+            }
         }
 
+        // 4. Функция возврата (Кнопка ВЫЙТИ)
         async function returnToWaitScreen() {
-            document.getElementById('btn-exit').style.display = 'none';
-            await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
-            await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
-            changeScreen('screen-wait');
+            try {
+                document.getElementById('btn-exit').style.display = 'none';
+                // Очищаем Firebase, чтобы можно было платить снова
+                await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
+                await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
+                changeScreen('screen-wait');
+            } catch (err) {
+                console.error("Ошибка при сбросе:", err);
+            }
         }
 
+        // 5. Безопасная генерация QR-кода
+        function safeGenerateQR(amount) {
+            const container = document.getElementById('qrcode-container');
+            container.innerHTML = ''; // Очистка
+            
+            // Проверка, загрузилась ли библиотека qrcode.js
+            if (typeof QRCode !== "undefined") {
+                new QRCode(container, {
+                    text: `${PAYMENT_GATEWAY_URL}?id=${MY_TERMINAL_ID}`,
+                    width: 250,
+                    height: 250
+                });
+            } else {
+                container.innerHTML = "Ошибка загрузки QR-библиотеки";
+            }
+        }
+
+        // 6. Основной цикл синхронизации
         async function checkSync() {
             try {
+                if (currentScreen === 'success') return;
+
+                // Проверка команды PAY
                 if (currentScreen === 'wait') {
-                    const r = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
-                    const d = await r.json();
-                    if (d && d.command === "PAY") {
-                        document.getElementById('amount-val').innerText = d.amount + " РУБ";
+                    const response = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
+                    const data = await response.json();
+
+                    if (data && data.command === "PAY") {
+                        const amount = data.amount || "0";
+                        document.getElementById('amount-val').innerText = amount + " РУБ";
+                        
+                        // Сообщаем сайту оплаты, какую сумму ждать
                         await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
-                            method: 'PUT', body: JSON.stringify({ state: "WAITING", requiredAmount: d.amount })
+                            method: 'PUT',
+                            body: JSON.stringify({ state: "WAITING", requiredAmount: amount })
                         });
-                        // Генерируем QR со ссылкой + ID
-                        document.getElementById('qrcode-container').innerHTML = '';
-                        new QRCode(document.getElementById("qrcode-container"), {
-                            text: `${PAYMENT_GATEWAY_URL}?id=${MY_TERMINAL_ID}`,
-                            width: 250, height: 250
-                        });
+
+                        safeGenerateQR(amount);
                         changeScreen('screen-pay');
                     }
                 }
+
+                // Проверка статуса оплаты
                 if (currentScreen === 'pay') {
-                    const r = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
-                    const d = await r.json();
-                    if (d && d.state === "SUCCESS") {
+                    const response = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
+                    const data = await response.json();
+
+                    if (data && data.state === "SUCCESS") {
                         changeScreen('screen-success');
-                        setTimeout(() => { document.getElementById('btn-exit').style.display = 'inline-block'; }, 3000);
+                        // Появление кнопки ВЫЙТИ через 3 секунды
+                        setTimeout(() => {
+                            const btn = document.getElementById('btn-exit');
+                            if (btn) btn.style.display = 'inline-block';
+                        }, 3000);
                     }
                 }
-            } catch (e) { console.error("Ошибка:", e); }
+            } catch (error) {
+                console.error("Синхронизация не удалась:", error);
+            }
         }
+
+        // Запуск проверки каждые 2 секунды
         setInterval(checkSync, 2000);
     </script>
 </body>
