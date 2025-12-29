@@ -3,122 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Платежный Терминал</title>
+    <title>Платежный Терминал 2025</title>
     <style>
-        body { margin: 0; background: #000; font-family: sans-serif; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        #main-container { text-align: center; }
+        body { 
+            margin: 0; 
+            background-color: #000000; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            color: #ffffff; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+        #ui-wrapper { text-align: center; width: 100%; }
         
-        /* Экраны */
-        #wait-screen, #payment-screen, #success-screen { display: none; }
-        #wait-screen { display: block; } /* Показываем только этот экран в начале */
+        /* Состояния экранов */
+        .screen { display: none; }
+        .active { display: block; }
 
-        /* Стиль QR-кода */
-        .qr-wrapper { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 15px; 
+        /* Дизайн QR-кода */
+        .qr-frame { 
+            background: #ffffff; 
+            padding: 25px; 
+            border-radius: 20px; 
             display: inline-block; 
-            margin-top: 20px;
+            margin: 20px auto;
+            box-shadow: 0 0 30px rgba(33, 160, 56, 0.3);
         }
-        .qr-wrapper img { 
+        .qr-frame img { 
             display: block; 
-            width: 250px; 
-            height: 250px; 
+            width: 280px; 
+            height: 280px; 
         }
 
-        .price { font-size: 40px; color: #00ff41; margin-bottom: 10px; font-weight: bold; }
-        .terminal-id { position: absolute; bottom: 20px; left: 20px; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 5px; font-size: 14px; color: #888; }
-        
-        h2 { font-size: 28px; margin-bottom: 10px; }
-        p { color: #ccc; }
+        .price-text { 
+            font-size: 48px; 
+            color: #00ff41; 
+            font-weight: 800; 
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        /* Тот самый ID в уголке */
+        .terminal-info-badge { 
+            position: absolute; 
+            bottom: 25px; 
+            left: 25px; 
+            background: rgba(255, 255, 255, 0.05); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 15px; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            color: #666666; 
+            letter-spacing: 1px;
+        }
+
+        .status-msg { color: #888888; font-size: 18px; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-    <div id="main-container">
-        <!-- ЭКРАН 1: ОЖИДАНИЕ -->
-        <div id="wait-screen">
-            <h2>СВОБОДНАЯ КАССА</h2>
-            <p>Ожидание команды от кассового аппарата...</p>
+    <div id="ui-wrapper">
+        <!-- ЭКРАН 1: ОЖИДАНИЕ ЗАКАЗА -->
+        <div id="screen-wait" class="screen active">
+            <h2 style="font-size: 32px; letter-spacing: 2px;">СВОБОДНАЯ КАССА</h2>
+            <p class="status-msg">Ожидание команды от кассового ПО...</p>
         </div>
 
-        <!-- ЭКРАН 2: ОПЛАТА (ЗДЕСЬ QR) -->
-        <div id="payment-screen">
-            <div id="price-tag" class="price">0.00 руб</div>
-            <div class="qr-wrapper">
-                <!-- Мы используем надежный сервис генерации QR -->
-                <img id="qr-image" src="" alt="QR Оплата">
+        <!-- ЭКРАН 2: ОПЛАТА (ПОКАЗЫВАЕМ QR) -->
+        <div id="screen-pay" class="screen">
+            <div id="amount-val" class="price-text">0.00 РУБ</div>
+            <div class="qr-frame">
+                <!-- Ссылка на изображение будет вставлена через JS с https:// -->
+                <img id="qr-image-element" src="" alt="QR Code Payment">
             </div>
-            <p style="margin-top:20px;">Отсканируйте и введите ID: <strong id="display-id" style="color:white; font-size:20px;"></strong></p>
+            <p style="font-size: 20px;">Сканируйте QR и введите ID на телефоне</p>
+            <p style="color: #00ff41; font-size: 22px;">ID ТЕРМИНАЛА: <span id="display-id-center"></span></p>
         </div>
 
-        <!-- ЭКРАН 3: УСПЕХ -->
-        <div id="success-screen">
-            <h1 style="color: #00ff41; font-size: 50px;">✅ ОПЛАЧЕНО</h1>
-            <p>Спасибо за покупку!</p>
+        <!-- ЭКРАН 3: УСПЕШНОЕ ЗАВЕРШЕНИЕ -->
+        <div id="screen-success" class="screen">
+            <h1 style="color: #00ff41; font-size: 60px; margin: 0;">✅ ОПЛАЧЕНО</h1>
+            <p style="font-size: 24px;">Спасибо! Возьмите ваш товар.</p>
         </div>
     </div>
 
-    <!-- ID В УГЛУ -->
-    <div class="terminal-id">ID ТЕРМИНАЛА: <span id="my-id">Генерация...</span></div>
+    <!-- ID ТЕРМИНАЛА В УГЛУ -->
+    <div class="terminal-info-badge">
+        ID: <span id="terminal-id-corner">ГЕНЕРАЦИЯ...</span>
+    </div>
 
     <script>
-        const FIREBASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        const PAYMENT_SITE_URL = "your-site.com"; // ЗАМЕНИ НА СВОЙ САЙТ
+        // --- КОНФИГУРАЦИЯ С ПОЛНЫМИ ССЫЛКАМИ (HTTPS ОБЯЗАТЕЛЕН) ---
         
-        let terminalId = Math.floor(100000 + Math.random() * 900000);
-        document.getElementById('my-id').innerText = terminalId;
-        document.getElementById('display-id').innerText = terminalId;
+        // 1. Ссылка на твой Firebase Realtime Database
+        const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
+        
+        // 2. Ссылка на твой единый сайт оплаты (куда попадет юзер после скана)
+        const PAYMENT_GATEWAY_URL = "https://tvoysait.com"; 
 
-        // Функция показа QR
-        function updateQRCode() {
-            const qrImg = document.getElementById('qr-image');
-            // Используем Google Charts API - это самый надежный способ в мире
-            const qrUrl = `chart.googleapis.com{encodeURIComponent(PAYMENT_SITE_URL)}`;
-            qrImg.src = qrUrl;
+        // 3. Ссылка на Google Charts API для генерации QR
+        const GOOGLE_QR_API = "https://chart.googleapis.com";
+
+        // Генерируем случайный 6-значный ID
+        const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000);
+        
+        // Отображаем ID в нужных местах
+        document.getElementById('terminal-id-corner').innerText = MY_TERMINAL_ID;
+        document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
+
+        // Функция переключения экранов
+        function changeScreen(targetId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(targetId).classList.add('active');
         }
 
-        async function checkCommands() {
+        // Основной цикл проверки данных в Firebase
+        async function checkSync() {
             try {
-                // 1. Проверяем наличие команды PAY
-                const cmdRes = await fetch(`${FIREBASE_URL}/commands/${terminalId}.json`);
-                const cmdData = await cmdRes.json();
+                // ПРОВЕРКА КОМАНД (Запрос к https://...)
+                const commandResponse = await fetch(FIREBASE_BASE_URL + "/commands/" + MY_TERMINAL_ID + ".json");
+                const commandData = await commandResponse.json();
 
-                if (cmdData && cmdData.command === "PAY") {
-                    document.getElementById('price-tag').innerText = cmdData.amount + " руб";
-                    updateQRCode(); // Генерируем картинку
-                    showScreen('payment-screen');
+                if (commandData && commandData.command === "PAY") {
+                    // Если пришла команда на оплату - формируем QR
+                    const finalAmount = commandData.amount || "0";
+                    document.getElementById('amount-val').innerText = finalAmount + " РУБ";
+                    
+                    // Устанавливаем SRC для картинки с полным путем https://
+                    const qrFullLink = GOOGLE_QR_API + encodeURIComponent(PAYMENT_GATEWAY_URL);
+                    document.getElementById('qr-image-element').src = qrFullLink;
+                    
+                    changeScreen('screen-pay');
                 }
 
-                // 2. Проверяем статус SUCCESS
-                const statusRes = await fetch(`${FIREBASE_URL}/status/${terminalId}.json`);
-                const statusData = await statusRes.json();
+                // ПРОВЕРКА СТАТУСА ОПЛАТЫ (Запрос к https://...)
+                const statusResponse = await fetch(FIREBASE_BASE_URL + "/status/" + MY_TERMINAL_ID + ".json");
+                const statusData = await statusResponse.json();
 
                 if (statusData === "SUCCESS") {
-                    showScreen('success-screen');
-                    // Очищаем данные через 5 секунд и возвращаемся в ожидание
-                    setTimeout(resetTerminal, 5000);
+                    changeScreen('screen-success');
+                    
+                    // Сброс терминала через 7 секунд после успеха
+                    setTimeout(async () => {
+                        // Удаляем команду и статус из базы (HTTPS)
+                        await fetch(FIREBASE_BASE_URL + "/commands/" + MY_TERMINAL_ID + ".json", { method: 'DELETE' });
+                        await fetch(FIREBASE_BASE_URL + "/status/" + MY_TERMINAL_ID + ".json", { method: 'DELETE' });
+                        location.reload(); 
+                    }, 7000);
                 }
-            } catch (e) {
-                console.log("Ошибка связи с Firebase");
+
+            } catch (error) {
+                console.error("ОШИБКА HTTPS ЗАПРОСА:", error);
             }
         }
 
-        function showScreen(screenId) {
-            document.getElementById('wait-screen').style.display = 'none';
-            document.getElementById('payment-screen').style.display = 'none';
-            document.getElementById('success-screen').style.display = 'none';
-            document.getElementById(screenId).style.display = 'block';
-        }
+        // Запуск мониторинга каждые 2000 мс (2 секунды)
+        setInterval(checkSync, 2000);
 
-        async function resetTerminal() {
-            await fetch(`${FIREBASE_URL}/commands/${terminalId}.json`, { method: 'DELETE' });
-            await fetch(`${FIREBASE_URL}/status/${terminalId}.json`, { method: 'DELETE' });
-            showScreen('wait-screen');
-        }
-
-        // Проверяем обновления каждые 2 секунды
-        setInterval(checkCommands, 2000);
+        console.log("Терминал запущен. ID:", MY_TERMINAL_ID);
+        console.log("Связь с базой: " + FIREBASE_BASE_URL);
     </script>
 </body>
 </html>
