@@ -2,154 +2,167 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Оплата заказа</title>
-    <!-- Подключаем нейросеть face-api.js -->
-    <script defer src="cdn.jsdelivr.net"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Платежный Терминал 2025</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding-top: 20px; background-color: #f4f4f4; }
-        .container { max-width: 400px; margin: auto; border: 1px solid #ccc; padding: 30px; border-radius: 15px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .input-group { margin-bottom: 20px; text-align: left; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input { padding: 12px; font-size: 16px; width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 5px; }
+        body { 
+            margin: 0; 
+            background-color: #000000; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            color: #ffffff; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+        #ui-wrapper { text-align: center; width: 100%; }
         
-        button { padding: 15px; font-size: 16px; border: none; cursor: pointer; width: 100%; font-weight: bold; border-radius: 5px; margin-top: 10px; transition: 0.3s; }
-        .btn-card { background-color: #007bff; color: white; }
-        .btn-smile { background-color: #00ff41; color: black; }
-        
-        /* Стили камеры */
-        #camera-container { display: none; margin-top: 20px; position: relative; }
-        video { width: 100%; border-radius: 10px; background: #000; transform: scaleX(-1); } /* Отражаем для удобства */
-        #timer-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 80px; color: white; font-weight: bold; text-shadow: 0 0 20px rgba(0,0,0,0.8); pointer-events: none; }
+        /* Состояния экранов */
+        .screen { display: none; }
+        .active { display: block; }
+
+        /* Дизайн QR-кода */
+        .qr-frame { 
+            background: #ffffff; 
+            padding: 25px; 
+            border-radius: 20px; 
+            display: inline-block; 
+            margin: 20px auto;
+            box-shadow: 0 0 30px rgba(33, 160, 56, 0.3);
+        }
+        .qr-frame img { 
+            display: block; 
+            width: 280px; 
+            height: 280px; 
+        }
+
+        .price-text { 
+            font-size: 48px; 
+            color: #00ff41; 
+            font-weight: 800; 
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        /* Тот самый ID в уголке */
+        .terminal-info-badge { 
+            position: absolute; 
+            bottom: 25px; 
+            left: 25px; 
+            background: rgba(255, 255, 255, 0.05); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 8px 15px; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            color: #666666; 
+            letter-spacing: 1px;
+        }
+
+        .status-msg { color: #888888; font-size: 18px; margin-top: 15px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Оплата заказа 2025</h1>
-        
-        <div class="input-group">
-            <label for="terminal-id">ID ТЕРМИНАЛА:</label>
-            <input type="number" id="terminal-id" placeholder="123456">
+
+    <div id="ui-wrapper">
+        <!-- ЭКРАН 1: ОЖИДАНИЕ ЗАКАЗА -->
+        <div id="screen-wait" class="screen active">
+            <h2 style="font-size: 32px; letter-spacing: 2px;">СВОБОДНАЯ КАССА</h2>
+            <p class="status-msg">Ожидание команды от кассового ПО...</p>
         </div>
 
-        <div id="manual-pay-section">
-            <div class="input-group">
-                <label for="payment-input">СУММА ОПЛАТЫ (РУБ):</label>
-                <input type="number" id="payment-input" placeholder="0.00" step="0.01">
+        <!-- ЭКРАН 2: ОПЛАТА (ПОКАЗЫВАЕМ QR) -->
+        <div id="screen-pay" class="screen">
+            <div id="amount-val" class="price-text">0.00 РУБ</div>
+            <div class="qr-frame">
+                <!-- Ссылка на изображение будет вставлена через JS с https:// -->
+                <img id="qr-image-element" src="" alt="QR Code Payment">
             </div>
-            <button class="btn-card" onclick="handlePaymentClick()">ОПЛАТИТЬ КАРТОЙ</button>
+            <p style="font-size: 20px;">Сканируйте QR и введите ID на телефоне</p>
+            <p style="color: #00ff41; font-size: 22px;">ID ТЕРМИНАЛА: <span id="display-id-center"></span></p>
         </div>
 
-        <hr style="margin: 20px 0; border: 0.5px solid #eee;">
-        
-        <button class="btn-smile" onclick="startSmilePayment()">ОПЛАТИТЬ УЛЫБКОЙ</button>
-
-        <div id="camera-container">
-            <video id="video" autoplay muted playsinline></video>
-            <div id="timer-overlay"></div>
-            <p id="camera-instruction">Улыбнитесь для подтверждения!</p>
+        <!-- ЭКРАН 3: УСПЕШНОЕ ЗАВЕРШЕНИЕ -->
+        <div id="screen-success" class="screen">
+            <h1 style="color: #00ff41; font-size: 60px; margin: 0;">✅ ОПЛАЧЕНО</h1>
+            <p style="font-size: 24px;">Спасибо! Возьмите ваш товар.</p>
         </div>
+    </div>
 
-        <p id="status-text" style="margin-top: 15px; font-weight: bold;"></p>
+    <!-- ID ТЕРМИНАЛА В УГЛУ -->
+    <div class="terminal-info-badge">
+        ID: <span id="terminal-id-corner">ГЕНЕРАЦИЯ...</span>
     </div>
 
     <script>
+        // --- КОНФИГУРАЦИЯ С ПОЛНЫМИ ССЫЛКАМИ (HTTPS ОБЯЗАТЕЛЕН) ---
+        
+        // 1. Ссылка на твой Firebase Realtime Database
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
         
-        // Автозаполнение ID из URL (если QR-код его передал)
-        window.onload = () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('id')) document.getElementById('terminal-id').value = urlParams.get('id');
-            loadModels();
-        };
+        // 2. Ссылка на твой единый сайт оплаты (куда попадет юзер после скана)
+        const PAYMENT_GATEWAY_URL = "https://tvoysait.com"; 
 
-        async function loadModels() {
-            const MODEL_URL = 'raw.githubusercontent.com';
-            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-            await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+        // 3. Ссылка на Google Charts API для генерации QR
+        const GOOGLE_QR_API = "https://chart.googleapis.com";
+
+        // Генерируем случайный 6-значный ID
+        const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000);
+        
+        // Отображаем ID в нужных местах
+        document.getElementById('terminal-id-corner').innerText = MY_TERMINAL_ID;
+        document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
+
+        // Функция переключения экранов
+        function changeScreen(targetId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(targetId).classList.add('active');
         }
 
-        // --- ЛОГИКА ОБЫЧНОЙ ОПЛАТЫ ---
-        async function handlePaymentClick() {
-            const terminalId = document.getElementById('terminal-id').value;
-            const userEntered = parseFloat(document.getElementById('payment-input').value);
-            processFinalPayment(terminalId, userEntered);
-        }
-
-        // --- ЛОГИКА ОПЛАТЫ ПО УЛЫБКЕ ---
-        async function startSmilePayment() {
-            const terminalId = document.getElementById('terminal-id').value;
-            if (!terminalId) return alert("Сначала введите ID терминала!");
-
-            const camContainer = document.getElementById('camera-container');
-            const video = document.getElementById('video');
-            const timerDiv = document.getElementById('timer-overlay');
-            const statusText = document.getElementById('status-text');
-
-            camContainer.style.display = "block";
-            statusText.innerText = "Инициализация камеры...";
-
+        // Основной цикл проверки данных в Firebase
+        async function checkSync() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
+                // ПРОВЕРКА КОМАНД (Запрос к https://...)
+                const commandResponse = await fetch(FIREBASE_BASE_URL + "/commands/" + MY_TERMINAL_ID + ".json");
+                const commandData = await commandResponse.json();
 
-                let count = 3;
-                timerDiv.innerText = count;
+                if (commandData && commandData.command === "PAY") {
+                    // Если пришла команда на оплату - формируем QR
+                    const finalAmount = commandData.amount || "0";
+                    document.getElementById('amount-val').innerText = finalAmount + " РУБ";
+                    
+                    // Устанавливаем SRC для картинки с полным путем https://
+                    const qrFullLink = GOOGLE_QR_API + encodeURIComponent(PAYMENT_GATEWAY_URL);
+                    document.getElementById('qr-image-element').src = qrFullLink;
+                    
+                    changeScreen('screen-pay');
+                }
 
-                const timerInterval = setInterval(async () => {
-                    count--;
-                    if (count > 0) {
-                        timerDiv.innerText = count;
-                    } else {
-                        clearInterval(timerInterval);
-                        timerDiv.innerText = "";
-                        statusText.innerText = "Сканирование улыбки...";
-                        
-                        // Проверка улыбки
-                        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
-                        
-                        if (detections.length > 0 && detections[0].expressions.happy > 0.7) {
-                            // Улыбка найдена — получаем нужную сумму и оплачиваем
-                            const response = await fetch(`${FIREBASE_BASE_URL}/status/${terminalId}.json`);
-                            const data = await response.json();
-                            processFinalPayment(terminalId, data.requiredAmount);
-                        } else {
-                            statusText.style.color = "red";
-                            statusText.innerText = "❌ Вы не улыбнулись! Попробуйте еще раз.";
-                            stopCamera(stream);
-                        }
-                    }
-                }, 1000);
+                // ПРОВЕРКА СТАТУСА ОПЛАТЫ (Запрос к https://...)
+                const statusResponse = await fetch(FIREBASE_BASE_URL + "/status/" + MY_TERMINAL_ID + ".json");
+                const statusData = await statusResponse.json();
 
-            } catch (err) {
-                alert("Нет доступа к камере");
+                if (statusData === "SUCCESS") {
+                    changeScreen('screen-success');
+                    
+                    // Сброс терминала через 7 секунд после успеха
+                    setTimeout(async () => {
+                        // Удаляем команду и статус из базы (HTTPS)
+                        await fetch(FIREBASE_BASE_URL + "/commands/" + MY_TERMINAL_ID + ".json", { method: 'DELETE' });
+                        await fetch(FIREBASE_BASE_URL + "/status/" + MY_TERMINAL_ID + ".json", { method: 'DELETE' });
+                        location.reload(); 
+                    }, 7000);
+                }
+
+            } catch (error) {
+                console.error("ОШИБКА HTTPS ЗАПРОСА:", error);
             }
         }
 
-        async function processFinalPayment(terminalId, amount) {
-            const statusText = document.getElementById('status-text');
-            try {
-                const response = await fetch(`${FIREBASE_BASE_URL}/status/${terminalId}.json`);
-                const data = await response.json();
-                
-                if (!data) return alert("Терминал не найден");
+        // Запуск мониторинга каждые 2000 мс (2 секунды)
+        setInterval(checkSync, 2000);
 
-                await fetch(`${FIREBASE_BASE_URL}/status/${terminalId}.json`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ state: "SUCCESS", paidAmount: amount })
-                });
-
-                statusText.style.color = "green";
-                statusText.innerText = "✅ Оплата успешно подтверждена!";
-                document.getElementById('camera-container').style.display = "none";
-            } catch (e) {
-                alert("Ошибка сети");
-            }
-        }
-
-        function stopCamera(stream) {
-            stream.getTracks().forEach(track => track.stop());
-            document.getElementById('camera-container').style.display = "none";
-        }
-    </script>       
+        console.log("Терминал запущен. ID:", MY_TERMINAL_ID);
+        console.log("Связь с базой: " + FIREBASE_BASE_URL);
+    </script>
 </body>
 </html>
