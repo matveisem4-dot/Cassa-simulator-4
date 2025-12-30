@@ -94,7 +94,6 @@
             }
         }
 
-        // Функция возврата на главный экран без перезагрузки страницы
         async function returnToWaitScreen() {
             try {
                 document.getElementById('exit-button').style.display = 'none';
@@ -106,7 +105,6 @@
             }
         }
 
-        // Безопасная генерация QR-кода с добавлением ID в URL
         function generateQRCode(amount) {
             const container = document.getElementById('qrcode-container');
             container.innerHTML = '';
@@ -162,7 +160,7 @@
             }
         }
 
-        setInterval(checkSync, 2000); // Проверяем статус каждые 2 секунды
+        setInterval(checkSync, 2000);
     </script>
 </body>
 </html>
