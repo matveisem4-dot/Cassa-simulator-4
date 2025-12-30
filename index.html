@@ -15,14 +15,14 @@
             height: 100vh; 
             overflow: hidden; 
             background: linear-gradient(to bottom, #004d25, #008000, #4CAF50);
-            position: relative; /* Добавляем позиционирование для кота */
+            position: relative;
         }
         #ui-wrapper { text-align: center; width: 100%; }
         .screen { display: none; }
         .active { display: block; }
         .qr-frame { background: #ffffff; padding: 25px; border-radius: 20px; display: inline-block; margin: 20px auto; min-width: 250px; min-height: 250px; }
         .qr-frame canvas, .qr-frame img { display: block; margin: 0 auto; width: 250px !important; height: 250px !important; }
-        .price-text { font-size: 48px; color: #00ff41; font-weight: 800; }
+        .price-text { font-size: 48px; color: #00ff41; font-weight: 800; margin-bottom: 10px; }
         .terminal-info-badge { position: absolute; bottom: 25px; left: 25px; background: rgba(255, 255, 255, 0.05); padding: 8px 15px; border-radius: 8px; font-size: 14px; color: #666666; }
         
         #exit-button { 
@@ -37,13 +37,28 @@
             cursor: pointer;
         }
 
-        /* Стиль для изображения СберКота */
         #sberkot-image {
             position: absolute;
             bottom: 20px;
             right: 20px;
-            width: 150px; /* Размер изображения */
-            pointer-events: none; /* Чтобы не мешал нажимать на другие элементы */
+            width: 150px;
+            pointer-events: none;
+        }
+
+        /* Стиль для списка товаров */
+        #item-list {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px auto;
+            max-width: 350px;
+            text-align: left;
+            font-size: 16px;
+        }
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
         }
     </style>
 </head>
@@ -55,6 +70,9 @@
         </div>
         <div id="screen-pay" class="screen">
             <div id="amount-val" class="price-text">0.00 РУБ</div>
+            <div id="item-list">
+                <!-- Сюда будут добавлены товары -->
+            </div>
             <div class="qr-frame" id="qrcode-container"></div>
             <p style="font-size: 20px;">Сканируйте QR и введите ID на телефоне</p>
             <p style="color: #00ff41; font-size: 22px;">ID ТЕРМИНАЛА: <span id="display-id-center"></span></p>
@@ -69,10 +87,8 @@
         ID: <span id="terminal-id-corner">ГЕНЕРАЦИЯ...</span>
     </div>
 
-    <!-- Изображение СберКота добавлено сюда -->
-    <img id="sberkot-image" src="i.imgur.com" alt="СберКот" />
+    <img id="sberkot-image" src="i.ibb.co" alt="СберКот" />
 
-    <!-- Подключаем библиотеку qrcode.js через CDN -->
     <script src="cdnjs.cloudflare.com"></script>
 
     <script>
@@ -120,6 +136,24 @@
             }
         }
 
+        // --- НОВАЯ ФУНКЦИЯ ОТОБРАЖЕНИЯ ТОВАРОВ ---
+        function displayItems(items) {
+            const listContainer = document.getElementById('item-list');
+            listContainer.innerHTML = ''; // Очищаем список
+
+            if (items && Array.isArray(items)) {
+                items.forEach(item => {
+                    const row = document.createElement('div');
+                    row.classList.add('item-row');
+                    row.innerHTML = `
+                        <span>${item.name} (x${item.quantity})</span>
+                        <span>${item.price.toFixed(2)} РУБ</span>
+                    `;
+                    listContainer.appendChild(row);
+                });
+            }
+        }
+
         async function checkSync() {
             try {
                 if (currentScreen === 'success') return;
@@ -130,11 +164,24 @@
 
                     if (commandData && commandData.command === "PAY") {
                         const amountNeeded = commandData.amount || "0";
+                        // Если команда PAY содержит список товаров, отображаем его
+                        if (commandData.items) {
+                            displayItems(commandData.items);
+                        } else {
+                            // Иначе скрываем пустой список
+                            document.getElementById('item-list').style.display = 'none';
+                        }
+
                         document.getElementById('amount-val').innerText = amountNeeded + " РУБ";
                         
+                        // ВАЖНО: Записываем сумму и товары в статус для сайта оплаты
                         await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
                             method: 'PUT',
-                            body: JSON.stringify({ state: "WAITING", requiredAmount: amountNeeded })
+                            body: JSON.stringify({ 
+                                state: "WAITING", 
+                                requiredAmount: amountNeeded,
+                                items: commandData.items || []
+                            })
                         });
 
                         generateQRCode(amountNeeded); 
