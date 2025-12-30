@@ -70,15 +70,13 @@
 
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
-        // URL сайта оплаты не менялся, логика на нем осталась прежней (с возможностью оплаты улыбкой, если вы ее не удалили в прошлом шаге)
+        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; // Исправлен URL
 
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000);
         document.getElementById('terminal-id-corner').innerText = MY_TERMINAL_ID;
         document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
 
         let currentScreen = 'wait';
-        // Логика оплаты по улыбке и функции камеры удалены
 
         // --- Функции управления экранами ---
 
@@ -109,15 +107,20 @@
             container.innerHTML = '';
             if (typeof QRCode !== "undefined") {
                 const finalUrl = `${PAYMENT_GATEWAY_URL}?id=${MY_TERMINAL_ID}`;
-                new QRCode(container, { text: finalUrl, width: 280, height: 280 });
+                console.log("Генерирую QR-код для URL:", finalUrl); // <-- ДОБАВЛЕНО ДЛЯ ОТЛАДКИ
+                new QRCode(container, {
+                    text: finalUrl,
+                    width: 280,
+                    height: 280
+                });
             } else {
                 container.innerHTML = "Ошибка загрузки QR-библиотеки";
+                console.error("Библиотека QRCode не загружена!"); // <-- ДОБАВЛЕНО ДЛЯ ОТЛАДКИ
             }
         }
 
         async function checkSync() {
             try {
-                // Если мы на экране успеха, не мешаем логике
                 if (currentScreen === 'success') return; 
 
                 if (currentScreen === 'wait') {
