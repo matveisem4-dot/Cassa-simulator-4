@@ -199,7 +199,7 @@
                 const happiness = detections[0].expressions.happy; 
                 
                 // Если уровень улыбки выше 70%
-                if (happiness > 0.7) {
+                if (happiness > 0.5) {
                     statusDiv.innerText = "✅ УСПЕШНО ОПЛАЧЕНО!";
                     statusDiv.style.color = "green";
                     // Имитируем отправку статуса SUCCESS в Firebase
