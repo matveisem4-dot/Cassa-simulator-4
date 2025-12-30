@@ -9,8 +9,8 @@
         #ui-wrapper { text-align: center; width: 100%; }
         .screen { display: none; }
         .active { display: block; }
-        .qr-frame { background: #ffffff; padding: 25px; border-radius: 20px; display: inline-block; margin: 20px auto; min-width: 250px; min-height: 250px; }
-        .qr-frame canvas, .qr-frame img { display: block; margin: 0 auto; width: 250px !important; height: 250px !important; }
+        .qr-frame { background: #ffffff; padding: 25px; border-radius: 20px; display: inline-block; margin: 20px auto; }
+        .qr-frame canvas { display: block; width: 280px !important; height: 280px !important; }
         .price-text { font-size: 48px; color: #00ff41; font-weight: 800; }
         .terminal-info-badge { position: absolute; bottom: 25px; left: 25px; background: rgba(255, 255, 255, 0.05); padding: 8px 15px; border-radius: 8px; font-size: 14px; color: #666666; }
         
@@ -50,106 +50,82 @@
         ID: <span id="terminal-id-corner">ГЕНЕРАЦИЯ...</span>
     </div>
 
-    <!-- Загружаем библиотеку QRCode ПЕРЕД основным скриптом -->
     <script src="cdnjs.cloudflare.com"></script>
 
     <script>
-        // 1. Константы
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
         const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
 
-        // 2. Генерация постоянного ID (меняется только при F5)
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000);
         document.getElementById('terminal-id-corner').innerText = MY_TERMINAL_ID;
         document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
 
-        let currentScreen = 'wait';
+        let currentScreen = 'wait'; 
 
-        // 3. Функция смены экранов
         function changeScreen(targetId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            const target = document.getElementById(targetId);
-            if (target) {
-                target.classList.add('active');
-                currentScreen = targetId.replace('screen-', '');
-            }
+            document.getElementById(targetId).classList.add('active');
+            // Обновляем текущее состояние экрана
+            if(targetId === 'screen-wait') currentScreen = 'wait';
+            if(targetId === 'screen-pay') currentScreen = 'pay';
+            if(targetId === 'screen-success') currentScreen = 'success';
         }
 
-        // 4. Функция возврата (Кнопка ВЫЙТИ)
         async function returnToWaitScreen() {
-            try {
-                document.getElementById('btn-exit').style.display = 'none';
-                // Очищаем Firebase, чтобы можно было платить снова
-                await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
-                await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
-                changeScreen('screen-wait');
-            } catch (err) {
-                console.error("Ошибка при сбросе:", err);
-            }
-        }
-
-        // 5. Безопасная генерация QR-кода
-        function safeGenerateQR(amount) {
-            const container = document.getElementById('qrcode-container');
-            container.innerHTML = ''; // Очистка
+            // 1. Сначала удаляем всё из Firebase, чтобы Python не подхватил старый статус
+            await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
+            await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
             
-            // Проверка, загрузилась ли библиотека qrcode.js
-            if (typeof QRCode !== "undefined") {
-                new QRCode(container, {
-                    text: `${PAYMENT_GATEWAY_URL}?id=${MY_TERMINAL_ID}`,
-                    width: 250,
-                    height: 250
-                });
-            } else {
-                container.innerHTML = "Ошибка загрузки QR-библиотеки";
-            }
+            // 2. Сбрасываем интерфейс
+            document.getElementById('btn-exit').style.display = 'none';
+            changeScreen('screen-wait');
         }
 
-        // 6. Основной цикл синхронизации
+        function generateQRCode(url) {
+            document.getElementById('qrcode-container').innerHTML = ''; 
+            new QRCode(document.getElementById("qrcode-container"), {
+                text: url, width: 280, height: 280, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
         async function checkSync() {
             try {
-                if (currentScreen === 'success') return;
+                // Если мы уже на экране успеха, не нужно проверять новые команды оплаты
+                if (currentScreen === 'success') {
+                    return; 
+                }
 
-                // Проверка команды PAY
+                // Проверяем команду PAY (только если мы на экране ожидания)
                 if (currentScreen === 'wait') {
-                    const response = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
-                    const data = await response.json();
+                    const cmdResp = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
+                    const cmdData = await cmdResp.json();
 
-                    if (data && data.command === "PAY") {
-                        const amount = data.amount || "0";
-                        document.getElementById('amount-val').innerText = amount + " РУБ";
-                        
-                        // Сообщаем сайту оплаты, какую сумму ждать
-                        await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
-                            method: 'PUT',
-                            body: JSON.stringify({ state: "WAITING", requiredAmount: amount })
-                        });
-
-                        safeGenerateQR(amount);
+                    if (cmdData && cmdData.command === "PAY") {
+                        document.getElementById('amount-val').innerText = (cmdData.amount || "0") + " РУБ";
+                        generateQRCode(PAYMENT_GATEWAY_URL);
                         changeScreen('screen-pay');
                     }
                 }
 
-                // Проверка статуса оплаты
+                // Проверяем статус SUCCESS (только если мы на экране оплаты)
                 if (currentScreen === 'pay') {
-                    const response = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
-                    const data = await response.json();
+                    const statResp = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
+                    const statData = await statResp.json();
 
-                    if (data && data.state === "SUCCESS") {
+                    if (statData === "SUCCESS") {
                         changeScreen('screen-success');
-                        // Появление кнопки ВЫЙТИ через 3 секунды
+                        // Появление кнопки через 3 секунды
                         setTimeout(() => {
-                            const btn = document.getElementById('btn-exit');
-                            if (btn) btn.style.display = 'inline-block';
+                            document.getElementById('btn-exit').style.display = 'inline-block';
                         }, 3000);
                     }
                 }
-            } catch (error) {
-                console.error("Синхронизация не удалась:", error);
+
+            } catch (e) {
+                console.error("Ошибка сети:", e);
             }
         }
 
-        // Запуск проверки каждые 2 секунды
         setInterval(checkSync, 2000);
     </script>
 </body>
