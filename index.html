@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Платежный Терминал 2025</title>
-    <!-- Подключаем face-api.js -->
-    <script defer src="cdn.jsdelivr.net"></script>
+    <!-- Все скрипты и стили, связанные с улыбкой, удалены -->
     
     <style>
         body { margin: 0; background-color: #000000; font-family: sans-serif; color: #ffffff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
@@ -17,7 +16,7 @@
         .price-text { font-size: 48px; color: #00ff41; font-weight: 800; }
         .terminal-info-badge { position: absolute; bottom: 25px; left: 25px; background: rgba(255, 255, 255, 0.05); padding: 8px 15px; border-radius: 8px; font-size: 14px; color: #666666; }
         
-        button { /* Общие стили для кнопок */
+        button { 
             margin-top: 20px;
             padding: 15px 30px;
             font-size: 18px;
@@ -26,15 +25,12 @@
             cursor: pointer;
             font-weight: bold;
         }
-        #exit-button { background-color: #00ff41; color: #000; }
-        .btn-qr { background-color: #007bff; color: white; }
-        .btn-smile { background-color: #ff5722; color: white; }
-        #btn-retry-smile { background-color: #ffeb3b; color: black; display: none; }
-
-        /* Стили для экрана с камерой */
-        #screen-smile video { width: 400px; border-radius: 15px; margin-top: 20px; }
-        #camera-status { font-size: 24px; margin-top: 15px; }
-        #timer { font-size: 72px; color: #00ff41; font-weight: bold; }
+        #exit-button { /* Используем ID из HTML */
+            display: none;
+            background-color: #00ff41;
+            color: #000;
+        }
+        /* Все стили для экрана улыбки удалены */
     </style>
 </head>
 <body>
@@ -46,30 +42,20 @@
             <p>Ожидание команды от кассового ПО...</p>
         </div>
         
-        <!-- ЭКРАН 2: ВЫБОР ОПЛАТЫ (QR или Улыбка) -->
+        <!-- ЭКРАН 2: ОПЛАТА (ТОЛЬКО QR) -->
         <div id="screen-pay" class="screen">
             <div id="amount-val" class="price-text">0.00 РУБ</div>
             
             <div id="qr-section">
                 <div class="qr-frame" id="qrcode-container"></div>
-                <p style="font-size: 20px;">Сканируйте QR или выберите другой способ</p>
-                <button class="btn-smile" onclick="initiateSmilePaymentFlow()">Оплата по улыбке</button>
+                <!-- Обновленный текст -->
+                <p style="font-size: 20px;">Сканируй меня и оплачивай</p>
             </div>
 
             <p style="color: #00ff41; font-size: 22px;">ID ТЕРМИНАЛА: <span id="display-id-center"></span></p>
         </div>
 
-        <!-- ЭКРАН 3: ОПЛАТА ПО УЛЫБКЕ -->
-        <div id="screen-smile" class="screen">
-            <h2>Оплата по улыбке</h2>
-            <video id="video" autoplay muted></video>
-            <div id="timer">3</div>
-            <div id="camera-status">Смотрите в камеру</div>
-            <button id="btn-retry-smile" onclick="runCountdownAndCheck()">Попробовать еще раз</button>
-            <button class="btn-qr" onclick="cancelSmilePayment()">Отмена/Назад к QR</button>
-        </div>
-        
-        <!-- ЭКРАН 4: УСПЕХ -->
+        <!-- ЭКРАН 3: УСПЕХ -->
         <div id="screen-success" class="screen">
             <h1 style="color: #00ff41;">✅ ОПЛАЧЕНО</h1>
             <p>Спасибо! Возьмите ваш товар.</p>
@@ -85,16 +71,16 @@
 
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
+        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; // Исправлен URL
 
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000);
         document.getElementById('terminal-id-corner').innerText = MY_TERMINAL_ID;
         document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
 
         let currentScreen = 'wait';
-        let smilePaymentInterval = null; 
+        // Все переменные и функции для оплаты по улыбке удалены
 
-        // --- Функции управления экранами и камерой ---
+        // --- Функции управления экранами ---
 
         function changeScreen(targetId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -107,7 +93,7 @@
 
         async function returnToWaitScreen() {
             try {
-                stopCamera();
+                // stopCamera() удалена
                 document.getElementById('exit-button').style.display = 'none';
                 await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
                 await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
@@ -116,7 +102,7 @@
                 console.error("Ошибка при сбросе:", err);
             }
         }
-
+        
         // --- Основная логика синхронизации (Firebase) ---
 
         function generateQRCode(amount) {
@@ -124,16 +110,22 @@
             container.innerHTML = '';
             if (typeof QRCode !== "undefined") {
                 const finalUrl = `${PAYMENT_GATEWAY_URL}?id=${MY_TERMINAL_ID}`;
-                new QRCode(container, { text: finalUrl, width: 280, height: 280 });
+                console.log("Генерирую QR-код для URL:", finalUrl); 
+                new QRCode(container, {
+                    text: finalUrl,
+                    width: 280,
+                    height: 280
+                });
             } else {
                 container.innerHTML = "Ошибка загрузки QR-библиотеки";
+                console.error("Библиотека QRCode не загружена!"); 
             }
         }
 
         async function checkSync() {
             try {
-                // Если мы на экране успеха или улыбки, не мешаем логике
-                if (currentScreen === 'success' || currentScreen === 'smile') return; 
+                // Проверка на экран улыбки удалена
+                if (currentScreen === 'success') return; 
 
                 if (currentScreen === 'wait') {
                     const commandResponse = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
