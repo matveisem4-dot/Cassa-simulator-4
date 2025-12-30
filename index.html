@@ -2,129 +2,126 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Платежный Терминал 2025</title>
+    <title>Система оплаты 2025</title>
+    <script defer src="cdn.jsdelivr.net"></script>
     <style>
-        body { margin: 0; background-color: #000000; font-family: sans-serif; color: #ffffff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        #ui-wrapper { text-align: center; width: 100%; }
-        .screen { display: none; }
-        .active { display: block; }
-        .qr-frame { background: #ffffff; padding: 25px; border-radius: 20px; display: inline-block; margin: 20px auto; }
-        .qr-frame canvas { display: block; width: 280px !important; height: 280px !important; }
-        .price-text { font-size: 48px; color: #00ff41; font-weight: 800; }
-        .terminal-info-badge { position: absolute; bottom: 25px; left: 25px; background: rgba(255, 255, 255, 0.05); padding: 8px 15px; border-radius: 8px; font-size: 14px; color: #666666; }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; background: #f0f2f5; }
+        .payment-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; margin-top: 50px; width: 450px; }
+        .btn-group { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+        button { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-qr { background: #333; color: white; }
+        .btn-smile { background: #00c853; color: white; }
         
-        /* Стиль для кнопки выхода */
-        #btn-exit {
-            display: none; /* Скрыта по умолчанию */
-            margin-top: 30px;
-            padding: 15px 40px;
-            font-size: 20px;
-            font-weight: bold;
-            color: #000;
-            background-color: #00ff41;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        #btn-exit:active { transform: scale(0.95); }
+        #camera-container { display: none; margin-top: 20px; position: relative; }
+        video { width: 100%; border-radius: 15px; background: #000; }
+        #timer { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 80px; color: white; font-weight: bold; text-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+        #qr-container { display: none; margin-top: 20px; }
+        .status { margin-top: 15px; font-size: 18px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="ui-wrapper">
-        <div id="screen-wait" class="screen active">
-            <h2>СВОБОДНАЯ КАССА</h2>
-            <p>Ожидание команды от кассового ПО...</p>
-        </div>
-        <div id="screen-pay" class="screen">
-            <div id="amount-val" class="price-text">0.00 РУБ</div>
-            <div class="qr-frame" id="qrcode-container"></div>
-            <p style="font-size: 20px;">Сканируйте QR и введите ID на телефоне</p>
-            <p style="color: #00ff41; font-size: 22px;">ID ТЕРМИНАЛА: <span id="display-id-center"></span></p>
-        </div>
-        <div id="screen-success" class="screen">
-            <h1 style="color: #00ff41;">✅ ОПЛАЧЕНО</h1>
-            <p>Спасибо! Возьмите ваш товар.</p>
-            <!-- Кнопка выхода -->
-            <button id="btn-exit" onclick="returnToWaitScreen()">ВЫЙТИ</button>
-        </div>
-    </div>
-    <div class="terminal-info-badge">
-        ID: <span id="terminal-id-corner">ГЕНЕРАЦИЯ...</span>
+
+<div class="payment-card">
+    <h2>Выберите способ оплаты</h2>
+    
+    <div class="btn-group">
+        <button class="btn-qr" onclick="showQR()">Оплата по QR</button>
+        <button class="btn-smile" onclick="startSmilePayment()">Оплата по улыбке</button>
     </div>
 
-    <script src="cdnjs.cloudflare.com"></script>
+    <!-- Блок QR-кода -->
+    <div id="qr-container">
+        <p>Сканируйте код для оплаты:</p>
+        <img src="api.qrserver.com" alt="QR Code">
+    </div>
 
-    <script>
-        const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
+    <!-- Блок Камеры и Таймера -->
+    <div id="camera-container">
+        <video id="video" autoplay muted></video>
+        <div id="timer"></div>
+    </div>
 
-        // ID генерируется 1 раз при открытии страницы
-        const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000);
-        document.getElementById('terminal-id-corner').innerText = MY_TERMINAL_ID;
-        document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
+    <div id="status" class="status"></div>
+</div>
 
-        let isProcessingSuccess = false; // Флаг, чтобы не запускать таймер многократно
+<script>
+    const video = document.getElementById('video');
+    const timerDiv = document.getElementById('timer');
+    const statusDiv = document.getElementById('status');
+    const cameraBox = document.getElementById('camera-container');
+    const qrBox = document.getElementById('qr-container');
 
-        function changeScreen(targetId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(targetId).classList.add('active');
-        }
+    // Загрузка моделей нейросети при старте
+    async function init() {
+        const MODEL_URL = 'raw.githubusercontent.com';
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+    }
+    init();
 
-        // Функция возврата на главный экран без перезагрузки страницы
-        async function returnToWaitScreen() {
-            // Скрываем кнопку для следующего раза
-            document.getElementById('btn-exit').style.display = 'none';
-            isProcessingSuccess = false;
-            
-            // Удаляем старые команды из базы, чтобы терминал снова стал "свободным"
-            await fetch(FIREBASE_BASE_URL + "/commands/" + MY_TERMINAL_ID + ".json", { method: 'DELETE' });
-            await fetch(FIREBASE_BASE_URL + "/status/" + MY_TERMINAL_ID + ".json", { method: 'DELETE' });
-            
-            changeScreen('screen-wait');
-        }
+    function showQR() {
+        cameraBox.style.display = 'none';
+        qrBox.style.display = 'block';
+        statusDiv.innerText = "";
+    }
 
-        function generateQRCode(url) {
-            document.getElementById('qrcode-container').innerHTML = ''; 
-            new QRCode(document.getElementById("qrcode-container"), {
-                text: url, width: 280, height: 280, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H
-            });
-        }
+    async function startSmilePayment() {
+        qrBox.style.display = 'none';
+        cameraBox.style.display = 'block';
+        statusDiv.innerText = "Приготовьтесь улыбаться!";
+        statusDiv.style.color = "black";
 
-        async function checkSync() {
-            try {
-                // 1. Проверка новых команд на оплату
-                const commandResponse = await fetch(FIREBASE_BASE_URL + "/commands/" + MY_TERMINAL_ID + ".json");
-                const commandData = await commandResponse.json();
+        // Запуск камеры
+        const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+        video.srcObject = stream;
 
-                if (commandData && commandData.command === "PAY" && !isProcessingSuccess) {
-                    const finalAmount = commandData.amount || "0";
-                    document.getElementById('amount-val').innerText = finalAmount + " РУБ";
-                    generateQRCode(PAYMENT_GATEWAY_URL);
-                    changeScreen('screen-pay');
-                }
+        // Таймер 3 секунды
+        let timeLeft = 3;
+        timerDiv.innerText = timeLeft;
 
-                // 2. Проверка статуса оплаты
-                const statusResponse = await fetch(FIREBASE_BASE_URL + "/status/" + MY_TERMINAL_ID + ".json");
-                const statusData = await statusResponse.json();
-
-                if (statusData === "SUCCESS" && !isProcessingSuccess) {
-                    isProcessingSuccess = true; // Блокируем повторный вход в это условие
-                    changeScreen('screen-success');
-
-                    // Появление кнопки ровно через 3 секунды
-                    setTimeout(() => {
-                        document.getElementById('btn-exit').style.display = 'inline-block';
-                    }, 3000);
-                }
-
-            } catch (error) {
-                console.error("ОШИБКА СВЯЗИ:", error);
+        const countdown = setInterval(async () => {
+            timeLeft--;
+            if (timeLeft > 0) {
+                timerDiv.innerText = timeLeft;
+            } else {
+                clearInterval(countdown);
+                timerDiv.innerText = "";
+                checkSmile(); // Проверка в момент окончания таймера
             }
-        }
+        }, 1000);
+    }
 
-        setInterval(checkSync, 2000);
-    </script>
+    async function checkSmile() {
+        statusDiv.innerText = "Сканирую лицо...";
+        
+        // Делаем снимок эмоции
+        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
+
+        if (detections.length > 0) {
+            const happiness = detections[0].expressions.happy;
+            console.log("Уровень счастья:", happiness);
+
+            if (happiness > 0.7) {
+                statusDiv.innerText = "✅ Успешно оплачено!";
+                statusDiv.style.color = "green";
+                // Здесь можно остановить камеру
+                stopCamera();
+            } else {
+                statusDiv.innerText = "❌ Вы не улыбнулись. Повторите попытку!";
+                statusDiv.style.color = "red";
+            }
+        } else {
+            statusDiv.innerText = "❌ Лицо не обнаружено. Попробуйте еще раз.";
+            statusDiv.style.color = "red";
+        }
+    }
+
+    function stopCamera() {
+        const stream = video.srcObject;
+        const tracks = stream.getTracks();
+        tracks.forEach(track => track.stop());
+    }
+</script>
+
 </body>
 </html>
