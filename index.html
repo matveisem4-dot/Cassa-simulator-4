@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Платежный Терминал 2025</title>
-    <!-- Подключаем face-api.js -->
-    <script defer src="cdn.jsdelivr.net"></script>
+    <!-- face-api.js и вся логика улыбки удалены -->
     
     <style>
         body { margin: 0; background-color: #000000; font-family: sans-serif; color: #ffffff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
@@ -17,7 +16,7 @@
         .price-text { font-size: 48px; color: #00ff41; font-weight: 800; }
         .terminal-info-badge { position: absolute; bottom: 25px; left: 25px; background: rgba(255, 255, 255, 0.05); padding: 8px 15px; border-radius: 8px; font-size: 14px; color: #666666; }
         
-        button { /* Общие стили для кнопок */
+        button { 
             margin-top: 20px;
             padding: 15px 30px;
             font-size: 18px;
@@ -26,14 +25,11 @@
             cursor: pointer;
             font-weight: bold;
         }
-        #exit-button { background-color: #00ff41; color: #000; }
-        .btn-qr { background-color: #007bff; color: white; }
-        .btn-smile { background-color: #ff5722; color: white; }
-
-        /* Стили для экрана с камерой */
-        #screen-smile video { width: 400px; border-radius: 15px; margin-top: 20px; }
-        #camera-status { font-size: 24px; margin-top: 15px; }
-        #timer { font-size: 72px; color: #00ff41; font-weight: bold; }
+        #exit-button { /* Используем ID из HTML */
+            display: none;
+            background-color: #00ff41;
+            color: #000;
+        }
     </style>
 </head>
 <body>
@@ -45,30 +41,20 @@
             <p>Ожидание команды от кассового ПО...</p>
         </div>
         
-        <!-- ЭКРАН 2: ВЫБОР ОПЛАТЫ (QR или Улыбка) -->
+        <!-- ЭКРАН 2: ОПЛАТА (ТОЛЬКО QR) -->
         <div id="screen-pay" class="screen">
             <div id="amount-val" class="price-text">0.00 РУБ</div>
             
-            <!-- Контейнеры для QR и кнопок выбора -->
             <div id="qr-section">
                 <div class="qr-frame" id="qrcode-container"></div>
-                <p style="font-size: 20px;">Сканируйте QR или выберите другой способ</p>
-                <button class="btn-smile" onclick="startSmilePayment()">Оплата по улыбке</button>
+                <!-- Обновленный текст -->
+                <p style="font-size: 20px;">Сканируй меня и оплачивай</p>
             </div>
 
             <p style="color: #00ff41; font-size: 22px;">ID ТЕРМИНАЛА: <span id="display-id-center"></span></p>
         </div>
 
-        <!-- ЭКРАН 3: ОПЛАТА ПО УЛЫБКЕ -->
-        <div id="screen-smile" class="screen">
-            <h2>Оплата по улыбке</h2>
-            <video id="video" autoplay muted></video>
-            <div id="timer">3</div>
-            <div id="camera-status">Смотрите в камеру</div>
-            <button class="btn-qr" onclick="cancelSmilePayment()">Отмена/Назад к QR</button>
-        </div>
-        
-        <!-- ЭКРАН 4: УСПЕХ -->
+        <!-- ЭКРАН 3: УСПЕХ -->
         <div id="screen-success" class="screen">
             <h1 style="color: #00ff41;">✅ ОПЛАЧЕНО</h1>
             <p>Спасибо! Возьмите ваш товар.</p>
@@ -80,20 +66,21 @@
     </div>
 
     <!-- Подключаем библиотеку qrcode.js через CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="cdnjs.cloudflare.com"></script>
 
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        const PAYMENT_GATEWAY_URL = "https://matveisem4-dot.github.io/PaymentSite/payment.html"; 
+        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
+        // URL сайта оплаты не менялся, логика на нем осталась прежней (с возможностью оплаты улыбкой, если вы ее не удалили в прошлом шаге)
 
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000);
         document.getElementById('terminal-id-corner').innerText = MY_TERMINAL_ID;
         document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
 
         let currentScreen = 'wait';
-        let smilePaymentInterval = null; // Для управления таймером и интервалом проверки
+        // Логика оплаты по улыбке и функции камеры удалены
 
-        // --- Функции управления экранами и камерой ---
+        // --- Функции управления экранами ---
 
         function changeScreen(targetId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -106,7 +93,6 @@
 
         async function returnToWaitScreen() {
             try {
-                stopCamera();
                 document.getElementById('exit-button').style.display = 'none';
                 await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
                 await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
@@ -116,111 +102,6 @@
             }
         }
         
-        function cancelSmilePayment() {
-            stopCamera();
-            changeScreen('screen-pay');
-        }
-
-        function stopCamera() {
-            if (window.localStream) {
-                window.localStream.getTracks().forEach(track => track.stop());
-            }
-            if (smilePaymentInterval) {
-                clearInterval(smilePaymentInterval);
-                smilePaymentInterval = null;
-            }
-        }
-
-        // --- Логика Оплаты по Улыбке ---
-
-        // 1. Загрузка моделей face-api.js
-        async function loadFaceApiModels() {
-            const MODEL_URL = 'raw.githubusercontent.com';
-            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-            await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
-            console.log("FaceAPI модели загружены.");
-        }
-        loadFaceApiModels();
-
-        // 2. Старт процесса оплаты по улыбке
-        async function startSmilePayment() {
-            changeScreen('screen-smile');
-            const video = document.getElementById('video');
-            const timerDiv = document.getElementById('timer');
-            const statusDiv = document.getElementById('camera-status');
-
-            try {
-                // Получаем доступ к камере
-                const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
-                video.srcObject = stream;
-                window.localStream = stream; // Сохраняем стрим для остановки
-
-                statusDiv.innerText = "Смотрите в камеру и приготовьтесь улыбнуться!";
-                timerDiv.innerText = "";
-                
-                // Ждем 1 секунду пока камера инициализируется
-                setTimeout(() => runCountdownAndCheck(), 1000);
-
-            } catch (err) {
-                statusDiv.innerText = "Ошибка доступа к камере: " + err.message;
-                console.error(err);
-            }
-        }
-
-        // 3. Таймер и финальная проверка
-        function runCountdownAndCheck() {
-            const timerDiv = document.getElementById('timer');
-            const statusDiv = document.getElementById('camera-status');
-            let timeLeft = 3;
-            timerDiv.innerText = timeLeft;
-
-            smilePaymentInterval = setInterval(async () => {
-                timeLeft--;
-                if (timeLeft > 0) {
-                    timerDiv.innerText = timeLeft;
-                } else {
-                    clearInterval(smilePaymentInterval);
-                    timerDiv.innerText = "Сканирование...";
-                    checkSmile(); 
-                }
-            }, 1000);
-        }
-
-        // 4. Проверка улыбки
-        async function checkSmile() {
-            const video = document.getElementById('video');
-            const statusDiv = document.getElementById('camera-status');
-            
-            const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
-                                        .withFaceExpressions();
-
-            if (detections.length > 0) {
-                // Вероятность "счастья" (от 0 до 1)
-                const happiness = detections[0].expressions.happy; 
-                
-                // Если уровень улыбки выше 70%
-                if (happiness > 0.5) {
-                    statusDiv.innerText = "✅ УСПЕШНО ОПЛАЧЕНО!";
-                    statusDiv.style.color = "green";
-                    // Имитируем отправку статуса SUCCESS в Firebase
-                    await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
-                        method: 'PUT',
-                        body: JSON.stringify({ state: "SUCCESS", requiredAmount: document.getElementById('amount-val').innerText.replace(' РУБ', '') })
-                    });
-                    stopCamera();
-                } else {
-                    statusDiv.innerText = "❌ Повторите попытку (недостаточно улыбки)";
-                    statusDiv.style.color = "red";
-                    // Даем возможность повторить
-                }
-            } else {
-                statusDiv.innerText = "❌ Лицо не обнаружено. Повторите попытку.";
-                statusDiv.style.color = "red";
-            }
-            // В случае неудачи таймер нужно перезапустить вручную или дать кнопку "Попробовать еще раз"
-        }
-
-
         // --- Основная логика синхронизации (Firebase) ---
 
         function generateQRCode(amount) {
@@ -236,7 +117,8 @@
 
         async function checkSync() {
             try {
-                if (currentScreen === 'success' || currentScreen === 'smile') return;
+                // Если мы на экране успеха, не мешаем логике
+                if (currentScreen === 'success') return; 
 
                 if (currentScreen === 'wait') {
                     const commandResponse = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
