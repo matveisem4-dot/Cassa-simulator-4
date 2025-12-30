@@ -2,126 +2,154 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Система оплаты 2025</title>
+    <title>Оплата заказа</title>
+    <!-- Подключаем нейросеть face-api.js -->
     <script defer src="cdn.jsdelivr.net"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; background: #f0f2f5; }
-        .payment-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; margin-top: 50px; width: 450px; }
-        .btn-group { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
-        button { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-qr { background: #333; color: white; }
-        .btn-smile { background: #00c853; color: white; }
+        body { font-family: sans-serif; text-align: center; padding-top: 20px; background-color: #f4f4f4; }
+        .container { max-width: 400px; margin: auto; border: 1px solid #ccc; padding: 30px; border-radius: 15px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { padding: 12px; font-size: 16px; width: 100%; box-sizing: border-box; border: 1px solid #ddd; border-radius: 5px; }
         
+        button { padding: 15px; font-size: 16px; border: none; cursor: pointer; width: 100%; font-weight: bold; border-radius: 5px; margin-top: 10px; transition: 0.3s; }
+        .btn-card { background-color: #007bff; color: white; }
+        .btn-smile { background-color: #00ff41; color: black; }
+        
+        /* Стили камеры */
         #camera-container { display: none; margin-top: 20px; position: relative; }
-        video { width: 100%; border-radius: 15px; background: #000; }
-        #timer { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 80px; color: white; font-weight: bold; text-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
-        #qr-container { display: none; margin-top: 20px; }
-        .status { margin-top: 15px; font-size: 18px; font-weight: bold; }
+        video { width: 100%; border-radius: 10px; background: #000; transform: scaleX(-1); } /* Отражаем для удобства */
+        #timer-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 80px; color: white; font-weight: bold; text-shadow: 0 0 20px rgba(0,0,0,0.8); pointer-events: none; }
     </style>
 </head>
 <body>
-
-<div class="payment-card">
-    <h2>Выберите способ оплаты</h2>
-    
-    <div class="btn-group">
-        <button class="btn-qr" onclick="showQR()">Оплата по QR</button>
-        <button class="btn-smile" onclick="startSmilePayment()">Оплата по улыбке</button>
-    </div>
-
-    <!-- Блок QR-кода -->
-    <div id="qr-container">
-        <p>Сканируйте код для оплаты:</p>
-        <img src="api.qrserver.com" alt="QR Code">
-    </div>
-
-    <!-- Блок Камеры и Таймера -->
-    <div id="camera-container">
-        <video id="video" autoplay muted></video>
-        <div id="timer"></div>
-    </div>
-
-    <div id="status" class="status"></div>
-</div>
-
-<script>
-    const video = document.getElementById('video');
-    const timerDiv = document.getElementById('timer');
-    const statusDiv = document.getElementById('status');
-    const cameraBox = document.getElementById('camera-container');
-    const qrBox = document.getElementById('qr-container');
-
-    // Загрузка моделей нейросети при старте
-    async function init() {
-        const MODEL_URL = 'raw.githubusercontent.com';
-        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-        await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
-    }
-    init();
-
-    function showQR() {
-        cameraBox.style.display = 'none';
-        qrBox.style.display = 'block';
-        statusDiv.innerText = "";
-    }
-
-    async function startSmilePayment() {
-        qrBox.style.display = 'none';
-        cameraBox.style.display = 'block';
-        statusDiv.innerText = "Приготовьтесь улыбаться!";
-        statusDiv.style.color = "black";
-
-        // Запуск камеры
-        const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
-        video.srcObject = stream;
-
-        // Таймер 3 секунды
-        let timeLeft = 3;
-        timerDiv.innerText = timeLeft;
-
-        const countdown = setInterval(async () => {
-            timeLeft--;
-            if (timeLeft > 0) {
-                timerDiv.innerText = timeLeft;
-            } else {
-                clearInterval(countdown);
-                timerDiv.innerText = "";
-                checkSmile(); // Проверка в момент окончания таймера
-            }
-        }, 1000);
-    }
-
-    async function checkSmile() {
-        statusDiv.innerText = "Сканирую лицо...";
+    <div class="container">
+        <h1>Оплата заказа 2025</h1>
         
-        // Делаем снимок эмоции
-        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
+        <div class="input-group">
+            <label for="terminal-id">ID ТЕРМИНАЛА:</label>
+            <input type="number" id="terminal-id" placeholder="123456">
+        </div>
 
-        if (detections.length > 0) {
-            const happiness = detections[0].expressions.happy;
-            console.log("Уровень счастья:", happiness);
+        <div id="manual-pay-section">
+            <div class="input-group">
+                <label for="payment-input">СУММА ОПЛАТЫ (РУБ):</label>
+                <input type="number" id="payment-input" placeholder="0.00" step="0.01">
+            </div>
+            <button class="btn-card" onclick="handlePaymentClick()">ОПЛАТИТЬ КАРТОЙ</button>
+        </div>
 
-            if (happiness > 0.7) {
-                statusDiv.innerText = "✅ Успешно оплачено!";
-                statusDiv.style.color = "green";
-                // Здесь можно остановить камеру
-                stopCamera();
-            } else {
-                statusDiv.innerText = "❌ Вы не улыбнулись. Повторите попытку!";
-                statusDiv.style.color = "red";
-            }
-        } else {
-            statusDiv.innerText = "❌ Лицо не обнаружено. Попробуйте еще раз.";
-            statusDiv.style.color = "red";
+        <hr style="margin: 20px 0; border: 0.5px solid #eee;">
+        
+        <button class="btn-smile" onclick="startSmilePayment()">ОПЛАТИТЬ УЛЫБКОЙ</button>
+
+        <div id="camera-container">
+            <video id="video" autoplay muted playsinline></video>
+            <div id="timer-overlay"></div>
+            <p id="camera-instruction">Улыбнитесь для подтверждения!</p>
+        </div>
+
+        <p id="status-text" style="margin-top: 15px; font-weight: bold;"></p>
+    </div>
+
+    <script>
+        const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
+        
+        // Автозаполнение ID из URL (если QR-код его передал)
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('id')) document.getElementById('terminal-id').value = urlParams.get('id');
+            loadModels();
+        };
+
+        async function loadModels() {
+            const MODEL_URL = 'raw.githubusercontent.com';
+            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
         }
-    }
 
-    function stopCamera() {
-        const stream = video.srcObject;
-        const tracks = stream.getTracks();
-        tracks.forEach(track => track.stop());
-    }
-</script>
+        // --- ЛОГИКА ОБЫЧНОЙ ОПЛАТЫ ---
+        async function handlePaymentClick() {
+            const terminalId = document.getElementById('terminal-id').value;
+            const userEntered = parseFloat(document.getElementById('payment-input').value);
+            processFinalPayment(terminalId, userEntered);
+        }
 
+        // --- ЛОГИКА ОПЛАТЫ ПО УЛЫБКЕ ---
+        async function startSmilePayment() {
+            const terminalId = document.getElementById('terminal-id').value;
+            if (!terminalId) return alert("Сначала введите ID терминала!");
+
+            const camContainer = document.getElementById('camera-container');
+            const video = document.getElementById('video');
+            const timerDiv = document.getElementById('timer-overlay');
+            const statusText = document.getElementById('status-text');
+
+            camContainer.style.display = "block";
+            statusText.innerText = "Инициализация камеры...";
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+
+                let count = 3;
+                timerDiv.innerText = count;
+
+                const timerInterval = setInterval(async () => {
+                    count--;
+                    if (count > 0) {
+                        timerDiv.innerText = count;
+                    } else {
+                        clearInterval(timerInterval);
+                        timerDiv.innerText = "";
+                        statusText.innerText = "Сканирование улыбки...";
+                        
+                        // Проверка улыбки
+                        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
+                        
+                        if (detections.length > 0 && detections[0].expressions.happy > 0.7) {
+                            // Улыбка найдена — получаем нужную сумму и оплачиваем
+                            const response = await fetch(`${FIREBASE_BASE_URL}/status/${terminalId}.json`);
+                            const data = await response.json();
+                            processFinalPayment(terminalId, data.requiredAmount);
+                        } else {
+                            statusText.style.color = "red";
+                            statusText.innerText = "❌ Вы не улыбнулись! Попробуйте еще раз.";
+                            stopCamera(stream);
+                        }
+                    }
+                }, 1000);
+
+            } catch (err) {
+                alert("Нет доступа к камере");
+            }
+        }
+
+        async function processFinalPayment(terminalId, amount) {
+            const statusText = document.getElementById('status-text');
+            try {
+                const response = await fetch(`${FIREBASE_BASE_URL}/status/${terminalId}.json`);
+                const data = await response.json();
+                
+                if (!data) return alert("Терминал не найден");
+
+                await fetch(`${FIREBASE_BASE_URL}/status/${terminalId}.json`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ state: "SUCCESS", paidAmount: amount })
+                });
+
+                statusText.style.color = "green";
+                statusText.innerText = "✅ Оплата успешно подтверждена!";
+                document.getElementById('camera-container').style.display = "none";
+            } catch (e) {
+                alert("Ошибка сети");
+            }
+        }
+
+        function stopCamera(stream) {
+            stream.getTracks().forEach(track => track.stop());
+            document.getElementById('camera-container').style.display = "none";
+        }
+    </script>       
 </body>
 </html>
