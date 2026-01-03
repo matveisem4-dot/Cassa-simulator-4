@@ -55,8 +55,22 @@
             line-height: 1.2;
             margin-top: 100px;
         }
-        .green-bullet { color: #00ff41; margin-right: 15px; font-size: 40px; display: inline-block; }
-        .green-check { color: #00ff41; margin-left: 15px; font-size: 40px; font-weight: bold; display: inline-block;}
+        
+        /* Улучшенные стили для символов */
+        .green-symbol {
+            color: #00ff41; /* Яркий, насыщенный зеленый цвет */
+            font-size: 48px; /* Сделали больше, чтобы они выделялись */
+            font-weight: 900; /* Очень жирный */
+            display: inline-block;
+            vertical-align: middle; /* Выравнивание по середине текста */
+            margin: 0 15px;
+            line-height: 1;
+        }
+        .text-line {
+            display: flex;
+            align-items: center; /* Центрируем всю строку вертикально */
+            margin-bottom: 5px;
+        }
 
         .terminal-id-badge {
             position: absolute;
@@ -90,12 +104,16 @@
     <div class="pay-logo">Pay</div>
 
     <div id="ui-wrapper">
-        <!-- Экран ожидания, 1-в-1 как на фото -->
+        <!-- Экран ожидания с красивыми символами -->
         <div id="screen-wait" class="screen active">
             <div class="main-text">
                 ПЛАТИТЕ
-                <div><span class="green-bullet">●</span> КАК ВАМ</div>
-                <div>УДОБНО <span class="green-check">✔</span></div>
+                <div class="text-line">
+                    <span class="green-symbol">●</span> КАК ВАМ
+                </div>
+                <div class="text-line">
+                    УДОБНО <span class="green-symbol">✔</span>
+                </div>
             </div>
         </div>
 
@@ -123,10 +141,8 @@
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
         const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
         
-        // --- ГЕНЕРАЦИЯ РАНДОМНОГО ID ---
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
         
-        // Обновляем все места в HTML, где отображается ID
         document.getElementById('terminal-id-display').innerText = MY_TERMINAL_ID;
         const displayCenter = document.getElementById('display-id-center');
         if (displayCenter) displayCenter.innerText = MY_TERMINAL_ID;
