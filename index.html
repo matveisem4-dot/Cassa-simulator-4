@@ -7,7 +7,6 @@
     <style>
         @font-face {
             font-family: 'SberDisplay';
-            /* В реальном проекте здесь должна быть ссылка на фирменный шрифт Сбера */
             src: local('Helvetica Neue Bold'), local('Arial Bold'), sans-serif;
             font-weight: 700;
         }
@@ -21,13 +20,12 @@
             align-items: center; 
             height: 100vh; 
             overflow: hidden; 
-            background: #000000; /* Черный фон для всего, что вне телефона */
+            background: #000000;
         }
         
         #phone-screen-container {
             width: 400px;
             height: 800px;
-            /* Точный градиент */
             background: linear-gradient(to bottom, #004d25, #008000, #00a040, #4CAF50); 
             position: relative;
             overflow: hidden;
@@ -41,25 +39,15 @@
         .screen { display: none; }
         .active { display: block; }
         
-        .pay-logo {
+        #sber-logo-img {
             position: absolute;
             top: 20px;
             left: 40px;
-            background: rgba(255, 255, 255, 0.15);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            font-weight: bold;
+            width: 100px;
+            height: auto;
+            border-radius: 15px;
         }
-        .pay-logo::before {
-            content: '✓';
-            color: #baffb0; /* Более светлый зеленый */
-            margin-right: 8px;
-            font-size: 16px;
-        }
-
+        
         .main-text {
             font-size: 44px;
             font-weight: 700;
@@ -67,18 +55,20 @@
             margin-top: 100px; 
         }
         
-        /* Стильные, минималистичные символы */
-        .symbol {
-            color: #baffb0; /* Светло-салатовый цвет для контраста на темном фоне */
-            font-size: 40px; 
-            font-weight: bold; 
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 50px;
-            height: 40px;
+        /* Стиль для изображения улыбки в тексте */
+        .sber-smile-inline {
+            width: 40px; 
+            height: auto;
+            vertical-align: middle; 
             margin-right: 15px;
-            line-height: 1;
+        }
+
+        /* Стиль для изображения галочки */
+        .check-inline {
+            width: 40px; /* Размер изображения */
+            height: auto;
+            vertical-align: middle; 
+            margin-left: 15px; /* Отступ слева от слова "УДОБНО" */
         }
 
         .text-line {
@@ -113,23 +103,23 @@
 </head>
 <body>
     <div id="phone-screen-container">
-        <div class="pay-logo">Pay</div>
+        <img id="sber-logo-img" src="encrypted-tbn0.gstatic.com" alt="Sber Logo">
 
         <div id="ui-wrapper">
-            <!-- Экран ожидания с красивыми символами -->
             <div id="screen-wait" class="screen active">
                 <div class="main-text">
                     ПЛАТИТЕ
                     <div class="text-line">
-                        <span class="symbol">●</span> КАК ВАМ
+                         <img src="encrypted-tbn0.gstatic.com" alt="Sber Smile" class="sber-smile-inline">
+                         КАК ВАМ
                     </div>
                     <div class="text-line">
-                        УДОБНО <span class="symbol">✔</span>
+                        УДОБНО <!-- Ваше изображение галочки здесь -->
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSgO4llrodiqFtK5P15tSQ-lQj_dPCz-EHBaw&s" alt="Checkmark" class="check-inline">
                     </div>
                 </div>
             </div>
 
-            <!-- Экраны оплаты и успеха -->
             <div id="screen-pay" class="screen">
                 <div id="amount-val" class="price-text">0.00 РУБ</div>
                 <div class="qr-frame" id="qrcode-container"></div>
