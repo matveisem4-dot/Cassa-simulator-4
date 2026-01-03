@@ -61,7 +61,18 @@
             font-weight: bold; 
         }
 
-        .qr-frame { background: #ffffff; padding: 15px; border-radius: 10px; display: inline-block; margin-top: 30px; }
+        /* Контейнер для QR-кода и его стиль */
+        .qr-frame { 
+            background: #ffffff; 
+            padding: 15px; 
+            border-radius: 10px; 
+            display: inline-block; 
+            margin-top: 30px; 
+            /* Если код не отображается, возможно, нужно явно задать размеры контейнеру */
+            width: 280px; 
+            height: 280px; 
+        } 
+
         .price-text { font-size: 48px; color: #00ff41; font-weight: 800; margin-bottom: 10px; text-align: center;}
         
         #exit-button { 
@@ -86,10 +97,10 @@
                 <div class="main-text">
                     ПЛАТИТЕ
                     <div class="text-line">
-                         <!-- Символы S| удалены --> КАК ВАМ
+                         КАК ВАМ
                     </div>
                     <div class="text-line">
-                        <!-- Символы S| удалены --> УДОБНО
+                         УДОБНО
                     </div>
                 </div>
             </div>
@@ -115,10 +126,11 @@
         </div>
     </div>
 
+    <!-- Правильная ссылка на библиотеку qrcode.js -->
     <script src="cdnjs.cloudflare.com"></script>
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
+        const PAYMENT_GATEWAY_URL = "https://matveisem4-dot.github.io/PaymentSite/payment.html"; 
         
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
         
@@ -155,10 +167,18 @@
 
         function generateQRCode(amount) {
             const container = document.getElementById('qrcode-container');
-            container.innerHTML = '';
+            // Очищаем контейнер перед генерацией
+            container.innerHTML = ''; 
             if (typeof QRCode !== "undefined") {
                 const finalUrl = `${PAYMENT_GATEWAY_URL}?id=${MY_TERMINAL_ID}`;
-                new QRCode(container, { text: finalUrl, width: 280, height: 280 });
+                new QRCode(container, { 
+                    text: finalUrl, 
+                    width: 280, 
+                    height: 280 
+                });
+            } else {
+                console.error("Библиотека QRCode не загружена.");
+                container.innerText = "Ошибка загрузки QR-библиотеки";
             }
         }
 
@@ -181,6 +201,7 @@
                             body: JSON.stringify({ state: "WAITING", requiredAmount: amountNeeded, items: commandData.items || [] })
                         });
 
+                        // Генерируем QR-код и переключаем экран
                         generateQRCode(amountNeeded); 
                         changeScreen('screen-pay');
                     }
