@@ -3,27 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Платежный Терминал 2025</title>
+    <title>SberPay Terminal Screen</title>
     <style>
+        @font-face {
+            font-family: 'SberDisplay';
+            /* В реальном проекте здесь должна быть ссылка на фирменный шрифт Сбера */
+            src: local('Helvetica Neue Bold'), local('Arial Bold'), sans-serif;
+            font-weight: 700;
+        }
+
         body { 
             margin: 0; 
-            font-family: sans-serif; 
+            font-family: 'SberDisplay', Arial, sans-serif; 
             color: #ffffff; 
             display: flex; 
-            justify-content: center; 
+            justify-content: flex-start;
             align-items: center; 
             height: 100vh; 
             overflow: hidden; 
-            background: linear-gradient(to bottom, #004d25, #008000, #4CAF50);
+            background: linear-gradient(to bottom, #004d25, #008000, #00a040, #4CAF50);
             position: relative;
+            flex-direction: column;
+            padding-top: 15vh;
         }
-        #ui-wrapper { text-align: center; width: 100%; }
+        #ui-wrapper { text-align: left; width: 100%; padding: 0 40px; box-sizing: border-box; }
         .screen { display: none; }
         .active { display: block; }
-        .qr-frame { background: #ffffff; padding: 25px; border-radius: 20px; display: inline-block; margin: 20px auto; min-width: 250px; min-height: 250px; }
-        .qr-frame canvas, .qr-frame img { display: block; margin: 0 auto; width: 250px !important; height: 250px !important; }
-        .price-text { font-size: 48px; color: #00ff41; font-weight: 800; margin-bottom: 10px; }
-        .terminal-info-badge { position: absolute; bottom: 25px; left: 25px; background: rgba(255, 255, 255, 0.05); padding: 8px 15px; border-radius: 8px; font-size: 14px; color: #666666; }
+        
+        .pay-logo {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+        }
+        .pay-logo::before {
+            content: '✓';
+            color: #00ff41;
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .main-text {
+            font-size: 44px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-top: 100px;
+        }
+        .green-bullet { color: #00ff41; margin-right: 15px; font-size: 40px; display: inline-block; }
+        .green-check { color: #00ff41; margin-left: 15px; font-size: 40px; font-weight: bold; display: inline-block;}
+
+        .terminal-id-badge {
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .qr-frame { background: #ffffff; padding: 15px; border-radius: 10px; display: inline-block; margin-top: 30px; }
+        .price-text { font-size: 48px; color: #00ff41; font-weight: 800; margin-bottom: 10px; text-align: center;}
         
         #exit-button { 
             display: none;
@@ -36,78 +80,63 @@
             border-radius: 10px;
             cursor: pointer;
         }
+        
+        #sberkot-image { display: none; }
+        .terminal-info-badge { display: none; }
 
-        #sberkot-image {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 150px;
-            pointer-events: none;
-        }
-
-        /* Стиль для списка товаров */
-        #item-list {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px auto;
-            max-width: 350px;
-            text-align: left;
-            font-size: 16px;
-        }
-        .item-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-        }
     </style>
 </head>
 <body>
+    <div class="pay-logo">Pay</div>
+
     <div id="ui-wrapper">
+        <!-- Экран ожидания, 1-в-1 как на фото -->
         <div id="screen-wait" class="screen active">
-            <h2>СВОБОДНАЯ КАССА</h2>
-            <p>Ожидание команды от кассового ПО...</p>
+            <div class="main-text">
+                ПЛАТИТЕ
+                <div><span class="green-bullet">●</span> КАК ВАМ</div>
+                <div>УДОБНО <span class="green-check">✔</span></div>
+            </div>
         </div>
+
+        <!-- Экраны оплаты и успеха -->
         <div id="screen-pay" class="screen">
             <div id="amount-val" class="price-text">0.00 РУБ</div>
-            <div id="item-list">
-                <!-- Сюда будут добавлены товары -->
-            </div>
             <div class="qr-frame" id="qrcode-container"></div>
-            <p style="font-size: 20px;">Сканируйте QR и введите ID на телефоне</p>
-            <p style="color: #00ff41; font-size: 22px;">ID ТЕРМИНАЛА: <span id="display-id-center"></span></p>
+            <p style="font-size: 20px; text-align: center;">Сканируйте QR и введите ID на телефоне</p>
+            <p style="color: #00ff41; font-size: 22px; text-align: center;">ID ТЕРМИНАЛА: <span id="display-id-center"></span></p>
         </div>
-        <div id="screen-success" class="screen">
+        
+        <div id="screen-success" class="screen" style="text-align: center;">
             <h1 style="color: #00ff41;">✅ ОПЛАЧЕНО</h1>
             <p>Спасибо! Возьмите ваш товар.</p>
             <button id="exit-button" onclick="returnToWaitScreen()">Выйти на главный экран</button>
         </div>
     </div>
-    <div class="terminal-info-badge">
-        ID: <span id="terminal-id-corner">ГЕНЕРАЦИЯ...</span>
+    
+    <div class="terminal-id-badge">
+        Терминал: <span id="terminal-id-display"></span>
     </div>
 
-    <img id="sberkot-image" src="https://free-png.ru/wp-content/uploads/2020/09/icon_sber-01.png" alt="СберКот" />
-
     <script src="cdnjs.cloudflare.com"></script>
-
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        const PAYMENT_GATEWAY_URL = "https://matveisem4-dot.github.io/PaymentSite/payment.html"; 
-
-        const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000);
-        document.getElementById('terminal-id-corner').innerText = MY_TERMINAL_ID;
-        document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
+        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
+        
+        // --- ГЕНЕРАЦИЯ РАНДОМНОГО ID ---
+        const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Обновляем все места в HTML, где отображается ID
+        document.getElementById('terminal-id-display').innerText = MY_TERMINAL_ID;
+        const displayCenter = document.getElementById('display-id-center');
+        if (displayCenter) displayCenter.innerText = MY_TERMINAL_ID;
 
         let currentScreen = 'wait';
 
         function changeScreen(targetId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            const target = document.getElementById(targetId);
-            if (target) {
-                target.classList.add('active');
-                currentScreen = targetId.replace('screen-', '');
-            }
+            document.getElementById(targetId).classList.add('active');
+            currentScreen = targetId.replace('screen-', '');
         }
 
         async function returnToWaitScreen() {
@@ -136,10 +165,10 @@
             }
         }
 
-        // --- НОВАЯ ФУНКЦИЯ ОТОБРАЖЕНИЯ ТОВАРОВ ---
         function displayItems(items) {
             const listContainer = document.getElementById('item-list');
-            listContainer.innerHTML = ''; // Очищаем список
+            if (!listContainer) return;
+            listContainer.innerHTML = ''; 
 
             if (items && Array.isArray(items)) {
                 items.forEach(item => {
@@ -164,17 +193,15 @@
 
                     if (commandData && commandData.command === "PAY") {
                         const amountNeeded = commandData.amount || "0";
-                        // Если команда PAY содержит список товаров, отображаем его
                         if (commandData.items) {
                             displayItems(commandData.items);
                         } else {
-                            // Иначе скрываем пустой список
-                            document.getElementById('item-list').style.display = 'none';
+                            const itemList = document.getElementById('item-list');
+                            if (itemList) itemList.style.display = 'none';
                         }
 
                         document.getElementById('amount-val').innerText = amountNeeded + " РУБ";
                         
-                        // ВАЖНО: Записываем сумму и товары в статус для сайта оплаты
                         await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
                             method: 'PUT',
                             body: JSON.stringify({ 
