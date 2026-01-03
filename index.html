@@ -75,13 +75,13 @@
             margin-bottom: 5px;
         }
 
-        /* Стиль и позиционирование ID терминала (ИСПРАВЛЕНО) */
+        /* Стиль и позиционирование ID терминала */
         .terminal-id-badge {
             position: absolute; 
             bottom: 40px;
             left: 40px;
             font-size: 14px;
-            color: #ffffff; /* Сделали полностью белым для видимости */
+            color: #ffffff; /* Сделали полностью белым */
             font-weight: bold; /* Сделали жирным */
         }
 
@@ -135,7 +135,7 @@
         </div>
         
         <div class="terminal-id-badge">
-            Терминал: <span id="terminal-id-display"></span>
+            Терминал: **<span id="terminal-id-display"></span>**
         </div>
     </div>
 
@@ -195,9 +195,11 @@
 
                     if (commandData && commandData.command === "PAY") {
                         const amountNeeded = commandData.amount || "0";
-                        // ...логика отображения товаров...
                         document.getElementById('amount-val').innerText = amountNeeded + " РУБ";
-                        // ...логика PUT запроса...
+                        await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
+                            method: 'PUT',
+                            body: JSON.stringify({ state: "WAITING", requiredAmount: amountNeeded, items: commandData.items || [] })
+                        });
                         generateQRCode(amountNeeded); 
                         changeScreen('screen-pay');
                     }
