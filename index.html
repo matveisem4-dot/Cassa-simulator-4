@@ -39,33 +39,11 @@
         .screen { display: none; }
         .active { display: block; }
         
-        /* Стиль для изображения логотипа */
-        #sber-logo-img {
-            position: absolute;
-            top: 20px;
-            left: 40px;
-            width: 100px; 
-            height: auto;
-            border-radius: 15px; 
-            display: none; /* Скрыто по умолчанию в этом дизайне */
-        }
-        
         .main-text {
-            font-size: 40px; /* Размер шрифта как на фото */
+            font-size: 40px; 
             font-weight: 700;
             line-height: 1.2;
-            margin-top: 100px; 
-        }
-
-        /* Стиль для маленьких значков (S|) */
-        .icon {
-            color: rgba(255, 255, 255, 0.4); 
-            font-size: 16px; 
-            font-weight: normal;
-            display: inline-block;
-            margin-right: 15px;
-            width: 20px; 
-            text-align: center;
+            margin-top: 200px;
         }
 
         .text-line {
@@ -74,7 +52,6 @@
             margin-bottom: 5px;
         }
 
-        /* Стиль и позиционирование ID терминала (появляется при оплате) */
         .terminal-id-badge {
             position: absolute; 
             bottom: 40px;
@@ -82,23 +59,8 @@
             font-size: 14px;
             color: #ffffff; 
             font-weight: bold; 
-            display: none; /* Скрыто по умолчанию, показывается JS при оплате */
         }
 
-        /* Надпись "Пуск" внизу */
-        .start-button {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.7);
-            padding: 5px 10px;
-            font-size: 12px;
-            border-radius: 4px;
-        }
-
-
-        /* Стиль для экрана оплаты (QR и т.д.) */
         .qr-frame { background: #ffffff; padding: 15px; border-radius: 10px; display: inline-block; margin-top: 30px; }
         .price-text { font-size: 48px; color: #00ff41; font-weight: 800; margin-bottom: 10px; text-align: center;}
         
@@ -121,16 +83,15 @@
         <div id="ui-wrapper">
             <!-- Экран ожидания (активен по умолчанию) -->
             <div id="screen-wait" class="screen active">
-                <div class="main-text" style="margin-top: 200px;">
+                <div class="main-text">
                     ПЛАТИТЕ
                     <div class="text-line">
-                         <span class="icon">S|</span> КАК ВАМ
+                         <!-- Символы S| удалены --> КАК ВАМ
                     </div>
                     <div class="text-line">
-                        <span class="icon">S|</span> УДОБНО
+                        <!-- Символы S| удалены --> УДОБНО
                     </div>
                 </div>
-                <div class="start-button">Пуск</div>
             </div>
 
             <!-- Экран оплаты (появляется при команде PAY) -->
@@ -149,42 +110,35 @@
             </div>
         </div>
         
-        <!-- Этот блок ID виден только когда активен экран оплаты (через JS) -->
-        <div class="terminal-id-badge" id="bottom-id-badge">
+        <div class="terminal-id-badge">
             ID: <span id="terminal-id-display"></span>
         </div>
     </div>
 
-    <!-- Подключаем библиотеку для генерации QR-кода -->
     <script src="cdnjs.cloudflare.com"></script>
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
         const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
         
-        // --- ГЕНЕРАЦИЯ РАНДОМНОГО ID ---
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
         
-        // Обновляем все места в HTML, где отображается ID
         document.getElementById('terminal-id-display').innerText = MY_TERMINAL_ID;
         const displayCenter = document.getElementById('display-id-center');
         if (displayCenter) displayCenter.innerText = MY_TERMINAL_ID;
 
         let currentScreen = 'wait';
+        const bottomIdBadge = document.getElementById('terminal-id-display').parentElement;
+
 
         function changeScreen(targetId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(targetId).classList.add('active');
             currentScreen = targetId.replace('screen-', '');
             
-            // Логика показа/скрытия нижнего ID
-            if (currentScreen === 'pay') {
-                document.getElementById('bottom-id-badge').style.display = 'block';
-                document.querySelector('.start-button').style.display = 'none';
+            if (currentScreen === 'wait' || currentScreen === 'pay') {
+                bottomIdBadge.style.display = 'block'; 
             } else {
-                document.getElementById('bottom-id-badge').style.display = 'none';
-                if (currentScreen === 'wait') {
-                     document.querySelector('.start-button').style.display = 'block';
-                }
+                bottomIdBadge.style.display = 'none';
             }
         }
 
@@ -204,13 +158,7 @@
             container.innerHTML = '';
             if (typeof QRCode !== "undefined") {
                 const finalUrl = `${PAYMENT_GATEWAY_URL}?id=${MY_TERMINAL_ID}`;
-                new QRCode(container, {
-                    text: finalUrl,
-                    width: 280,
-                    height: 280
-                });
-            } else {
-                container.innerHTML = "Ошибка загрузки QR-библиотеки";
+                new QRCode(container, { text: finalUrl, width: 280, height: 280 });
             }
         }
 
