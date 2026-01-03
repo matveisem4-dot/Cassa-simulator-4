@@ -27,8 +27,8 @@
         #phone-screen-container {
             width: 400px;
             height: 800px;
-            /* Более плавный и точный зеленый градиент */
-            background: linear-gradient(to bottom, #004d25, #006633, #008040, #4CAF50); 
+            /* Точный градиент */
+            background: linear-gradient(to bottom, #004d25, #008000, #00a040, #4CAF50); 
             position: relative;
             overflow: hidden;
             display: flex;
@@ -55,7 +55,7 @@
         }
         .pay-logo::before {
             content: '✓';
-            color: #76ff03; /* Салатовый цвет */
+            color: #baffb0; /* Более светлый зеленый */
             margin-right: 8px;
             font-size: 16px;
         }
@@ -67,31 +67,17 @@
             margin-top: 100px; 
         }
         
-        /* Улыбка Сбера без глаз - CSS SVG */
-        .sber-smile-icon {
-            display: inline-block;
-            width: 40px;
+        /* Стильные, минималистичные символы */
+        .symbol {
+            color: #baffb0; /* Светло-салатовый цвет для контраста на темном фоне */
+            font-size: 40px; 
+            font-weight: bold; 
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
             height: 40px;
             margin-right: 15px;
-            vertical-align: middle;
-        }
-        .sber-smile-icon svg {
-            fill: #76ff03; /* Салатовый цвет */
-            width: 100%;
-            height: 100%;
-        }
-        /* Новый путь SVG только для рта и контура */
-        .sber-smile-icon path {
-             d: path('M25 0C11.2 0 0 11.2 0 25s11.2 25 25 25 25-11.2 25-25S38.8 0 25 0zm0 40c-8.3 0-15-6.7-15-15h2c0 7.2 5.8 13 13 13s13-5.8 13-13h2c0 8.3-6.7 15-15 15z');
-        }
-
-        .green-symbol {
-            color: #76ff03; /* Салатовый цвет */
-            font-size: 48px; 
-            font-weight: 900; 
-            display: inline-block;
-            vertical-align: middle; 
-            margin: 0 15px;
             line-height: 1;
         }
 
@@ -130,22 +116,20 @@
         <div class="pay-logo">Pay</div>
 
         <div id="ui-wrapper">
+            <!-- Экран ожидания с красивыми символами -->
             <div id="screen-wait" class="screen active">
                 <div class="main-text">
                     ПЛАТИТЕ
                     <div class="text-line">
-                        <!-- SVG-смайлик Сбера без глаз -->
-                        <span class="sber-smile-icon">
-                             <svg viewBox="0 0 50 50" xmlns="www.w3.org"><path d="M25 0C11.2 0 0 11.2 0 25s11.2 25 25 25 25-11.2 25-25S38.8 0 25 0zm0 40c-8.3 0-15-6.7-15-15h2c0 7.2 5.8 13 13 13s13-5.8 13-13h2c0 8.3-6.7 15-15 15z""")/>></svg>
-                        </span>
-                        КАК ВАМ
+                        <span class="symbol">●</span> КАК ВАМ
                     </div>
                     <div class="text-line">
-                        УДОБНО <span class="green-symbol">✔</span>
+                        УДОБНО <span class="symbol">✔</span>
                     </div>
                 </div>
             </div>
 
+            <!-- Экраны оплаты и успеха -->
             <div id="screen-pay" class="screen">
                 <div id="amount-val" class="price-text">0.00 РУБ</div>
                 <div class="qr-frame" id="qrcode-container"></div>
