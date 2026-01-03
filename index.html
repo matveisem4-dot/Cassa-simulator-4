@@ -25,16 +25,16 @@
         }
         
         #phone-screen-container {
-            width: 400px; /* Фиксированная ширина для имитации телефона */
-            height: 800px; /* Фиксированная высота */
-            /* Улучшенный, более глубокий градиент */
-            background: linear-gradient(to bottom, #00562e, #008040, #00a050, #4CAF50); 
+            width: 400px;
+            height: 800px;
+            /* Более плавный и точный зеленый градиент */
+            background: linear-gradient(to bottom, #004d25, #006633, #008040, #4CAF50); 
             position: relative;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            padding-top: 50px; /* Отступ для "челки" */
+            padding-top: 50px;
         }
         
         #ui-wrapper { text-align: left; width: 100%; padding: 0 40px; box-sizing: border-box; }
@@ -55,7 +55,7 @@
         }
         .pay-logo::before {
             content: '✓';
-            color: #00ff41;
+            color: #76ff03; /* Салатовый цвет */
             margin-right: 8px;
             font-size: 16px;
         }
@@ -67,7 +67,7 @@
             margin-top: 100px; 
         }
         
-        /* Улыбка Сбера вместо точки - CSS SVG */
+        /* Улыбка Сбера без глаз - CSS SVG */
         .sber-smile-icon {
             display: inline-block;
             width: 40px;
@@ -76,15 +76,17 @@
             vertical-align: middle;
         }
         .sber-smile-icon svg {
-            /* Цвет немного менее яркий, чтобы лучше вписывался в градиент */
-            fill: #76ff03; 
+            fill: #76ff03; /* Салатовый цвет */
             width: 100%;
             height: 100%;
         }
+        /* Новый путь SVG только для рта и контура */
+        .sber-smile-icon path {
+             d: path('M25 0C11.2 0 0 11.2 0 25s11.2 25 25 25 25-11.2 25-25S38.8 0 25 0zm0 40c-8.3 0-15-6.7-15-15h2c0 7.2 5.8 13 13 13s13-5.8 13-13h2c0 8.3-6.7 15-15 15z');
+        }
 
         .green-symbol {
-            /* Цвет галочки тоже смягчен */
-            color: #76ff03; 
+            color: #76ff03; /* Салатовый цвет */
             font-size: 48px; 
             font-weight: 900; 
             display: inline-block;
@@ -132,9 +134,9 @@
                 <div class="main-text">
                     ПЛАТИТЕ
                     <div class="text-line">
-                        <!-- SVG-смайлик Сбера -->
+                        <!-- SVG-смайлик Сбера без глаз -->
                         <span class="sber-smile-icon">
-                             <svg viewBox="0 0 50 50" xmlns="www.w3.org"><path d="M25 0C11.2 0 0 11.2 0 25s11.2 25 25 25 25-11.2 25-25S38.8 0 25 0zm0 40c-8.3 0-15-6.7-15-15h2c0 7.2 5.8 13 13 13s13-5.8 13-13h2c0 8.3-6.7 15-15 15zm-4.5-12c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5zm9 0c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z""")/>></svg>
+                             <svg viewBox="0 0 50 50" xmlns="www.w3.org"><path d="M25 0C11.2 0 0 11.2 0 25s11.2 25 25 25 25-11.2 25-25S38.8 0 25 0zm0 40c-8.3 0-15-6.7-15-15h2c0 7.2 5.8 13 13 13s13-5.8 13-13h2c0 8.3-6.7 15-15 15z""")/>></svg>
                         </span>
                         КАК ВАМ
                     </div>
