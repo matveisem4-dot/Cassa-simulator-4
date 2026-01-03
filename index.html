@@ -61,14 +61,12 @@
             font-weight: bold; 
         }
 
-        /* Контейнер для QR-кода и его стиль */
         .qr-frame { 
             background: #ffffff; 
             padding: 15px; 
             border-radius: 10px; 
             display: inline-block; 
             margin-top: 30px; 
-            /* Если код не отображается, возможно, нужно явно задать размеры контейнеру */
             width: 280px; 
             height: 280px; 
         } 
@@ -86,13 +84,40 @@
             border-radius: 10px;
             cursor: pointer;
         }
+
+        /* Стиль для модального окна оплаты по улыбке */
+        #smile-payment-modal {
+            display: none; /* Скрыто по умолчанию */
+            position: fixed; 
+            z-index: 10; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0,0,0,0.8); 
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+        }
+        #camera-feed {
+            width: 300px;
+            height: 300px;
+            background: #444; /* Имитация черного экрана камеры */
+            border-radius: 50%; /* Круглая область для лица */
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 5px solid #00ff41;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
     <div id="phone-screen-container">
         
         <div id="ui-wrapper">
-            <!-- Экран ожидания (активен по умолчанию) -->
             <div id="screen-wait" class="screen active">
                 <div class="main-text">
                     ПЛАТИТЕ
@@ -105,15 +130,28 @@
                 </div>
             </div>
 
-            <!-- Экран оплаты (появляется при команде PAY) -->
             <div id="screen-pay" class="screen" style="text-align: center;">
                 <div id="amount-val" class="price-text">0.00 РУБ</div>
-                <div class="qr-frame" id="qrcode-container"></div>
-                <p style="font-size: 20px; margin-top: 20px;">Сканируйте QR и введите ID на телефоне</p>
-                <p style="color: #ffffff; font-size: 16px;">Терминал: <span id="display-id-center" style="font-weight: bold;"></span></p>
+                
+                <!-- Опции оплаты -->
+                <div id="payment-options-container" style="margin-top: 20px;">
+                    <button onclick="switchPaymentMethod('qr')" style="padding: 10px; margin-right: 10px;">QR Оплата</button>
+                    <button onclick="switchPaymentMethod('smile')" style="padding: 10px;">Оплата по улыбке</button>
+                </div>
+
+                <div id="qr-payment-section">
+                    <div class="qr-frame" id="qrcode-container"></div>
+                    <p style="font-size: 20px; margin-top: 20px;">Сканируйте QR и введите ID на телефоне</p>
+                </div>
+
+                <div id="smile-payment-section" style="display: none; text-align: center; margin-top: 30px;">
+                    <p>Нажмите "Улыбка", чтобы начать оплату лицом.</p>
+                    <button onclick="initiateSmilePayment()" style="padding: 15px; background: #00ff41; border: none; border-radius: 5px;">Начать оплату улыбкой</button>
+                </div>
+
+                <p style="color: #ffffff; font-size: 16px; margin-top: 20px;">Терминал: <span id="display-id-center" style="font-weight: bold;"></span></p>
             </div>
             
-            <!-- Экран успеха (появляется после успешной оплаты) -->
             <div id="screen-success" class="screen" style="text-align: center;">
                 <h1 style="color: #00ff41; margin-top: 150px;">✅ ОПЛАЧЕНО</h1>
                 <p>Спасибо! Возьмите ваш товар.</p>
@@ -126,11 +164,20 @@
         </div>
     </div>
 
-    <!-- Правильная ссылка на библиотеку qrcode.js -->
+    <!-- Модальное окно для оплаты по улыбке -->
+    <div id="smile-payment-modal">
+        <h2>Оплата по улыбке</h2>
+        <div id="camera-feed">
+            <span>Идет распознавание...</span>
+        </div>
+        <p>Пожалуйста, посмотрите в камеру.</p>
+    </div>
+
+
     <script src="cdnjs.cloudflare.com"></script>
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        const PAYMENT_GATEWAY_URL = "https://matveisem4-dot.github.io/PaymentSite/payment.html"; 
+        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
         
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
         
@@ -153,6 +200,38 @@
                 bottomIdBadge.style.display = 'none';
             }
         }
+        
+        // --- НОВАЯ ФУНКЦИЯ: Переключение методов оплаты ---
+        function switchPaymentMethod(method) {
+            if (method === 'qr') {
+                document.getElementById('qr-payment-section').style.display = 'block';
+                document.getElementById('smile-payment-section').style.display = 'none';
+            } else if (method === 'smile') {
+                document.getElementById('qr-payment-section').style.display = 'none';
+                document.getElementById('smile-payment-section').style.display = 'block';
+            }
+        }
+
+        // --- НОВАЯ ФУНКЦИЯ: Оплата по улыбке (Имитация) ---
+        function initiateSmilePayment() {
+            const modal = document.getElementById('smile-payment-modal');
+            modal.style.display = 'flex'; // Показываем модальное окно
+
+            // Имитация 5-секундного процесса
+            setTimeout(async () => {
+                modal.style.display = 'none'; // Скрываем модальное окно
+                
+                // Отправляем статус SUCCESS в Firebase
+                const statusUrl = `${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`;
+                await fetch(statusUrl, {
+                    method: 'PUT',
+                    body: JSON.stringify({ state: "SUCCESS", reason: "Smile Pay Success" })
+                });
+
+                // checkSync() подхватит этот статус и переключит на экран успеха
+            }, 5000); 
+        }
+
 
         async function returnToWaitScreen() {
             try {
@@ -167,17 +246,11 @@
 
         function generateQRCode(amount) {
             const container = document.getElementById('qrcode-container');
-            // Очищаем контейнер перед генерацией
             container.innerHTML = ''; 
             if (typeof QRCode !== "undefined") {
                 const finalUrl = `${PAYMENT_GATEWAY_URL}?id=${MY_TERMINAL_ID}`;
-                new QRCode(container, { 
-                    text: finalUrl, 
-                    width: 280, 
-                    height: 280 
-                });
+                new QRCode(container, { text: finalUrl, width: 280, height: 280 });
             } else {
-                console.error("Библиотека QRCode не загружена.");
                 container.innerText = "Ошибка загрузки QR-библиотеки";
             }
         }
@@ -201,7 +274,6 @@
                             body: JSON.stringify({ state: "WAITING", requiredAmount: amountNeeded, items: commandData.items || [] })
                         });
 
-                        // Генерируем QR-код и переключаем экран
                         generateQRCode(amountNeeded); 
                         changeScreen('screen-pay');
                     }
