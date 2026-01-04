@@ -3,263 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SberPay Terminal Screen</title>
+    <title>SberPay Terminal</title>
     <style>
         @font-face {
             font-family: 'SberDisplay';
-            src: local('Helvetica Neue Bold'), local('Arial Bold'), sans-serif;
+            src: local('Arial Bold'), sans-serif;
             font-weight: 700;
         }
-
-        body { 
-            margin: 0; 
-            font-family: 'SberDisplay', Arial, sans-serif; 
-            color: #ffffff; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            overflow: hidden; 
-            background: #000000;
-        }
+        body { margin: 0; font-family: 'SberDisplay', sans-serif; background: #000; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; }
         
         #phone-screen-container {
-            width: 400px;
-            height: 800px;
-            background: linear-gradient(to bottom, #004d25, #008000, #00a040, #4CAF50); 
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            padding-top: 50px;
+            width: 360px; height: 740px;
+            background: linear-gradient(to bottom, #004d25, #00a040);
+            position: relative; border-radius: 30px; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center;
         }
-        
-        #ui-wrapper { text-align: left; width: 100%; padding: 0 40px; box-sizing: border-box; }
-        .screen { display: none; }
+
+        .screen { display: none; width: 100%; text-align: center; padding-top: 100px; }
         .active { display: block; }
+
+        .main-text { font-size: 38px; font-weight: bold; line-height: 1.1; margin-top: 50px; text-align: left; padding: 0 30px; }
+        .price-text { font-size: 42px; color: #00ff41; font-weight: 800; margin: 20px 0; }
         
-        .main-text {
-            font-size: 40px; 
-            font-weight: 700;
-            line-height: 1.2;
-            margin-top: 200px;
-        }
-
-        .text-line {
-            display: flex;
-            align-items: center; 
-            margin-bottom: 5px;
-        }
-
+        .qr-frame { background: #fff; padding: 10px; border-radius: 15px; display: inline-block; }
+        
+        /* Та самая плашка ID, которая «терялась» */
         .terminal-id-badge {
-            position: absolute; 
-            bottom: 40px;
-            left: 40px;
-            font-size: 14px;
-            color: #ffffff; 
-            font-weight: bold; 
+            position: absolute; bottom: 30px; left: 0; width: 100%;
+            text-align: center; font-size: 14px; opacity: 0.8;
+            background: rgba(0,0,0,0.2); padding: 5px 0;
         }
 
-        .qr-frame { 
-            background: #ffffff; 
-            padding: 15px; 
-            border-radius: 10px; 
-            display: inline-block; 
-            margin-top: 30px; 
-            width: 280px; 
-            height: 280px; 
-        } 
-
-        .price-text { font-size: 48px; color: #00ff41; font-weight: 800; margin-bottom: 10px; text-align: center;}
-        
-        #exit-button { 
-            display: none;
-            margin-top: 40px;
-            padding: 15px 30px;
-            font-size: 18px;
-            background-color: #00ff41;
-            color: #000;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            width: 100%;
+        button { 
+            background: #00ff41; color: #000; border: none; padding: 12px 20px; 
+            border-radius: 10px; font-weight: bold; cursor: pointer; margin: 5px;
         }
-
         #smile-payment-modal {
-            display: none; 
-            position: fixed; 
-            z-index: 10; 
-            left: 0; top: 0; width: 100%; height: 100%; 
-            background-color: rgba(0,0,0,0.8); 
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            color: white;
-        }
-        #camera-feed {
-            width: 250px; height: 250px;
-            background: #222;
-            border-radius: 50%;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 5px solid #00ff41;
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.9); flex-direction: column; justify-content: center; align-items: center;
         }
     </style>
 </head>
 <body>
+
     <div id="phone-screen-container">
-        <div id="ui-wrapper">
-            <!-- Экран ожидания -->
-            <div id="screen-wait" class="screen active">
-                <div class="main-text">
-                    ПЛАТИТЕ<br>КАК ВАМ<br>УДОБНО
-                </div>
-            </div>
-
-            <!-- Экран оплаты -->
-            <div id="screen-pay" class="screen" style="text-align: center;">
-                <div id="amount-val" class="price-text">0.00 РУБ</div>
-                
-                <div id="payment-options-container" style="margin-top: 20px;">
-                    <button onclick="switchPaymentMethod('qr')" style="padding: 10px; border-radius: 5px; cursor: pointer;">QR</button>
-                    <button onclick="switchPaymentMethod('smile')" style="padding: 10px; border-radius: 5px; cursor: pointer;">Улыбка</button>
-                </div>
-
-                <div id="qr-payment-section">
-                    <div class="qr-frame" id="qrcode-container"></div>
-                    <p style="font-size: 16px; margin-top: 20px;">Сканируйте QR через СберБанк</p>
-                </div>
-
-                <div id="smile-payment-section" style="display: none; text-align: center; margin-top: 30px;">
-                    <button onclick="initiateSmilePayment()" style="padding: 15px; background: #00ff41; border: none; border-radius: 10px; font-weight: bold; width: 100%;">Распознать лицо</button>
-                </div>
-                <p style="font-size: 12px; margin-top: 10px;">ID Терминала: <span id="display-id-center"></span></p>
-            </div>
-            
-            <!-- Экран успеха -->
-            <div id="screen-success" class="screen" style="text-align: center;">
-                <h1 style="color: #00ff41; margin-top: 150px;">✅ ОПЛАЧЕНО</h1>
-                <p>Спасибо за покупку!</p>
-                <button id="exit-button" onclick="returnToWaitScreen()">В начало</button>
-            </div>
+        <!-- Экран 1: Ожидание -->
+        <div id="screen-wait" class="screen active">
+            <div class="main-text">ПЛАТИТЕ<br>КАК ВАМ<br>УДОБНО</div>
         </div>
-        
+
+        <!-- Экран 2: Оплата -->
+        <div id="screen-pay" class="screen">
+            <div id="amount-val" class="price-text">0.00 РУБ</div>
+            <div class="qr-frame" id="qrcode-container"></div>
+            <p>ID для ручного ввода: <b id="display-id-center">------</b></p>
+            <button onclick="initiateSmilePayment()">Оплата лицом</button>
+        </div>
+
+        <!-- Экран 3: Успех -->
+        <div id="screen-success" class="screen">
+            <h1 style="color: #00ff41;">✅ ОПЛАЧЕНО</h1>
+            <button onclick="location.reload()">Вернуться</button>
+        </div>
+
+        <!-- Плашка с ID -->
         <div class="terminal-id-badge">
-            ID: <span id="terminal-id-display">------</span>
+            ТЕРМИНАЛ ID: <span id="terminal-id-display">ЗАГРУЗКА...</span>
         </div>
     </div>
 
-    <!-- Модалка улыбки -->
     <div id="smile-payment-modal">
-        <div id="camera-feed"><span>📷</span></div>
-        <h2>Ищем улыбку...</h2>
+        <div style="width:200px; height:200px; border:4px solid #00ff41; border-radius:50%;"></div>
+        <p>Улыбнитесь в камеру</p>
     </div>
 
-    <!-- БИБЛИОТЕКИ -->
+    <!-- Библиотека QR -->
     <script src="cdnjs.cloudflare.com"></script>
 
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
+        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io";
         
-        // Генерируем уникальный ID для этого окна
+        // 1. ГЕНЕРИРУЕМ ID СРАЗУ
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
-        let currentScreen = 'wait';
+        console.log("Ваш ID:", MY_TERMINAL_ID);
 
-        // Инициализация при запуске
-        document.getElementById('terminal-id-display').innerText = MY_TERMINAL_ID;
-        document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
+        // 2. ФУНКЦИЯ ОТОБРАЖЕНИЯ ID (запускаем принудительно)
+        function showID() {
+            const el1 = document.getElementById('terminal-id-display');
+            const el2 = document.getElementById('display-id-center');
+            if(el1) el1.innerText = MY_TERMINAL_ID;
+            if(el2) el2.innerText = MY_TERMINAL_ID;
+        }
 
-        // 1. РЕГИСТРАЦИЯ В FIREBASE
-        async function registerTerminal() {
+        // 3. РЕГИСТРАЦИЯ В FIREBASE
+        async function registerInFirebase() {
             try {
                 await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
                     method: 'PUT',
-                    body: JSON.stringify({ state: "IDLE", lastSeen: Date.now() })
+                    body: JSON.stringify({ state: "IDLE", online: true })
                 });
-            } catch (e) { console.error("Firebase init error", e); }
+            } catch (e) { console.error("Firebase Error"); }
         }
-        registerTerminal();
 
-        // 2. СМЕНА ЭКРАНОВ
-        function changeScreen(targetId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(targetId).classList.add('active');
-            currentScreen = targetId.replace('screen-', '');
+        // 4. СИНХРОНИЗАЦИЯ (ПРОВЕРКА КОМАНД)
+        async function checkSync() {
+            try {
+                // Проверяем, пришла ли команда PAY
+                const res = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
+                const data = await res.json();
+
+                if (data && data.command === "PAY" && document.getElementById('screen-wait').classList.contains('active')) {
+                    startPayment(data.amount);
+                }
+
+                // Проверяем, не оплачено ли (если мы на экране оплаты)
+                const statusRes = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
+                const statusData = await statusRes.json();
+                if (statusData && statusData.state === "SUCCESS") {
+                    showScreen('screen-success');
+                }
+            } catch (e) {}
+        }
+
+        function startPayment(amount) {
+            document.getElementById('amount-val').innerText = amount + " РУБ";
+            showScreen('screen-pay');
             
-            const badge = document.querySelector('.terminal-id-badge');
-            badge.style.display = (currentScreen === 'success') ? 'none' : 'block';
+            // Генерируем QR
+            const qrContainer = document.getElementById('qrcode-container');
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+                text: `${PAYMENT_GATEWAY_URL}?id=${MY_TERMINAL_ID}&amount=${amount}`,
+                width: 200, height: 200
+            });
         }
 
-        function switchPaymentMethod(method) {
-            document.getElementById('qr-payment-section').style.display = (method === 'qr') ? 'block' : 'none';
-            document.getElementById('smile-payment-section').style.display = (method === 'smile') ? 'block' : 'none';
-        }
-
-        // 3. ЛОГИКА ОПЛАТЫ
-        function generateQRCode(amount) {
-            const container = document.getElementById('qrcode-container');
-            container.innerHTML = '';
-            const link = `${PAYMENT_GATEWAY_URL}?id=${MY_TERMINAL_ID}&amount=${amount}`;
-            new QRCode(container, { text: link, width: 280, height: 280 });
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
         }
 
         async function initiateSmilePayment() {
             document.getElementById('smile-payment-modal').style.display = 'flex';
             setTimeout(async () => {
                 document.getElementById('smile-payment-modal').style.display = 'none';
-                // Отправляем успех в Firebase
                 await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
                     method: 'PATCH',
-                    body: JSON.stringify({ state: "SUCCESS", method: "smile" })
+                    body: JSON.stringify({ state: "SUCCESS" })
                 });
             }, 3000);
         }
 
-        async function returnToWaitScreen() {
-            await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
-            await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { 
-                method: 'PUT', 
-                body: JSON.stringify({ state: "IDLE" }) 
-            });
-            document.getElementById('exit-button').style.display = 'none';
-            changeScreen('screen-wait');
-        }
+        // ЗАПУСК ВСЕГО
+        showID();
+        registerInFirebase();
+        setInterval(checkSync, 2000);
 
-        // 4. ЦИКЛ ПРОВЕРКИ КОМАНД (SYNC)
-        async function checkSync() {
-            try {
-                // Если ждем оплаты - проверяем, не оплатил ли пользователь
-                if (currentScreen === 'pay') {
-                    const res = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
-                    const data = await res.json();
-                    if (data && data.state === "SUCCESS") {
-                        changeScreen('screen-success');
-                        setTimeout(() => { document.getElementById('exit-button').style.display = 'block'; }, 2000);
-                    }
-                } 
-                // Если на главном - ждем команду PAY от другого приложения
-                else if (currentScreen === 'wait') {
-                    const res = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
-                    const cmd = await res.json();
-                    if (cmd && cmd.command === "PAY") {
-                        document.getElementById('amount-val').innerText = (cmd.amount || 0) + " РУБ";
-                        generateQRCode(cmd.amount);
-                        // Обновляем статус, что терминал занят оплатой
-                        await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
-                            method: 'PUT',
-                            body: JSON.stringify({ state: "WAITING_PAYMENT", amount: cmd.amount })
-                        });
-                        changeScreen('screen-pay');
-                    }
-                }
-            } catch (err) { console.error("Sync Error:", err); }
-        }
-
-        setInterval(checkSync, 2000); // Проверка каждые 2 секунды
     </script>
 </body>
 </html>
