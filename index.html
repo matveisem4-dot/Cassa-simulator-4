@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SberPay Terminal 2026 Animated</title>
-    <!-- ИСПРАВЛЕННАЯ ССЫЛКА НА БИБЛИОТЕКУ QR -->
-    <script src="https://cdn.jsdelivr.net"></script>
+    <title>SberPay Terminal 2026 Permanent QR</title>
+    <script src="cdn.jsdelivr.net"></script>
     <style>
         @font-face {
             font-family: 'SberDisplay';
@@ -21,11 +20,9 @@
             display: flex; flex-direction: column; align-items: center;
         }
 
-        /* Анимация перехода между экранами */
         .screen { display: none; width: 100%; text-align: center; padding-top: 60px; opacity: 0; transition: opacity 0.5s ease-in-out; }
         .screen.active { display: block; opacity: 1; }
 
-        /* Анимация для "Платите как вам удобно" */
         .main-text { 
             font-size: 38px; font-weight: bold; line-height: 1.1; margin-top: 50px; text-align: left; padding: 0 30px; 
             opacity: 0;
@@ -34,13 +31,11 @@
         
         .price-text { font-size: 48px; color: #00ff41; font-weight: 800; margin: 10px 0; opacity: 0; transform: translateY(-20px); animation: fadeIn 0.5s forwards 0.1s; }
         
-        /* Контейнер QR с белым фоном и анимацией */
         #qrcode-container {
             background: #fff; padding: 20px; border-radius: 15px; display: inline-block; margin: 20px auto;
             min-width: 250px; min-height: 250px; opacity: 0; transform: translateY(50px);
         }
         
-        /* Класс для запуска анимации QR */
         .animated { animation: slideInUp 0.6s forwards; }
 
         .terminal-id-badge { position: absolute; bottom: 15px; left: 15px; font-size: 10px; opacity: 0.5; }
@@ -50,12 +45,10 @@
         #smile-payment-modal { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.95); flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
         #webcam-video { width: 280px; height: 280px; object-fit: cover; border-radius: 50%; border: 4px solid #00ff41; transform: scaleX(-1); background: #222; }
 
-        /* Keyframes для анимаций */
         @keyframes slideInUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideInFromLeft { from { opacity: 0; transform: translateX(-100px); } to { opacity: 1; transform: translateX(0); } }
 
-        /* Индикатор статуса */
         #status-indicator { position: absolute; bottom: 18px; right: 15px; width: 8px; height: 8px; border-radius: 50%; background-color: gray; }
         @keyframes pulse-green { 0%, 100% { background-color: #00ff41; box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.4); } 50% { box-shadow: 0 0 0 8px rgba(0, 255, 65, 0); } }
         @keyframes pulse-red { 0%, 100% { background-color: #ff0000; box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4); } 50% { box-shadow: 0 0 0 8px rgba(255, 0, 0, 0); } }
@@ -65,11 +58,13 @@
 <body>
 
     <div id="phone-screen-container">
-        <div id="screen-wait" class="screen active">
+        <!-- Убрали active отсюда -->
+        <div id="screen-wait" class="screen">
             <div class="main-text">ПЛАТИТЕ<br>КАК ВАМ<br>УДОБНО</div>
         </div>
 
-        <div id="screen-pay" class="screen">
+        <!-- Добавили active сюда -->
+        <div id="screen-pay" class="screen active">
             <div id="amount-val" class="price-text">0.00 РУБ</div>
             <div id="qrcode-container"></div>
             <p>ID: <b id="display-id-center">------</b></p>
@@ -93,19 +88,22 @@
 
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        const PAYMENT_GATEWAY_URL = "https://matveisem4-dot.github.io/PaymentSite/payment.html";
+        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io";
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
-        let currentScreen = 'wait';
+        let currentScreen = 'pay'; // Изменили дефолтный экран в JS
         const statusIndicator = document.getElementById('status-indicator');
 
         document.getElementById('terminal-id-display').innerText = MY_TERMINAL_ID;
         document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
+        
+        const DEFAULT_AMOUNT = 500.00; // Сумма, которая будет показываться всегда
 
         async function registerInFirebase() {
             try {
+                // Регистрируем терминал сразу с суммой
                 await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
                     method: 'PUT',
-                    body: JSON.stringify({ state: "IDLE", lastUpdate: Date.now() })
+                    body: JSON.stringify({ state: "WAITING_PAYMENT", amount: DEFAULT_AMOUNT, lastUpdate: Date.now() })
                 });
                 updateIndicator('green');
             } catch (e) { updateIndicator('red'); }
@@ -123,13 +121,8 @@
         }
 
         async function checkSync() {
+            // checkSync теперь нужен только для отслеживания успешной оплаты
             try {
-                const res = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
-                const data = await res.json();
-                if (data && data.command === "PAY" && currentScreen === 'wait') {
-                    startPayment(data.amount);
-                }
-
                 const statusRes = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
                 const statusData = await statusRes.json();
                 if (statusData && statusData.state === "SUCCESS" && currentScreen !== 'success') {
@@ -141,8 +134,8 @@
         }
 
         function startPayment(amount) {
+             // Эта функция теперь просто запускает анимацию, т.к. экран уже активен
             document.getElementById('amount-val').innerText = amount + " РУБ";
-            showScreen('screen-pay');
             updateIndicator('green');
             const qrBox = document.getElementById('qrcode-container');
             qrBox.innerHTML = '';
@@ -167,12 +160,15 @@
         }
 
         async function returnToWaitScreen() {
+            // При возврате мы опять показываем экран оплаты по умолчанию
             await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
                 method: 'PUT',
-                body: JSON.stringify({ state: "IDLE" })
+                body: JSON.stringify({ state: "WAITING_PAYMENT", amount: DEFAULT_AMOUNT })
             });
             await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
-            showScreen('screen-wait');
+            showScreen('screen-pay');
+            // Запускаем отрисовку QR снова
+            startPayment(DEFAULT_AMOUNT); 
             updateIndicator('green');
         }
 
@@ -203,7 +199,9 @@
             }
         }
 
+        // Запуск приложения
         registerInFirebase();
+        startPayment(DEFAULT_AMOUNT); // Запускаем QR-код сразу при загрузке
         setInterval(checkSync, 2000);
     </script>
 </body>
