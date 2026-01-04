@@ -146,7 +146,6 @@
             updateIndicator('green');
             const qrBox = document.getElementById('qrcode-container');
             qrBox.innerHTML = '';
-            // Гарантированная отрисовка QR с задержкой
             setTimeout(() => {
                 if (typeof QRCode !== "undefined") {
                     new QRCode(qrBox, {
