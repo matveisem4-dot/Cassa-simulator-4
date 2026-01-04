@@ -83,17 +83,14 @@
             border: none;
             border-radius: 10px;
             cursor: pointer;
+            width: 100%;
         }
 
-        /* Стиль для модального окна оплаты по улыбке */
         #smile-payment-modal {
-            display: none; /* Скрыто по умолчанию */
+            display: none; 
             position: fixed; 
             z-index: 10; 
-            left: 0;
-            top: 0;
-            width: 100%; 
-            height: 100%; 
+            left: 0; top: 0; width: 100%; height: 100%; 
             background-color: rgba(0,0,0,0.8); 
             justify-content: center;
             align-items: center;
@@ -101,203 +98,168 @@
             color: white;
         }
         #camera-feed {
-            width: 300px;
-            height: 300px;
-            background: #444; /* Имитация черного экрана камеры */
-            border-radius: 50%; /* Круглая область для лица */
+            width: 250px; height: 250px;
+            background: #222;
+            border-radius: 50%;
             margin-bottom: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
             border: 5px solid #00ff41;
-            box-sizing: border-box;
         }
     </style>
 </head>
 <body>
     <div id="phone-screen-container">
-        
         <div id="ui-wrapper">
+            <!-- Экран ожидания -->
             <div id="screen-wait" class="screen active">
                 <div class="main-text">
-                    ПЛАТИТЕ
-                    <div class="text-line">
-                         КАК ВАМ
-                    </div>
-                    <div class="text-line">
-                         УДОБНО
-                    </div>
+                    ПЛАТИТЕ<br>КАК ВАМ<br>УДОБНО
                 </div>
             </div>
 
+            <!-- Экран оплаты -->
             <div id="screen-pay" class="screen" style="text-align: center;">
                 <div id="amount-val" class="price-text">0.00 РУБ</div>
                 
-                <!-- Опции оплаты -->
                 <div id="payment-options-container" style="margin-top: 20px;">
-                    <button onclick="switchPaymentMethod('qr')" style="padding: 10px; margin-right: 10px;">QR Оплата</button>
-                    <button onclick="switchPaymentMethod('smile')" style="padding: 10px;">Оплата по улыбке</button>
+                    <button onclick="switchPaymentMethod('qr')" style="padding: 10px; border-radius: 5px; cursor: pointer;">QR</button>
+                    <button onclick="switchPaymentMethod('smile')" style="padding: 10px; border-radius: 5px; cursor: pointer;">Улыбка</button>
                 </div>
 
                 <div id="qr-payment-section">
                     <div class="qr-frame" id="qrcode-container"></div>
-                    <p style="font-size: 20px; margin-top: 20px;">Сканируйте QR и введите ID на телефоне</p>
+                    <p style="font-size: 16px; margin-top: 20px;">Сканируйте QR через СберБанк</p>
                 </div>
 
                 <div id="smile-payment-section" style="display: none; text-align: center; margin-top: 30px;">
-                    <p>Нажмите "Улыбка", чтобы начать оплату лицом.</p>
-                    <button onclick="initiateSmilePayment()" style="padding: 15px; background: #00ff41; border: none; border-radius: 5px;">Начать оплату улыбкой</button>
+                    <button onclick="initiateSmilePayment()" style="padding: 15px; background: #00ff41; border: none; border-radius: 10px; font-weight: bold; width: 100%;">Распознать лицо</button>
                 </div>
-
-                <p style="color: #ffffff; font-size: 16px; margin-top: 20px;">Терминал: <span id="display-id-center" style="font-weight: bold;"></span></p>
+                <p style="font-size: 12px; margin-top: 10px;">ID Терминала: <span id="display-id-center"></span></p>
             </div>
             
+            <!-- Экран успеха -->
             <div id="screen-success" class="screen" style="text-align: center;">
                 <h1 style="color: #00ff41; margin-top: 150px;">✅ ОПЛАЧЕНО</h1>
-                <p>Спасибо! Возьмите ваш товар.</p>
-                <button id="exit-button" onclick="returnToWaitScreen()">Выйти на главный экран</button>
+                <p>Спасибо за покупку!</p>
+                <button id="exit-button" onclick="returnToWaitScreen()">В начало</button>
             </div>
         </div>
         
         <div class="terminal-id-badge">
-            ID: <span id="terminal-id-display"></span>
+            ID: <span id="terminal-id-display">------</span>
         </div>
     </div>
 
-    <!-- Модальное окно для оплаты по улыбке -->
+    <!-- Модалка улыбки -->
     <div id="smile-payment-modal">
-        <h2>Оплата по улыбке</h2>
-        <div id="camera-feed">
-            <span>Идет распознавание...</span>
-        </div>
-        <p>Пожалуйста, посмотрите в камеру.</p>
+        <div id="camera-feed"><span>📷</span></div>
+        <h2>Ищем улыбку...</h2>
     </div>
 
-
+    <!-- БИБЛИОТЕКИ -->
     <script src="cdnjs.cloudflare.com"></script>
+
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        const PAYMENT_GATEWAY_URL = "https://matveisem4-dot.github.io/PaymentSite/payment.html"; 
+        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io"; 
         
+        // Генерируем уникальный ID для этого окна
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
-        
-        document.getElementById('terminal-id-display').innerText = MY_TERMINAL_ID;
-        const displayCenter = document.getElementById('display-id-center');
-        if (displayCenter) displayCenter.innerText = MY_TERMINAL_ID;
-
         let currentScreen = 'wait';
-        const bottomIdBadge = document.getElementById('terminal-id-display').parentElement;
 
+        // Инициализация при запуске
+        document.getElementById('terminal-id-display').innerText = MY_TERMINAL_ID;
+        document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
 
+        // 1. РЕГИСТРАЦИЯ В FIREBASE
+        async function registerTerminal() {
+            try {
+                await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ state: "IDLE", lastSeen: Date.now() })
+                });
+            } catch (e) { console.error("Firebase init error", e); }
+        }
+        registerTerminal();
+
+        // 2. СМЕНА ЭКРАНОВ
         function changeScreen(targetId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(targetId).classList.add('active');
             currentScreen = targetId.replace('screen-', '');
             
-            if (currentScreen === 'wait' || currentScreen === 'pay') {
-                bottomIdBadge.style.display = 'block'; 
-            } else {
-                bottomIdBadge.style.display = 'none';
-            }
+            const badge = document.querySelector('.terminal-id-badge');
+            badge.style.display = (currentScreen === 'success') ? 'none' : 'block';
         }
-        
-        // --- НОВАЯ ФУНКЦИЯ: Переключение методов оплаты ---
+
         function switchPaymentMethod(method) {
-            if (method === 'qr') {
-                document.getElementById('qr-payment-section').style.display = 'block';
-                document.getElementById('smile-payment-section').style.display = 'none';
-            } else if (method === 'smile') {
-                document.getElementById('qr-payment-section').style.display = 'none';
-                document.getElementById('smile-payment-section').style.display = 'block';
-            }
+            document.getElementById('qr-payment-section').style.display = (method === 'qr') ? 'block' : 'none';
+            document.getElementById('smile-payment-section').style.display = (method === 'smile') ? 'block' : 'none';
         }
 
-        // --- НОВАЯ ФУНКЦИЯ: Оплата по улыбке (Имитация) ---
-        function initiateSmilePayment() {
-            const modal = document.getElementById('smile-payment-modal');
-            modal.style.display = 'flex'; // Показываем модальное окно
-
-            // Имитация 5-секундного процесса
-            setTimeout(async () => {
-                modal.style.display = 'none'; // Скрываем модальное окно
-                
-                // Отправляем статус SUCCESS в Firebase
-                const statusUrl = `${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`;
-                await fetch(statusUrl, {
-                    method: 'PUT',
-                    body: JSON.stringify({ state: "SUCCESS", reason: "Smile Pay Success" })
-                });
-
-                // checkSync() подхватит этот статус и переключит на экран успеха
-            }, 5000); 
-        }
-
-
-        async function returnToWaitScreen() {
-            try {
-                document.getElementById('exit-button').style.display = 'none';
-                await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
-                await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
-                changeScreen('screen-wait');
-            } catch (err) {
-                console.error("Ошибка при сбросе:", err);
-            }
-        }
-
+        // 3. ЛОГИКА ОПЛАТЫ
         function generateQRCode(amount) {
             const container = document.getElementById('qrcode-container');
-            container.innerHTML = ''; 
-            if (typeof QRCode !== "undefined") {
-                const finalUrl = `${PAYMENT_GATEWAY_URL}?id=${MY_TERMINAL_ID}`;
-                new QRCode(container, { text: finalUrl, width: 280, height: 280 });
-            } else {
-                container.innerText = "Ошибка загрузки QR-библиотеки";
-            }
+            container.innerHTML = '';
+            const link = `${PAYMENT_GATEWAY_URL}?id=${MY_TERMINAL_ID}&amount=${amount}`;
+            new QRCode(container, { text: link, width: 280, height: 280 });
         }
 
-        function displayItems(items) { /* ... ваша функция ... */ }
+        async function initiateSmilePayment() {
+            document.getElementById('smile-payment-modal').style.display = 'flex';
+            setTimeout(async () => {
+                document.getElementById('smile-payment-modal').style.display = 'none';
+                // Отправляем успех в Firebase
+                await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ state: "SUCCESS", method: "smile" })
+                });
+            }, 3000);
+        }
 
+        async function returnToWaitScreen() {
+            await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
+            await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { 
+                method: 'PUT', 
+                body: JSON.stringify({ state: "IDLE" }) 
+            });
+            document.getElementById('exit-button').style.display = 'none';
+            changeScreen('screen-wait');
+        }
+
+        // 4. ЦИКЛ ПРОВЕРКИ КОМАНД (SYNC)
         async function checkSync() {
             try {
-                if (currentScreen === 'success') return;
-
-                if (currentScreen === 'wait') {
-                    const commandResponse = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
-                    const commandData = await commandResponse.json();
-
-                    if (commandData && commandData.command === "PAY") {
-                        const amountNeeded = commandData.amount || "0";
-                        document.getElementById('amount-val').innerText = amountNeeded + " РУБ";
-                        
+                // Если ждем оплаты - проверяем, не оплатил ли пользователь
+                if (currentScreen === 'pay') {
+                    const res = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
+                    const data = await res.json();
+                    if (data && data.state === "SUCCESS") {
+                        changeScreen('screen-success');
+                        setTimeout(() => { document.getElementById('exit-button').style.display = 'block'; }, 2000);
+                    }
+                } 
+                // Если на главном - ждем команду PAY от другого приложения
+                else if (currentScreen === 'wait') {
+                    const res = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
+                    const cmd = await res.json();
+                    if (cmd && cmd.command === "PAY") {
+                        document.getElementById('amount-val').innerText = (cmd.amount || 0) + " РУБ";
+                        generateQRCode(cmd.amount);
+                        // Обновляем статус, что терминал занят оплатой
                         await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
                             method: 'PUT',
-                            body: JSON.stringify({ state: "WAITING", requiredAmount: amountNeeded, items: commandData.items || [] })
+                            body: JSON.stringify({ state: "WAITING_PAYMENT", amount: cmd.amount })
                         });
-
-                        generateQRCode(amountNeeded); 
                         changeScreen('screen-pay');
                     }
                 }
-
-                if (currentScreen === 'pay') {
-                    const statusResponse = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
-                    const statusData = await statusResponse.json();
-
-                    if (statusData && statusData.state === "SUCCESS") {
-                        changeScreen('screen-success');
-                        setTimeout(() => {
-                            const exitBtn = document.getElementById('exit-button');
-                            if (exitBtn) exitBtn.style.display = 'block';
-                        }, 3000); 
-                    }
-                }
-
-            } catch (error) {
-                console.error("ОШИБКА СВЯЗИ:", error);
-            }
+            } catch (err) { console.error("Sync Error:", err); }
         }
 
-        setInterval(checkSync, 2000);
+        setInterval(checkSync, 2000); // Проверка каждые 2 секунды
     </script>
 </body>
 </html>
