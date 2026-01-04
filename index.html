@@ -100,7 +100,7 @@
 
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io";
+        const PAYMENT_GATEWAY_URL = "https://matveisem4-dot.github.io/PaymentSite/payment.html";
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
         let currentScreen = 'wait'; 
         const statusIndicator = document.getElementById('status-indicator');
@@ -109,7 +109,7 @@
         document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
         
         // Ссылка на изображение QR-кода, которое вы положили в папку
-        const QR_IMAGE_SRC = "my_qr_code.pdf";
+        const QR_IMAGE_SRC = "my_qr_code.svg";
 
         async function registerInFirebase() { /* ... (остается без изменений) ... */
              try {
