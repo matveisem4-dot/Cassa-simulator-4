@@ -8,39 +8,23 @@
         :root { --bg: linear-gradient(135deg, #08a652 0%, #03411e 100%); --lime: #7cec84; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: sans-serif; background: #121212; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         #terminal { width: 100%; height: 100vh; max-width: 420px; background: var(--bg); display: flex; flex-direction: column; position: relative; }
-        
         .screen { display: none; flex-direction: column; flex: 1; padding: 40px; color: white; text-align: left; }
         .screen.active { display: flex; }
-
-        /* Стиль для главного текста со смайликом */
-        .main-text { 
-            font-size: 38px; font-weight: 800; line-height: 1.1; 
-            margin-top: 30px; color: #fff; letter-spacing: -1px; 
-        }
+        .main-text { font-size: 38px; font-weight: 800; line-height: 1.1; margin-top: 30px; color: #fff; letter-spacing: -1px; }
         .smile-inline { height: 40px; vertical-align: middle; margin: 0 4px; }
-
         .card { background: white; border-radius: 30px; padding: 25px; color: black; margin-top: auto; display: flex; flex-direction: column; align-items: center; position: relative; overflow: hidden; text-align: center; }
         #camera { position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; display:none; }
-        #timer { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); color: white; display:none; align-items:center; justify-content:center; font-size: 80px; font-weight: bold; }
-        
+        #timer { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); color: white; display:none; align-items:center; justify-content:center; font-size: 80px; font-weight: bold; z-index: 10; }
         img#qr { width: 180px; height: 180px; background: white; margin: 20px 0; object-fit: contain; }
-        
         button { background: var(--lime); border: none; padding: 20px; width: 100%; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 16px; color: #004d25; }
         .id-label { padding: 15px; color: rgba(255,255,255,0.5); font-size: 14px; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
     <div id="terminal">
-        <!-- ПЕРВЫЙ ЭКРАН С НАДПИСЬЮ И СМАЙЛОМ -->
         <div id="s-wait" class="screen active">
-            <div class="main-text">
-                платите<br>
-                <img src="https://www.sberbank.ru/common/img/uploaded/files/oplata_ulybkoy/images/blindssmile_howto.webp" class="smile-inline" alt="smile">
-                как вам<br>
-                удобно
-            </div>
+            <div class="main-text">платите<br><img src="www.sberbank.ru" class="smile-inline">как вам<br>удобно</div>
         </div>
-
         <div id="s-pay" class="screen">
             <div class="card">
                 <video id="camera" autoplay playsinline muted></video>
@@ -50,15 +34,11 @@
                 <button onclick="payWithSmile()">ОПЛАТИТЬ УЛЫБКОЙ</button>
             </div>
         </div>
-
         <div id="s-ok" class="screen" style="text-align: center; justify-content: center;">
-            <div style="background: var(--lime); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                <span style="font-size: 40px; color: #004d25;">✔</span>
-            </div>
+            <div style="background: var(--lime); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;"><span style="font-size: 40px; color: #004d25;">✔</span></div>
             <h1>ОПЛАЧЕНО</h1>
         </div>
-
-        <center class="id-label">ID ТЕРМИНАЛА: <span id="my-id">...</span></center>
+        <div class="id-label">ID ТЕРМИНАЛА: <span id="my-id">...</span></div>
     </div>
 
     <script>
@@ -69,6 +49,7 @@
 
         async function sync() {
             try {
+                // ТЕРМИНАЛ СЛУШАЕТ ПАПКУ COMMANDS
                 const r = await fetch(`${DB}/commands/${tid}.json`);
                 const cmd = await r.json();
                 if (cmd && cmd.command === "PAY") { 
@@ -79,6 +60,7 @@
         }
 
         async function payWithSmile() {
+            // ... (код камеры) ...
             const v = document.getElementById('camera');
             const t = document.getElementById('timer');
             try {
@@ -90,13 +72,14 @@
                     if(c <= 0) {
                         clearInterval(i);
                         stream.getTracks().forEach(tr => tr.stop());
+                        // ОТПРАВЛЯЕТ SUCCESS В ПАПКУ STATUS
                         await fetch(`${DB}/status/${tid}.json`, {method:'PUT', body: JSON.stringify({state:'SUCCESS'})});
                         await fetch(`${DB}/commands/${tid}.json`, {method:'DELETE'});
                         show('ok');
                         setTimeout(() => { location.reload(); }, 3000);
                     }
                 }, 1000);
-            } catch(e) { alert("Включите камеру для оплаты улыбкой"); }
+            } catch(e) { alert("Ошибка камеры!"); }
         }
 
         function show(id) {
