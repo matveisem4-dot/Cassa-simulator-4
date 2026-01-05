@@ -3,196 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SberPay Terminal Final UI</title>
+    <title>SberPay Terminal UI 2026</title>
     <style>
-        /* --- 1. Цвета и Фон (Точно как на фото) --- */
         :root {
-            --sber-green-start: #008040; /* Начало градиента */
-            --sber-green-end: #004d25;   /* Конец градиента */
-            --text-color: #ffffff;      /* Белый текст */
-            --accent-green: #7cec84;    /* Яркий зеленый для галочек/лого */
-            --terminal-id-color: #aaa;  /* Серый для ID терминала */
-            --card-bg: rgba(255, 255, 255, 0.9);
-            --button-bg: linear-gradient(45deg, #00ff41, #00e600);
-            --text-color-dark: #000000;
+            --sber-green-main: #21a038;
+            --sber-gradient: linear-gradient(135deg, #21a038 0%, #04391d 100%);
+            --accent-green: #2df573;
+            --bg-dark: #000000;
+            --text-white: #ffffff;
+            --card-radius: 24px;
         }
 
-        /* --- 2. Глобальные Стили и Адаптивный Контейнер --- */
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
-
-        body { 
-            font-family: 'Segoe UI', Roboto, Arial, sans-serif; 
-            background: #000000; 
-            color: var(--text-color); 
-            display: flex; justify-content: center; align-items: center; 
-            height: 100vh; overflow: hidden; 
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            font-family: 'SBSansInterface', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-white);
+            display: flex; justify-content: center; align-items: center;
         }
-        
+
         #phone-screen-container {
-            width: 100%; height: 100vh; 
-            max-width: 450px; 
-            background: linear-gradient(to bottom, var(--sber-green-start), var(--sber-green-end)); 
-            position: relative; 
-            display: flex; flex-direction: column; overflow: hidden;
-            border-radius: 0px; 
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.3); 
+            width: 100%; height: 100vh;
+            max-width: 420px;
+            background: var(--sber-gradient);
+            position: relative;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
         }
 
         @media (min-width: 768px) {
-            #phone-screen-container { width: 380px; height: 780px; border-radius: 40px; box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), inset 0 0 50px rgba(0,0,0,0.3); border: 10px solid #222; }
+            #phone-screen-container { 
+                height: 85vh; border-radius: 40px; 
+                border: 8px solid #222; 
+            }
         }
 
-        /* --- 3. UI Элементы --- */
-        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; padding: 20px; }
-        .screen.active { display: flex !important; animation: fadeIn 0.4s; } 
-
-        .main-text { 
-            font-size: 38px; font-weight: 800; line-height: 1.1; 
-            margin-top: 120px; margin-bottom: auto; 
-            text-align: left; 
-            color: var(--text-color); 
-            padding-left: 10px; 
+        /* Шапка */
+        .header {
+            padding: 40px 25px 20px;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        
-        /* НОВЫЙ СТИЛЬ ДЛЯ ИЗОБРАЖЕНИЯ УЛЫБКИ В ТЕКСТЕ */
-        .sber-smile-logo-inline {
-            height: 30px; 
-            vertical-align: middle;
-            margin-right: 5px;
-            margin-bottom: 5px;
-        }
+        .sber-logo { height: 28px; filter: brightness(100); }
 
-        .sber-logo-check-small { color: var(--accent-green); display: inline-block; margin-left: 5px; font-size: 20px; vertical-align: middle;}
-        
-        .terminal-id-badge { position: absolute; bottom: 15px; left: 15px; font-size: 10px; opacity: 0.8; color: var(--terminal-id-color); }
-        
-        #sberpay-logo {
-            position: absolute;
-            top: 40px; 
-            left: 20px;
-            height: 24px; 
-            width: auto;
-            opacity: 0.8;
-            filter: brightness(1.5);
+        /* Экраны */
+        .screen { 
+            display: none; flex-direction: column; flex: 1; 
+            padding: 0 25px 40px; 
+        }
+        .screen.active { display: flex; animation: fadeIn 0.4s ease-out; }
+
+        /* Экран Ожидания */
+        .main-text {
+            font-size: 42px; font-weight: 700; line-height: 1.1;
+            margin-top: 60px; letter-spacing: -1px;
+        }
+        .smile-inline {
+            height: 38px; vertical-align: -6px; margin: 0 4px;
         }
 
-        /* ... (Остальные стили экрана оплаты остаются прежними) ... */
-        .price-text { font-size: 50px; font-weight: 800; margin: 0; color: var(--text-color); }
-        #qrcode-container { background: var(--card-bg); padding: 10px; border-radius: 8px; margin: 0; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
-        #qrcode-image { width: 150px; height: 150px; display: none; }
-        button { background: var(--button-bg); color: var(--text-color-dark); border: none; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 0 15px rgba(0, 255, 65, 0.5); }
-        #nfc-area { display: none; width: 100%; padding: 15px; margin-bottom: 20px; background: rgba(255, 255, 255, 0.1); text-align: center; color: white; border-radius: 10px; }
-        #payment-footer-area { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; margin-top: auto; }
-        #smile-button { background: var(--button-bg); color: var(--text-color-dark); border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; height: min-content; margin-left: 10px; }
-        #id-center-display { color: var(--text-color); font-size: 12px; opacity: 0.8; text-align: center; margin-bottom: auto; display: none; }
+        /* Экран Оплаты */
+        .amount-display {
+            text-align: center; margin-top: 40px;
+        }
+        .price-val { font-size: 54px; font-weight: 800; margin-bottom: 5px; }
+        .price-sub { font-size: 16px; opacity: 0.7; margin-bottom: 30px; }
 
+        .payment-methods {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--card-radius);
+            padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
+            backdrop-filter: blur(10px);
+        }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #qrcode-image {
+            width: 180px; height: 180px;
+            background: white; padding: 10px;
+            border-radius: 12px; margin-bottom: 20px;
+        }
 
+        .btn-smile {
+            background: var(--accent-green);
+            color: #000; border: none; width: 100%;
+            padding: 18px; border-radius: 16px;
+            font-size: 18px; font-weight: 700;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        .btn-smile:active { transform: scale(0.98); }
+
+        /* Футер */
+        .terminal-info {
+            position: absolute; bottom: 20px; width: 100%;
+            text-align: center; font-size: 11px; opacity: 0.5;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Статус NFC */
+        .nfc-hint {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px; border-radius: 30px;
+            font-size: 14px; margin-bottom: 20px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     </style>
 </head>
-<body onclick="toggleFullScreen()">
+<body>
 
     <div id="phone-screen-container">
-        <!-- Логотип SberPay -->
-        <img id="sberpay-logo" src="https://upload.wikimedia.org/wikipedia/commons/6/6b/SberPay.png" alt="SberPay Logo">
+        <div class="header">
+            <img class="sber-logo" src="upload.wikimedia.org" alt="SberPay">
+        </div>
 
-        <!-- Экран ожидания (Точно как на фото) -->
+        <!-- Экран ожидания -->
         <div id="screen-wait" class="screen active">
             <div class="main-text">
                 платите<br>
-                <!-- ИСПОЛЬЗУЕМ ВАШЕ ИЗОБРАЖЕНИЕ ВМЕСТО ТОЧКИ -->
-                <img src="upload.wikimedia.org" class="https://www.sberbank.ru/common/img/uploaded/files/oplata_ulybkoy/images/blindssmile_howto.webp" alt="Smile Logo"> как вам<br>
-                удобно<span class="sber-logo-check-small">✔</span>
+                <img src="www.sberbank.ru" class="smile-inline" alt="smile">
+                как вам<br>
+                удобно
             </div>
         </div>
         
-        <!-- ... (Остальные экраны: оплаты, успеха) ... -->
+        <!-- Экран оплаты -->
         <div id="screen-pay" class="screen">
-            <div id="nfc-area"> <div class="nfc-icon">📶</div> <div id="nfc-status-text">Приложите карту</div> </div>
-            <div id="amount-val" class="price-text">0.00 РУБ</div>
-            <div id="id-center-display">Терминал ID: <span id="display-id-center-value">...</span></div>
-            <div id="payment-footer-area">
-                <div style="display: flex; align-items: flex-end;">
-                    <div id="qrcode-container"> <img id="qrcode-image" src="my_qr_code.png" alt="QR Code" /> </div>
-                    <button id="smile-button" onclick="initiateSmilePayment()">Улыбка</button>
-                </div>
+            <div class="amount-display">
+                <div id="amount-val" class="price-val">0.00 ₽</div>
+                <div class="price-sub">К оплате по SberPay</div>
+            </div>
+
+            <div class="payment-methods">
+                <div class="nfc-hint">Приложите карту или телефон</div>
+                <img id="qrcode-image" src="" alt="QR">
+                <button class="btn-smile" onclick="initiateSmilePayment()">Оплатить улыбкой</button>
             </div>
         </div>
 
-        <div id="screen-success" class="screen">
-            <h1 style="color: var(--text-color); margin-top: 150px; font-size: 40px;">✅ ОПЛАЧЕНО</h1>
-            <button onclick="returnToWaitScreen()">В начало</button>
+        <!-- Экран успеха -->
+        <div id="screen-success" class="screen" style="justify-content: center; align-items: center; text-align: center;">
+            <div style="font-size: 80px; margin-bottom: 20px;">✅</div>
+            <h1 style="font-size: 32px; margin: 0;">Оплачено</h1>
+            <p style="opacity: 0.7;">Спасибо за покупку!</p>
+            <button class="btn-smile" style="margin-top: 40px; background: white;" onclick="returnToWaitScreen()">Готово</button>
         </div>
 
-        <!-- ID терминала в углу (как на фото) -->
-        <div class="terminal-id-badge">Терминал: <span id="terminal-id-display-value">00544048</span></div>
+        <div class="terminal-info">ID Терминала: <span id="terminal-id">00544048</span></div>
     </div>
     
     <script>
-        // --- ПОЛНЫЙ БЛОК СКРИПТОВ ---
-        const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
-        let currentScreen = 'wait'; 
-        let stream = null;
+        const FIREBASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
+        const TERMINAL_ID = "00544048"; // Фиксированный для теста или Math.random
+        let currentScreen = 'wait';
 
-        document.getElementById('terminal-id-display-value').innerText = MY_TERMINAL_ID;
-        document.getElementById('display-id-center-value').innerText = MY_TERMINAL_ID;
+        document.getElementById('terminal-id').innerText = TERMINAL_ID;
 
-        function toggleFullScreen() { if (window.innerWidth < 768 && !document.fullscreenElement) { document.documentElement.requestFullscreen().catch(() => {}); } }
-        
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            currentScreen = id.replace('screen-', '');
-            
-            if (id === 'screen-pay') {
-                document.getElementById('id-center-display').style.display = 'block';
-            } else {
-                document.getElementById('id-center-display').style.display = 'none';
-            }
-            
-            const nfcArea = document.getElementById('nfc-area'); if (nfcArea) nfcArea.style.display = 'none';
-            const qrImg = document.getElementById('qrcode-image'); if (qrImg) qrImg.style.display = 'none';
-        }
-        
-        function playSuccessSound() { try { const audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const oscillator = audioCtx.createOscillator(); const gainNode = audioCtx.createGain(); oscillator.connect(gainNode); gainNode.connect(audioCtx.destination); oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.2); } catch (e) { } }
-        
-        async function initiateNFC() {
-            const nfcArea = document.getElementById('nfc-area'); nfcArea.style.display = 'block';
-            if ("NDEFReader" in window) { try { const reader = new NDEFReader(); await reader.scan(); reader.addEventListener("reading", async ({ message, serialNumber }) => { playSuccessSound(); setTimeout(() => { updateFirebaseStatus("SUCCESS"); reader.removeEventListener('reading', () => {}); }, 500); }); } catch (error) { } }
+            document.getElementById('screen-' + id).classList.add('active');
+            currentScreen = id;
         }
 
-        function startPayment(amount) {
-            document.getElementById('amount-val').innerText = amount + " РУБ"; 
-            showScreen('screen-pay'); 
-            initiateNFC();
-            const qrImg = document.getElementById('qrcode-image'); qrImg.style.display = 'block';
-            updateFirebaseStatus("WAITING_PAYMENT", amount);
+        // Генерация QR через Google API
+        function updateQRCode(amount) {
+            const qrData = `sberpay.ru{TERMINAL_ID}&amount=${amount}`;
+            document.getElementById('qrcode-image').src = `chart.googleapis.com{encodeURIComponent(qrData)}&choe=UTF-8`;
         }
-        
+
+        async function startPayment(amount) {
+            document.getElementById('amount-val').innerText = `${amount} ₽`;
+            updateQRCode(amount);
+            showScreen('pay');
+            updateFirebaseStatus("WAITING_PAYMENT", amount);
+            playBeep();
+        }
+
         async function updateFirebaseStatus(state, amount = null) {
-            const data = { state, lastUpdate: Date.now() }; if(amount) data.amount = amount;
-            try { await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { method: 'PUT', body: JSON.stringify(data), headers: {'Content-Type': 'application/json'} }); } catch (e) { }
+            const data = { state, lastUpdate: Date.now() };
+            if(amount) data.amount = amount;
+            try {
+                await fetch(`${FIREBASE_URL}/status/${TERMINAL_ID}.json`, { 
+                    method: 'PUT', 
+                    body: JSON.stringify(data) 
+                });
+            } catch (e) { console.error("Firebase Error", e); }
         }
 
         async function checkSync() {
             try {
-                const commandsRes = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`); const commandsData = await commandsRes.json();
-                if (commandsData && commandsData.command === "PAY" && currentScreen === 'wait') { startPayment(commandsData.amount); }
-                const statusRes = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`); const statusData = await statusRes.json();
-                if (statusData?.state === "SUCCESS" && currentScreen !== 'success') { showScreen('screen-success'); }
-            } catch (e) { }
-        }
-        
-        async function returnToWaitScreen() { 
-            await updateFirebaseStatus("IDLE"); await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' }); 
-            showScreen('screen-wait'); 
+                const res = await fetch(`${FIREBASE_URL}/commands/${TERMINAL_ID}.json`);
+                const data = await res.json();
+                
+                if (data && data.command === "PAY" && currentScreen === 'wait') {
+                    startPayment(data.amount);
+                }
+                
+                // Проверка статуса (если оплачено через телефон/удаленно)
+                const statusRes = await fetch(`${FIREBASE_URL}/status/${TERMINAL_ID}.json`);
+                const statusData = await statusRes.json();
+                if (statusData?.state === "SUCCESS" && currentScreen === 'pay') {
+                    showScreen('success');
+                    playSuccessSound();
+                }
+            } catch (e) {}
         }
 
-        // Запуск приложения
-        updateFirebaseStatus("IDLE");
+        async function returnToWaitScreen() {
+            await updateFirebaseStatus("IDLE");
+            await fetch(`${FIREBASE_URL}/commands/${TERMINAL_ID}.json`, { method: 'DELETE' });
+            showScreen('wait');
+        }
+
+        function playBeep() { /* Ваш код звука */ }
+        function playSuccessSound() { /* Ваш код звука */ }
+        function initiateSmilePayment() { updateFirebaseStatus("SUCCESS"); }
+
         setInterval(checkSync, 2000);
+        updateFirebaseStatus("IDLE");
     </script>
 </body>
 </html>
