@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SberPay Terminal Exact Match UI Full Code</title>
+    <title>SberPay Terminal Final UI</title>
     <style>
         /* --- 1. Цвета и Фон (Точно как на фото) --- */
         :root {
@@ -21,8 +21,8 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
 
         body { 
-            font-family: 'Segoe UI', Roboto, Arial, sans-serif; /* Имитация шрифта Сбера */
-            background: #000000; /* ЧЕРНЫЙ ФОН ДЛЯ ПК */
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif; 
+            background: #000000; 
             color: var(--text-color); 
             display: flex; justify-content: center; align-items: center; 
             height: 100vh; overflow: hidden; 
@@ -31,7 +31,7 @@
         #phone-screen-container {
             width: 100%; height: 100vh; 
             max-width: 450px; 
-            background: linear-gradient(to bottom, var(--sber-green-start), var(--sber-green-end)); /* Точный градиент */
+            background: linear-gradient(to bottom, var(--sber-green-start), var(--sber-green-end)); 
             position: relative; 
             display: flex; flex-direction: column; overflow: hidden;
             border-radius: 0px; 
@@ -47,18 +47,29 @@
         .screen.active { display: flex !important; animation: fadeIn 0.4s; } 
 
         .main-text { 
-            font-size: 38px; font-weight: 800; line-height: 1.1; margin: auto 0; text-align: left; 
+            font-size: 38px; font-weight: 800; line-height: 1.1; 
+            margin-top: 120px; margin-bottom: auto; /* Текст не по центру, а сверху */
+            text-align: left; 
             color: var(--text-color); 
-            opacity: 1; 
-            padding-left: 10px; /* Отступ слева как на фото */
+            padding-left: 10px; 
         }
         
         .sber-logo-check { color: var(--accent-green); display: inline-block; margin-right: 5px; font-size: 28px; vertical-align: middle;}
         .sber-logo-check-small { color: var(--accent-green); display: inline-block; margin-left: 5px; font-size: 20px; vertical-align: middle;}
         
-        /* ID терминала в углу (как на фото) */
         .terminal-id-badge { position: absolute; bottom: 15px; left: 15px; font-size: 10px; opacity: 0.8; color: var(--terminal-id-color); }
         
+        /* Логотип SberPay в верхнем левом углу */
+        #sberpay-logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            height: 24px; /* Размер как на фото */
+            width: auto;
+            opacity: 0.8;
+            filter: brightness(1.5); /* Немного ярче, чтобы выделялся */
+        }
+
         /* Стили для экрана оплаты */
         .price-text { font-size: 50px; font-weight: 800; margin: 0; color: var(--text-color); }
         #qrcode-container { background: var(--card-bg); padding: 10px; border-radius: 8px; margin: 0; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
@@ -77,6 +88,9 @@
 <body onclick="toggleFullScreen()">
 
     <div id="phone-screen-container">
+        <!-- Логотип SberPay (новый элемент) -->
+        <img id="sberpay-logo" src="https://upload.wikimedia.org/wikipedia/commons/6/6b/SberPay.png" alt="SberPay Logo">
+
         <!-- Экран ожидания (Точно как на фото) -->
         <div id="screen-wait" class="screen active">
             <div class="main-text">
