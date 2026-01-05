@@ -3,77 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SberPay Terminal 2026 Pro (NFC/Firebase)</title>
+    <title>SberPay Terminal 2026 Pro (Adaptive UI)</title>
     <style>
-        /* --- 1. CSS Переменные для Тем и Дизайна 2026 --- */
+        /* --- 1. CSS Переменные и Дизайн 2026 --- */
         :root {
             --bg-gradient: linear-gradient(135deg, #004d25, #00a040);
-            --card-bg: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.9);
             --text-color: #000000;
             --button-bg: #00ff41;
-            --sber-green: #21a038;
-        }
-        [data-theme="dark"] {
-            --bg-gradient: linear-gradient(135deg, #000000, #002200);
-            --card-bg: #1a1a1a;
-            --text-color: #ffffff;
-            --button-bg: #008020;
+            --text-white: #ffffff;
         }
 
-        /* --- 2. Глобальные Стили --- */
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(135deg, #000000, #003300);
+            --card-bg: rgba(26, 26, 26, 0.95);
+            --text-color: #ffffff;
+            --button-bg: #008020;
+            --text-white: #ffffff;
+        }
+
+        /* --- 2. Глобальные Стили и Адаптивный Контейнер --- */
         body { 
-            margin: 0; padding: 0; font-family: 'Arial', sans-serif; 
-            background: var(--bg-gradient); color: var(--text-color); 
+            margin: 0; padding: 0; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background: #000000; /* ЧЕРНЫЙ ФОН ДЛЯ ПК */
+            color: var(--text-color); 
             display: flex; justify-content: center; align-items: center; 
-            height: 100vh; overflow: hidden; transition: 0.3s ease;
+            height: 100vh; overflow: hidden; 
         }
-        #phone-screen-container {
-            width: 100%; height: 100%; max-width: 450px;
-            background: var(--gradient); position: relative; 
-            display: flex; flex-direction: column; overflow: hidden;
-        }
-        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; padding-top: 60px; }
-        .screen.active { display: flex; animation: fadeIn 0.5s forwards; }
-        .main-text { font-size: 38px; font-weight: bold; line-height: 1.1; margin: 50px 30px; text-align: left; color: #fff; }
-        .price-text { font-size: 48px; color: var(--button-bg); font-weight: 800; margin: 10px 0; }
-        #qrcode-container { background: var(--card-bg); padding: 20px; border-radius: 15px; display: inline-block; margin: 10px auto; opacity: 1; }
-        #qrcode-image { width: 250px; height: 250px; display: none; }
-        button { background: var(--button-bg); color: var(--text-color); border: none; padding: 18px; border-radius: 12px; font-weight: bold; font-size: 16px; width: 85%; margin-top: auto; margin-bottom: 30px; cursor: pointer; }
         
-        /* NFC UI Styles */
-        #nfc-area { display: none; width: 100%; padding: 20px; margin-bottom: 10px; background: rgba(0, 0, 0, 0.3); text-align: center; }
-        .nfc-icon { font-size: 40px; color: white; animation: pulseNFC 1.5s infinite; }
-        #nfc-status-text { color: white; font-size: 14px; }
+        #phone-screen-container {
+            width: 100%; height: 100%; /* По умолчанию на телефоне */
+            max-width: 450px; /* Ограничение ширины */
+            background: var(--gradient); 
+            position: relative; 
+            display: flex; flex-direction: column; overflow: hidden;
+            border-radius: 0px; /* Без скруглений на телефоне */
+            transition: all 0.5s ease;
+        }
+
+        /* --- Медиа-запрос для ПК (ширина экрана > 768px) --- */
+        @media (min-width: 768px) {
+            #phone-screen-container {
+                width: 380px; 
+                height: 780px; /* Фиксированный размер телефона на ПК */
+                border-radius: 40px; /* Красивые скругленные края как у смартфона */
+                box-shadow: 0 0 50px rgba(0, 0, 0, 0.8); /* Глубокая тень */
+                border: 10px solid #222; /* Рамка корпуса */
+            }
+        }
+
+        /* ... (Остальные стили .screen, .main-text, #qrcode-container, button, #nfc-area, @keyframes остаются прежними из предыдущего кода) ... */
+
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; padding-top: 60px; opacity: 0; transition: opacity 0.5s ease-in-out; }
+        .screen.active { display: flex; opacity: 1; }
+        .main-text { font-size: 42px; font-weight: 900; line-height: 1.1; margin: 50px 30px; text-align: left; background: linear-gradient(45deg, var(--text-white), var(--button-bg)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: slideInLeft 0.8s cubic-bezier(0.1, 0.7, 0.1, 1) forwards; }
+        .price-text { font-size: 54px; font-weight: 800; margin: 20px 0; color: var(--button-bg); }
+        #qrcode-container { background: var(--card-bg); padding: 20px; border-radius: 20px; margin: 10px auto; opacity: 0; transform: scale(0.8); box-shadow: 0 10px 40px rgba(0,0,0,0.2); backdrop-filter: blur(10px); transition: all 0.6s cubic-bezier(0.1, 0.7, 0.1, 1); }
+        #qrcode-container.animated { opacity: 1; transform: scale(1); }
+        #qrcode-image { width: 260px; height: 260px; display: none; }
+        button { background: var(--button-bg); color: var(--text-color); border: none; padding: 20px; border-radius: 14px; font-weight: bold; font-size: 18px; width: 85%; margin-top: auto; margin-bottom: 30px; cursor: pointer; box-shadow: 0 4px 15px rgba(0, 255, 65, 0.3); transition: transform 0.2s, background 0.3s; }
+        button:active { transform: scale(0.95); }
+        #nfc-area { display: none; width: 90%; padding: 15px; margin-bottom: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 12px; backdrop-filter: blur(8px); text-align: center; border: 1px solid rgba(255,255,255,0.2); }
+        .nfc-icon { font-size: 40px; color: var(--text-white); margin-bottom: 5px; animation: pulseNFC 1.5s infinite; }
+        #nfc-status-text { color: var(--text-white); font-size: 14px; }
         .terminal-id-badge { position: absolute; bottom: 15px; left: 15px; font-size: 10px; opacity: 0.7; color: #fff; }
         #status-indicator { position: absolute; bottom: 18px; right: 15px; width: 10px; height: 10px; border-radius: 50%; background: gray; }
         .theme-btn { position: absolute; top: 20px; right: 20px; z-index: 1000; background: rgba(255,255,255,0.2); color: #fff; border: none; padding: 10px; border-radius: 50%; cursor: pointer; }
-
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes pulseNFC { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
-        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(0,255,65,0.4); } 70% { box-shadow: 0 0 0 10px rgba(0,255,65,0); } 100% { box-shadow: 0 0 0 0 rgba(0,255,65,0); } }
-    </style>
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-50px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes pulseNFC { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.95); } }
+
+
+    </script>
 </head>
 <body onclick="toggleFullScreen()">
 
     <button class="theme-btn" onclick="toggleTheme(event)">🌓</button>
 
     <div id="phone-screen-container">
+        <!-- Все экраны и элементы UI здесь -->
         <div id="screen-wait" class="screen active">
             <div class="main-text">ПЛАТИТЕ<br>КАК ВАМ<br>УДОБНО</div>
         </div>
-
         <div id="screen-pay" class="screen">
-             <div id="nfc-area">
-                <div class="nfc-icon">📶</div>
-                <div id="nfc-status-text">Инициализация NFC...</div>
-            </div>
+             <div id="nfc-area"> <div class="nfc-icon">📶</div> <div id="nfc-status-text">Инициализация NFC...</div> </div>
             <div id="amount-val" class="price-text">0.00 РУБ</div>
-            <div id="qrcode-container">
-                 <img id="qrcode-image" src="my_qr_code.png" alt="QR Code" />
-            </div>
+            <div id="qrcode-container"> <img id="qrcode-image" src="my_qr_code.png" alt="QR Code" /> </div>
             <button onclick="initiateSmilePayment()">Оплатить улыбкой</button>
         </div>
-
         <div id="screen-success" class="screen">
             <h1 style="color: #00ff41; margin-top: 150px; font-size: 40px;">✅ ОПЛАЧЕНО</h1>
             <button onclick="returnToWaitScreen()">В начало</button>
@@ -83,25 +101,26 @@
         <div id="status-indicator"></div>
     </div>
 
+    <!-- Модальное окно камеры остается прежним -->
+    <!-- СКРИПТЫ НИЖЕ ОСТАЮТСЯ ТЕМИ ЖЕ -->
     <script>
-        // --- 5. JS Логика и Исправления Ошибок ---
-        // Убедитесь, что FIREBASE_BASE_URL — это точный адрес вашей базы данных (должен заканчиваться .json)
+        // --- JS Логика (Firebase, NFC, Fullscreen) ---
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
         let currentScreen = 'wait'; 
         let stream = null;
+        // ... (все остальные JS функции: toggleFullScreen, toggleTheme, playSuccessSound, initiateNFC, startPayment, showScreen, updateFirebaseStatus, checkSync, initiateSmilePayment, stopCamera, updateIndicator, returnToWaitScreen) ...
+
+        // ... (Остальной скрипт из предыдущего сообщения) ...
 
         document.getElementById('terminal-id-display').innerText = MY_TERMINAL_ID;
         document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
 
-        // Полноэкранный режим (для APK при первом клике)
         function toggleFullScreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(() => {});
             }
         }
-
-        // Смена и сохранение темы
         function toggleTheme(e) {
             e.stopPropagation();
             const body = document.body;
@@ -110,134 +129,18 @@
             body.setAttribute('data-theme', newTheme);
             localStorage.setItem('sber-theme', newTheme);
         }
-        if (localStorage.getItem('sber-theme') === 'dark') {
-            document.body.setAttribute('data-theme', 'dark');
-        }
-
-        // NFC Звук
-        function playSuccessSound() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.2);
-            } catch (e) { }
-        }
-
-        // NFC Логика
-        async function initiateNFC() {
-            const nfcArea = document.getElementById('nfc-area');
-            const nfcStatus = document.getElementById('nfc-status-text');
-            nfcArea.style.display = 'block';
-
-            if ("NDEFReader" in window) {
-                try {
-                    const reader = new NDEFReader();
-                    await reader.scan();
-                    nfcStatus.innerText = "Ожидание NFC-метки...";
-
-                    reader.addEventListener("reading", async ({ message, serialNumber }) => {
-                        nfcStatus.innerText = "Метка считана! ✅";
-                        playSuccessSound(); 
-                        setTimeout(() => {
-                            updateFirebaseStatus("SUCCESS");
-                            reader.removeEventListener('reading', () => {});
-                        }, 500);
-                    });
-
-                } catch (error) { nfcStatus.innerText = `Ошибка NFC: ${error.message}`; }
-            } else {
-                nfcStatus.innerText = "NFC API недоступно. Используйте кнопку для симуляции.";
-                nfcArea.innerHTML += '<button onclick="updateFirebaseStatus(\'SUCCESS\')" style="margin-top: 10px; width: auto;">Симулировать NFC оплату</button>';
-            }
-        }
-        
-        // --- 6. Основные функции приложения (Firebase и UI) ---
-
-        // Функция startPayment обновлена для вызова NFC и QR
-        function startPayment(amount) {
-            document.getElementById('amount-val').innerText = amount + " РУБ";
-            showScreen('screen-pay'); 
-            initiateNFC(); 
-            const qrImg = document.getElementById('qrcode-image');
-            const qrBox = document.getElementById('qrcode-container');
-            qrImg.style.display = 'block';
-            setTimeout(() => qrBox.classList.add('animated'), 100);
-            updateFirebaseStatus("WAITING_PAYMENT", amount);
-        }
-        
-        function showScreen(id) {
-            // Сбрасываем все анимации и элементы при смене экрана
-            const qrContainer = document.getElementById('qrcode-container');
-            if (qrContainer) qrContainer.classList.remove('animated'); 
-            const qrImg = document.getElementById('qrcode-image');
-            if (qrImg) qrImg.style.display = 'none'; 
-            const nfcArea = document.getElementById('nfc-area');
-            if (nfcArea) nfcArea.style.display = 'none';
-
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            currentScreen = id.replace('screen-', '');
-        }
-
-        // --- ИСПРАВЛЕНИЯ В ФУНКЦИЯХ FIREBASE ---
-        // Убедитесь, что метод PUT корректен для вашей структуры базы
-        async function updateFirebaseStatus(state, amount = null) {
-            const data = { state, lastUpdate: Date.now() };
-            if(amount) data.amount = amount;
-            try {
-                // !!! ИСПРАВЛЕНИЕ: Используем fetch правильно, убедитесь, что URL заканчивается на .json
-                const response = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
-                    method: 'PUT',
-                    body: JSON.stringify(data),
-                    headers: {'Content-Type': 'application/json'} // Добавлено явно
-                });
-                if (!response.ok) throw new Error('Firebase response not OK');
-                updateIndicator('green');
-            } catch (e) { 
-                console.error("Ошибка Firebase:", e); // Выводим ошибку в консоль
-                updateIndicator('red'); 
-            }
-        }
-
-        async function checkSync() {
-            try {
-                // Проверяем входящие команды
-                const commandsRes = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
-                const commandsData = await commandsRes.json();
-                if (commandsData && commandsData.command === "PAY" && currentScreen === 'wait') {
-                    startPayment(commandsData.amount);
-                }
-                // Проверяем статус оплаты
-                const statusRes = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
-                const statusData = await statusRes.json();
-                if (statusData?.state === "SUCCESS" && currentScreen !== 'success') {
-                    showScreen('screen-success');
-                    stopCamera();
-                }
-            } catch (e) {
-                 console.error("Ошибка синхронизации:", e);
-            }
-        }
-        
-        // Функции для Камеры
+        if (localStorage.getItem('sber-theme') === 'dark') { document.body.setAttribute('data-theme', 'dark'); }
+        function playSuccessSound() { try { const audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const oscillator = audioCtx.createOscillator(); const gainNode = audioCtx.createGain(); oscillator.connect(gainNode); gainNode.connect(audioCtx.destination); oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.2); } catch (e) { } }
+        async function initiateNFC() { const nfcArea = document.getElementById('nfc-area'); const nfcStatus = document.getElementById('nfc-status-text'); nfcArea.style.display = 'block'; if ("NDEFReader" in window) { try { const reader = new NDEFReader(); await reader.scan(); nfcStatus.innerText = "Ожидание NFC-метки..."; reader.addEventListener("reading", async ({ message, serialNumber }) => { nfcStatus.innerText = "Метка считана! ✅"; playSuccessSound(); setTimeout(() => { updateFirebaseStatus("SUCCESS"); reader.removeEventListener('reading', () => {}); }, 500); }); } catch (error) { nfcStatus.innerText = `Ошибка NFC: ${error.message}`; } } else { nfcStatus.innerText = "NFC API недоступно. Используйте кнопку для симуляции."; nfcArea.innerHTML += '<button onclick="updateFirebaseStatus(\'SUCCESS\')" style="margin-top: 10px; width: auto;">Симулировать NFC оплату</button>'; } }
+        function startPayment(amount) { document.getElementById('amount-val').innerText = amount + " РУБ"; showScreen('screen-pay'); initiateNFC(); const qrImg = document.getElementById('qrcode-image'); const qrBox = document.getElementById('qrcode-container'); qrImg.style.display = 'block'; setTimeout(() => qrBox.classList.add('animated'), 100); updateFirebaseStatus("WAITING_PAYMENT", amount); }
+        function showScreen(id) { const qrContainer = document.getElementById('qrcode-container'); if (qrContainer) qrContainer.classList.remove('animated'); const qrImg = document.getElementById('qrcode-image'); if (qrImg) qrImg.style.display = 'none'; const nfcArea = document.getElementById('nfc-area'); if (nfcArea) nfcArea.style.display = 'none'; document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); currentScreen = id.replace('screen-', ''); }
+        async function updateFirebaseStatus(state, amount = null) { const data = { state, lastUpdate: Date.now() }; if(amount) data.amount = amount; try { const response = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { method: 'PUT', body: JSON.stringify(data), headers: {'Content-Type': 'application/json'} }); if (!response.ok) throw new Error('Firebase response not OK'); updateIndicator('green'); } catch (e) { console.error("Ошибка Firebase:", e); updateIndicator('red'); } }
+        async function checkSync() { try { const commandsRes = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`); const commandsData = await commandsRes.json(); if (commandsData && commandsData.command === "PAY" && currentScreen === 'wait') { startPayment(commandsData.amount); } const statusRes = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`); const statusData = await statusRes.json(); if (statusData?.state === "SUCCESS" && currentScreen !== 'success') { showScreen('screen-success'); stopCamera(); } } catch (e) { console.error("Ошибка синхронизации:", e); } }
         async function initiateSmilePayment() { /* ... */ }
         function stopCamera() { /* ... */ }
-        function updateIndicator(color) { /* ... */ }
-        async function returnToWaitScreen() {
-            await updateFirebaseStatus("IDLE");
-            await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
-            showScreen('screen-wait');
-        }
+        function updateIndicator(color) { const ind = document.getElementById('status-indicator'); ind.style.background = color === 'green' ? '#00ff41' : '#ff0000'; ind.style.animation = 'pulse-green 2s infinite'; }
+        async function returnToWaitScreen() { await updateFirebaseStatus("IDLE"); await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' }); showScreen('screen-wait'); }
 
-        // --- 7. Запуск приложения ---
-        // Инициализация при старте
         updateFirebaseStatus("IDLE");
         setInterval(checkSync, 2000);
     </script>
