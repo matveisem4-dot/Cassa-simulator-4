@@ -3,37 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SberPay Terminal 2026 Clean UI Animated</title>
+    <title>SberPay Terminal 2026 Ultimate Full Code</title>
     <style>
-        /* --- 1. Цвета и Фон (Официальный Сбер) --- */
+        /* --- 1. Цвета и Фон (Светлый дизайн по умолчанию) --- */
         :root {
+            --bg-color: #e6f2e8; /* Очень светлый зеленый фон */
             --sber-green-main: #21a038;
             --sber-green-dark: #004d25;
             --text-color: #000000;
-            --card-bg: #ffffff;
-            --button-text: #000000;
+            --card-bg: rgba(255, 255, 255, 0.7); /* Светлая полупрозрачная карта */
+            --button-bg: #00ff41;
+            --text-white: #ffffff;
         }
         [data-theme="dark"] {
+            --bg-color: #000000;
             --text-color: #ffffff;
-            --card-bg: #1a1a1a;
-            --sber-green-main: #00ff41;
-            --button-text: #000000;
+            --card-bg: rgba(26, 26, 26, 0.8);
+            --button-bg: #008020;
         }
 
         /* --- 2. Глобальные Стили и Адаптивный Контейнер --- */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
+
         body { 
-            margin: 0; padding: 0; 
             font-family: 'Segoe UI', Roboto, Arial, sans-serif; 
             background: #000000; /* ЧЕРНЫЙ ФОН ДЛЯ ПК */
             color: var(--text-color); 
             display: flex; justify-content: center; align-items: center; 
             height: 100vh; overflow: hidden; 
+            transition: background 0.5s ease;
         }
         
         #phone-screen-container {
-            width: 100%; height: 100%; 
+            width: 100%; height: 100vh; 
             max-width: 450px; 
-            background: var(--sber-green-dark); 
+            background: var(--bg-color); 
             position: relative; 
             display: flex; flex-direction: column; overflow: hidden;
             border-radius: 0px; 
@@ -44,52 +48,56 @@
                 width: 380px; 
                 height: 780px; 
                 border-radius: 40px; 
-                box-shadow: 0 0 50px rgba(0, 0, 0, 0.8); 
+                box-shadow: 0 0 50px rgba(0, 0, 0, 0.5); 
                 border: 10px solid #222; 
             }
         }
 
-        /* --- 3. UI Элементы --- */
+        /* --- 3. UI Элементы и Анимации --- */
         .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; padding-top: 80px; }
         .screen.active { display: flex !important; animation: fadeIn 0.4s; } 
 
         .main-text { 
-            font-size: 36px; font-weight: 900; line-height: 1.2; margin: 50px 30px; text-align: left; color: #fff;
-            opacity: 0; /* Делаем невидимым по умолчанию */
-            animation: slideInLeft 0.8s cubic-bezier(0.1, 0.7, 0.1, 1) forwards; /* Плавная анимация */
+            font-size: 36px; font-weight: 900; line-height: 1.2; margin: 50px 30px; text-align: left; 
+            color: var(--sber-green-dark); 
+            opacity: 0;
+            animation: slideInLeft 0.8s cubic-bezier(0.1, 0.7, 0.1, 1) forwards;
         }
         
         .price-text { font-size: 50px; font-weight: 800; margin: 20px 0; color: var(--sber-green-main); }
         
-        #qrcode-container { background: var(--card-bg); padding: 15px; border-radius: 10px; margin: 20px auto; }
+        #qrcode-container { 
+            background: var(--card-bg); padding: 15px; border-radius: 10px; margin: 20px auto;
+            backdrop-filter: blur(10px); 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
         #qrcode-image { width: 280px; height: 280px; display: none; }
         
         button { 
-            background: var(--sber-green-main); color: var(--button-text); border: none; 
+            background: var(--button-bg); color: #000; border: none; 
             padding: 18px; border-radius: 8px; font-weight: bold; font-size: 16px; 
             width: 85%; margin-top: auto; margin-bottom: 20px; cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.5); 
         }
-
+        
         #nfc-area { display: none; width: 90%; padding: 10px; margin-bottom: 10px; background: rgba(0, 0, 0, 0.2); text-align: center; color: white; }
-        .nfc-icon { font-size: 32px; color: white; }
+        .theme-btn { position: absolute; top: 20px; right: 20px; z-index: 1000; background: var(--card-bg); color: var(--text-color); border: none; padding: 10px; border-radius: 50%; cursor: pointer; }
 
-        /* Keyframes для анимации выплывания */
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideInLeft { 
-            from { opacity: 0; transform: translateX(-100px); } 
-            to { opacity: 1; transform: translateX(0); } 
-        }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-100px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(0,255,65,0.4); } 70% { box-shadow: 0 0 0 10px rgba(0,255,65,0); } 100% { box-shadow: 0 0 0 0 rgba(0,255,65,0); } }
+
     </style>
 </head>
 <body onclick="toggleFullScreen()">
 
+    <button class="theme-btn" onclick="toggleTheme(event)">🌓</button>
+
     <div id="phone-screen-container">
         <div id="screen-wait" class="screen active">
-            <div class="main-text">ПЛАТИТЕ<br>БЫСТРО<br>И УДОБНО</div>
+            <div class="main-text">платите<br>Как Вам удобно</div>
         </div>
         
-        <!-- ... (Остальные экраны и футер) ... -->
-
         <div id="screen-pay" class="screen">
              <div id="nfc-area"> <div class="nfc-icon">📶</div> <div id="nfc-status-text">Приложите метку</div> </div>
             <div id="amount-val" class="price-text">0.00 РУБ</div>
@@ -108,16 +116,34 @@
         </div>
     </div>
     
-    <!-- СКРИПТЫ НИЖЕ ОСТАЮТСЯ ТЕМИ ЖЕ -->
     <script>
-        const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com/";
+        // --- 4. ПОЛНЫЙ БЛОК СКРИПТОВ ---
+        const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
         let currentScreen = 'wait'; 
         let stream = null;
 
         document.getElementById('terminal-id-display').innerText = MY_TERMINAL_ID;
+        document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
 
-        function toggleFullScreen() { if (window.innerWidth < 768 && !document.fullscreenElement) { document.documentElement.requestFullscreen().catch(() => {}); } }
+        function toggleFullScreen() {
+             if (window.innerWidth < 768 && !document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
+        }
+        
+        function toggleTheme(e) {
+            e.stopPropagation();
+            const body = document.body;
+            const isDark = body.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('sber-theme', newTheme);
+        }
+
+        if (localStorage.getItem('sber-theme') === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+        }
         
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -129,11 +155,40 @@
             if (qrImg) qrImg.style.display = 'none';
         }
 
-        // --- Вставьте сюда все остальные функции из предыдущих сообщений (updateFirebaseStatus, checkSync, initiateNFC, startPayment и т.д.) ---
-        // Они необходимы для работы оплаты!
+        function playSuccessSound() { try { const audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const oscillator = audioCtx.createOscillator(); const gainNode = audioCtx.createGain(); oscillator.connect(gainNode); gainNode.connect(audioCtx.destination); oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.2); } catch (e) { } }
+        
+        async function initiateNFC() {
+            const nfcArea = document.getElementById('nfc-area'); nfcArea.style.display = 'block';
+            if ("NDEFReader" in window) { try { const reader = new NDEFReader(); await reader.scan(); reader.addEventListener("reading", async ({ message, serialNumber }) => { playSuccessSound(); setTimeout(() => { updateFirebaseStatus("SUCCESS"); reader.removeEventListener('reading', () => {}); }, 500); }); } catch (error) { } }
+        }
 
-        // updateFirebaseStatus("IDLE"); // Запуск при загрузке
-        // setInterval(checkSync, 2000); // Запуск синхронизации раз в 2 секунды
+        function startPayment(amount) {
+            document.getElementById('amount-val').innerText = amount + " РУБ";
+            showScreen('screen-pay'); 
+            initiateNFC();
+            updateFirebaseStatus("WAITING_PAYMENT", amount);
+        }
+        
+        async function updateFirebaseStatus(state, amount = null) {
+            const data = { state, lastUpdate: Date.now() }; if(amount) data.amount = amount;
+            try { await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { method: 'PUT', body: JSON.stringify(data), headers: {'Content-Type': 'application/json'} }); updateIndicator('green'); } catch (e) { updateIndicator('red'); }
+        }
+
+        async function checkSync() {
+            try {
+                const commandsRes = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`); const commandsData = await commandsRes.json();
+                if (commandsData && commandsData.command === "PAY" && currentScreen === 'wait') { startPayment(commandsData.amount); }
+                const statusRes = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`); const statusData = await statusRes.json();
+                if (statusData?.state === "SUCCESS" && currentScreen !== 'success') { showScreen('screen-success'); /* stopCamera(); */ }
+            } catch (e) { }
+        }
+        
+        function updateIndicator(color) { const ind = document.getElementById('status-indicator'); ind.style.background = color === 'green' ? '#00ff41' : '#ff0000'; ind.style.animation = 'pulse-green 2s infinite'; }
+        async function returnToWaitScreen() { await updateFirebaseStatus("IDLE"); await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' }); showScreen('screen-wait'); }
+
+        // Запуск приложения
+        updateFirebaseStatus("IDLE");
+        setInterval(checkSync, 2000);
     </script>
 </body>
 </html>
