@@ -3,96 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SberPay Terminal Green UI</title>
+    <title>SberPay Terminal Short ID</title>
     <style>
         :root {
-            /* Фирменные зеленые цвета */
-            --sber-green-start: #08a652;
-            --sber-green-end: #03411e;
-            --accent-lime: #7cec84; /* Тот самый салатовый */
-            --glass-bg: rgba(255, 255, 255, 0.95);
-            --text-dark: #000000;
-            --text-white: #ffffff;
+            --sber-green-bg: linear-gradient(135deg, #08a652 0%, #03411e 100%);
+            --accent-lime: #7cec84; /* Яркий салатовый */
+            --glass-white: rgba(255, 255, 255, 0.95);
+            --text-dark: #004d25;
         }
 
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             font-family: 'Segoe UI', Roboto, sans-serif;
-            background: #1a1a1a;
+            background: #121212;
             display: flex; justify-content: center; align-items: center;
             overflow: hidden;
         }
 
-        /* ОСНОВНОЙ КОНТЕЙНЕР (Теперь снова зеленый) */
         #terminal-container {
             width: 100%; height: 100vh;
-            max-width: 430px;
-            background: linear-gradient(135deg, var(--sber-green-start) 0%, var(--sber-green-end) 100%);
+            max-width: 420px;
+            background: var(--sber-green-bg);
             position: relative;
             display: flex; flex-direction: column;
             overflow: hidden;
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.3);
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.4);
         }
 
         @media (min-width: 450px) {
-            #terminal-container { 
-                height: 90vh; border-radius: 45px; 
-                border: 10px solid #222; /* Темная рамка корпуса */
-                box-shadow: 0 25px 50px rgba(0,0,0,0.5); 
-            }
+            #terminal-container { border-radius: 40px; height: 85vh; border: 8px solid #222; }
         }
 
-        .header { padding: 50px 30px 20px; }
-        .sber-logo { height: 26px; filter: brightness(0) invert(1); /* Делаем лого белым */ }
+        .header { padding: 45px 30px 10px; }
+        .sber-logo { height: 24px; filter: brightness(0) invert(1); }
 
         .screen { display: none; flex-direction: column; flex: 1; padding: 0 30px 40px; }
-        .screen.active { display: flex; animation: fadeIn 0.4s ease-out; }
+        .screen.active { display: flex; animation: fadeIn 0.3s ease; }
 
         .main-text { 
-            font-size: 42px; font-weight: 700; line-height: 1.1; 
-            margin-top: 40px; color: var(--text-white); 
-            letter-spacing: -1.5px; 
+            font-size: 38px; font-weight: 800; line-height: 1.1; 
+            margin-top: 30px; color: #fff; letter-spacing: -1px; 
         }
-        .smile-inline { height: 45px; vertical-align: middle; margin: 0 4px; }
+        .smile-inline { height: 40px; vertical-align: middle; margin: 0 4px; }
 
-        /* Светлая карточка поверх зеленого фона */
+        /* Белая карточка */
         .payment-card {
-            background: var(--glass-bg);
-            border-radius: 35px;
-            padding: 30px 20px;
+            background: var(--glass-white);
+            border-radius: 30px;
+            padding: 25px;
             display: flex; flex-direction: column; align-items: center;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            margin-top: auto;
-            margin-bottom: 20px;
-            backdrop-filter: blur(10px);
+            margin-top: auto; margin-bottom: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
-        .price-val { font-size: 52px; font-weight: 800; color: var(--text-dark); margin-bottom: 5px; }
-        .price-sub { font-size: 14px; color: #666; margin-bottom: 25px; }
+        .price-val { font-size: 48px; font-weight: 800; color: #000; margin-bottom: 5px; }
+        .price-sub { font-size: 13px; color: #666; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
 
-        #qrcode-image { 
-            width: 180px; height: 180px; 
-            border-radius: 20px; margin-bottom: 25px; 
-            border: 1px solid #ddd; padding: 10px; background: white;
-        }
+        #qrcode-image { width: 170px; height: 170px; border-radius: 15px; margin-bottom: 20px; background: #fff; padding: 5px; }
 
-        /* Кнопка салатового цвета */
+        /* Салатовая кнопка */
         .btn-smile { 
-            background: linear-gradient(45deg, #7cec84, #39d353); 
-            color: #004d25; 
-            border: none; width: 100%; padding: 22px; 
-            border-radius: 22px; font-size: 18px; 
+            background: var(--accent-lime); 
+            color: var(--text-dark); 
+            border: none; width: 100%; padding: 20px; 
+            border-radius: 20px; font-size: 17px; 
             font-weight: 800; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(124, 236, 132, 0.4);
+            box-shadow: 0 4px 12px rgba(124, 236, 132, 0.3);
         }
 
         .terminal-info { 
-            text-align: center; padding-bottom: 20px; 
-            font-size: 11px; color: rgba(255,255,255,0.6); 
-            font-weight: 600; 
+            text-align: center; padding-bottom: 15px; 
+            font-size: 12px; color: rgba(255,255,255,0.5); 
+            font-weight: bold;
         }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -113,56 +98,56 @@
         
         <div id="screen-pay" class="screen">
             <div class="payment-card">
-                <div id="amount-val" class="price-val">0.00 ₽</div>
-                <div class="price-sub">SberPay: QR или Улыбка</div>
+                <div id="amount-val" class="price-val">0 ₽</div>
+                <div class="price-sub">SberPay Терминал</div>
                 <img id="qrcode-image" src="" alt="QR">
                 <button class="btn-smile" onclick="confirmPayment()">ОПЛАТИТЬ УЛЫБКОЙ</button>
             </div>
         </div>
 
         <div id="screen-success" class="screen" style="justify-content: center; align-items: center; text-align: center;">
-            <div style="background: var(--accent-lime); width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 0 30px var(--accent-lime);">
-                <span style="font-size: 45px; color: #03411e;">✔</span>
+            <div style="background: var(--accent-lime); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                <span style="font-size: 40px; color: var(--text-dark);">✔</span>
             </div>
-            <h1 style="font-size: 32px; color: white;">ОПЛАЧЕНО</h1>
+            <h1 style="font-size: 28px; color: white;">ОПЛАЧЕНО</h1>
         </div>
 
-        <div class="terminal-info">ТЕРМИНАЛ ID: <span id="display-id">--------</span></div>
+        <div class="terminal-info">ID: <span id="display-id">00000</span></div>
     </div>
     
     <script>
         const FB_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
         let MY_TERMINAL_ID = "";
 
-        // Логика сохранения ID в сессии (не меняется при обновлении страницы)
+        // Инициализация короткого ID (5 цифр)
         function initID() {
-            const savedID = sessionStorage.getItem('terminal_id');
-            if (savedID) {
-                MY_TERMINAL_ID = savedID;
-            } else {
-                MY_TERMINAL_ID = "00" + Math.floor(100000 + Math.random() * 900000);
-                sessionStorage.setItem('terminal_id', MY_TERMINAL_ID);
+            let savedID = sessionStorage.getItem('term_id_short');
+            if (!savedID) {
+                // Генерируем число от 10000 до 99999
+                savedID = Math.floor(10000 + Math.random() * 90000).toString();
+                sessionStorage.setItem('term_id_short', savedID);
             }
+            MY_TERMINAL_ID = savedID;
             document.getElementById('display-id').innerText = MY_TERMINAL_ID;
         }
 
-        async function syncWithFirebase() {
+        async function sync() {
             try {
-                const cmdRes = await fetch(`${FB_URL}/commands/${MY_TERMINAL_ID}.json`);
-                const cmdData = await cmdRes.json();
-                if (cmdData && cmdData.command === "PAY" && !document.getElementById('screen-pay').classList.contains('active')) {
-                    startPaymentProcess(cmdData.amount);
+                const res = await fetch(`${FB_URL}/commands/${MY_TERMINAL_ID}.json`);
+                const data = await res.json();
+                if (data && data.command === "PAY" && !isActive('screen-pay')) {
+                    startPay(data.amount);
                 }
 
-                const statusRes = await fetch(`${FB_URL}/status/${MY_TERMINAL_ID}.json`);
-                const statusData = await statusRes.json();
-                if (statusData?.state === "SUCCESS" && !document.getElementById('screen-success').classList.contains('active')) {
+                const stRes = await fetch(`${FB_URL}/status/${MY_TERMINAL_ID}.json`);
+                const stData = await stRes.json();
+                if (stData?.state === "SUCCESS" && !isActive('screen-success')) {
                     showSuccess();
                 }
             } catch (e) {}
         }
 
-        function startPaymentProcess(amount) {
+        function startPay(amount) {
             document.getElementById('amount-val').innerText = amount + " ₽";
             document.getElementById('qrcode-image').src = `chart.googleapis.com{MY_TERMINAL_ID}_${amount}&choe=UTF-8`;
             showScreen('pay');
@@ -176,10 +161,10 @@
 
         function showSuccess() {
             showScreen('success');
-            setTimeout(resetTerminal, 5000);
+            setTimeout(reset, 4000);
         }
 
-        async function resetTerminal() {
+        async function reset() {
             await updateStatus("IDLE");
             await fetch(`${FB_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
             showScreen('wait');
@@ -189,6 +174,8 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById('screen-' + id).classList.add('active');
         }
+
+        function isActive(id) { return document.getElementById(id).classList.contains('active'); }
 
         async function updateStatus(state) {
             try {
@@ -201,7 +188,7 @@
 
         initID();
         updateStatus("IDLE");
-        setInterval(syncWithFirebase, 2000);
+        setInterval(sync, 2000);
     </script>
 </body>
 </html>
