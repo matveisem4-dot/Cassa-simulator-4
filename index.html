@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SberPay Terminal Short ID</title>
+    <title>SberPay Terminal</title>
     <style>
         :root {
             --sber-green-bg: linear-gradient(135deg, #08a652 0%, #03411e 100%);
-            --accent-lime: #7cec84; /* Яркий салатовый */
+            --accent-lime: #7cec84;
             --glass-white: rgba(255, 255, 255, 0.95);
             --text-dark: #004d25;
         }
@@ -46,7 +46,6 @@
         }
         .smile-inline { height: 40px; vertical-align: middle; margin: 0 4px; }
 
-        /* Белая карточка */
         .payment-card {
             background: var(--glass-white);
             border-radius: 30px;
@@ -59,16 +58,15 @@
         .price-val { font-size: 48px; font-weight: 800; color: #000; margin-bottom: 5px; }
         .price-sub { font-size: 13px; color: #666; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
 
+        /* Путь к твоему файлу */
         #qrcode-image { width: 170px; height: 170px; border-radius: 15px; margin-bottom: 20px; background: #fff; padding: 5px; }
 
-        /* Салатовая кнопка */
         .btn-smile { 
             background: var(--accent-lime); 
             color: var(--text-dark); 
             border: none; width: 100%; padding: 20px; 
             border-radius: 20px; font-size: 17px; 
             font-weight: 800; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(124, 236, 132, 0.3);
         }
 
         .terminal-info { 
@@ -84,13 +82,13 @@
 
     <div id="terminal-container">
         <div class="header">
-            <img src="https://logo-teka.com/wp-content/uploads/2025/07/sber-pay-gradient-sign-logo.png" class="sber-logo" alt="SberPay">
+            <img src="logo-teka.com" class="sber-logo" alt="SberPay">
         </div>
 
         <div id="screen-wait" class="screen active">
             <div class="main-text">
                 платите<br>
-                <img src="https://www.sberbank.ru/common/img/uploaded/files/oplata_ulybkoy/images/blindssmile_howto.webp" class="smile-inline" alt="smile">
+                <img src="www.sberbank.ru" class="smile-inline" alt="smile">
                 как вам<br>
                 удобно
             </div>
@@ -100,7 +98,8 @@
             <div class="payment-card">
                 <div id="amount-val" class="price-val">0 ₽</div>
                 <div class="price-sub">SberPay Терминал</div>
-                <img id="qrcode-image" src="" alt="QR">
+                <!-- Указан путь к твоему SVG -->
+                <img id="qrcode-image" src="A/my_qr_code.svg" alt="QR">
                 <button class="btn-smile" onclick="confirmPayment()">ОПЛАТИТЬ УЛЫБКОЙ</button>
             </div>
         </div>
@@ -119,11 +118,9 @@
         const FB_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
         let MY_TERMINAL_ID = "";
 
-        // Инициализация короткого ID (5 цифр)
         function initID() {
             let savedID = sessionStorage.getItem('term_id_short');
             if (!savedID) {
-                // Генерируем число от 10000 до 99999
                 savedID = Math.floor(10000 + Math.random() * 90000).toString();
                 sessionStorage.setItem('term_id_short', savedID);
             }
@@ -149,7 +146,8 @@
 
         function startPay(amount) {
             document.getElementById('amount-val').innerText = amount + " ₽";
-            document.getElementById('qrcode-image').src = `chart.googleapis.com{MY_TERMINAL_ID}_${amount}&choe=UTF-8`;
+            // Теперь берет локальный файл из папки A
+            document.getElementById('qrcode-image').src = "A/my_qr_code.svg";
             showScreen('pay');
             updateStatus("WAITING_PAYMENT");
         }
@@ -166,7 +164,9 @@
 
         async function reset() {
             await updateStatus("IDLE");
-            await fetch(`${FB_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
+            try {
+                await fetch(`${FB_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
+            } catch(e) {}
             showScreen('wait');
         }
 
