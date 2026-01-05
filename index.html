@@ -11,7 +11,7 @@
             --sber-green-end: #004d25;   /* Конец градиента */
             --text-color: #ffffff;      /* Белый текст */
             --accent-green: #7cec84;    /* Яркий зеленый для галочек/лого */
-            --terminal-id-color: #888;  /* Серый для ID терминала */
+            --terminal-id-color: #aaa;  /* Серый для ID терминала */
             --card-bg: rgba(255, 255, 255, 0.9);
             --button-bg: linear-gradient(45deg, #00ff41, #00e600);
             --text-color-dark: #000000;
@@ -48,29 +48,35 @@
 
         .main-text { 
             font-size: 38px; font-weight: 800; line-height: 1.1; 
-            margin-top: 120px; margin-bottom: auto; /* Текст не по центру, а сверху */
+            margin-top: 120px; margin-bottom: auto; 
             text-align: left; 
             color: var(--text-color); 
             padding-left: 10px; 
         }
         
-        .sber-logo-check { color: var(--accent-green); display: inline-block; margin-right: 5px; font-size: 28px; vertical-align: middle;}
+        /* НОВЫЙ СТИЛЬ ДЛЯ ИЗОБРАЖЕНИЯ УЛЫБКИ В ТЕКСТЕ */
+        .sber-smile-logo-inline {
+            height: 30px; 
+            vertical-align: middle;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
         .sber-logo-check-small { color: var(--accent-green); display: inline-block; margin-left: 5px; font-size: 20px; vertical-align: middle;}
         
         .terminal-id-badge { position: absolute; bottom: 15px; left: 15px; font-size: 10px; opacity: 0.8; color: var(--terminal-id-color); }
         
-        /* Логотип SberPay в верхнем левом углу */
         #sberpay-logo {
             position: absolute;
-            top: 20px;
+            top: 40px; 
             left: 20px;
-            height: 24px; /* Размер как на фото */
+            height: 24px; 
             width: auto;
             opacity: 0.8;
-            filter: brightness(1.5); /* Немного ярче, чтобы выделялся */
+            filter: brightness(1.5);
         }
 
-        /* Стили для экрана оплаты */
+        /* ... (Остальные стили экрана оплаты остаются прежними) ... */
         .price-text { font-size: 50px; font-weight: 800; margin: 0; color: var(--text-color); }
         #qrcode-container { background: var(--card-bg); padding: 10px; border-radius: 8px; margin: 0; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
         #qrcode-image { width: 150px; height: 150px; display: none; }
@@ -88,29 +94,24 @@
 <body onclick="toggleFullScreen()">
 
     <div id="phone-screen-container">
-        <!-- Логотип SberPay (новый элемент) -->
-        <img id="sberpay-logo" src="https://upload.wikimedia.org/wikipedia/commons/6/6b/SberPay.png" alt="SberPay Logo">
+        <!-- Логотип SberPay -->
+        <img id="sberpay-logo" src="upload.wikimedia.org" alt="SberPay Logo">
 
         <!-- Экран ожидания (Точно как на фото) -->
         <div id="screen-wait" class="screen active">
             <div class="main-text">
                 платите<br>
-                <span class="sber-logo-check">●</span> как вам<br>
+                <!-- ИСПОЛЬЗУЕМ ВАШЕ ИЗОБРАЖЕНИЕ ВМЕСТО ТОЧКИ -->
+                <img src="upload.wikimedia.org" class="sber-smile-logo-inline" alt="Smile Logo"> как вам<br>
                 удобно<span class="sber-logo-check-small">✔</span>
             </div>
         </div>
         
-        <!-- Экран оплаты (NFC сверху, ID по центру, QR/Улыбка снизу) -->
+        <!-- ... (Остальные экраны: оплаты, успеха) ... -->
         <div id="screen-pay" class="screen">
-            <!-- Оплата по карте (Сверху) -->
-             <div id="nfc-area"> <div class="nfc-icon">📶</div> <div id="nfc-status-text">Приложите карту</div> </div>
-            
+            <div id="nfc-area"> <div class="nfc-icon">📶</div> <div id="nfc-status-text">Приложите карту</div> </div>
             <div id="amount-val" class="price-text">0.00 РУБ</div>
-            
-            <!-- ЭЛЕМЕНТ ID ПО ЦЕНТРУ -->
             <div id="id-center-display">Терминал ID: <span id="display-id-center-value">...</span></div>
-
-            <!-- QR и Улыбка (Нижний угол) -->
             <div id="payment-footer-area">
                 <div style="display: flex; align-items: flex-end;">
                     <div id="qrcode-container"> <img id="qrcode-image" src="my_qr_code.png" alt="QR Code" /> </div>
@@ -119,7 +120,6 @@
             </div>
         </div>
 
-        <!-- Экран успеха -->
         <div id="screen-success" class="screen">
             <h1 style="color: var(--text-color); margin-top: 150px; font-size: 40px;">✅ ОПЛАЧЕНО</h1>
             <button onclick="returnToWaitScreen()">В начало</button>
