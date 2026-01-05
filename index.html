@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SberPay Terminal</title>
+    <title>Terminal</title>
     <style>
         :root {
             --sber-green-bg: linear-gradient(135deg, #08a652 0%, #03411e 100%);
@@ -34,15 +34,12 @@
             #terminal-container { border-radius: 40px; height: 85vh; border: 8px solid #222; }
         }
 
-        .header { padding: 45px 30px 10px; }
-        .sber-logo { height: 24px; filter: brightness(0) invert(1); }
-
-        .screen { display: none; flex-direction: column; flex: 1; padding: 0 30px 40px; }
+        .screen { display: none; flex-direction: column; flex: 1; padding: 40px 30px 40px; }
         .screen.active { display: flex; animation: fadeIn 0.3s ease; }
 
         .main-text { 
             font-size: 38px; font-weight: 800; line-height: 1.1; 
-            margin-top: 30px; color: #fff; letter-spacing: -1px; 
+            margin-top: 20px; color: #fff; letter-spacing: -1px; 
         }
         .smile-inline { height: 40px; vertical-align: middle; margin: 0 4px; }
 
@@ -53,20 +50,33 @@
             display: flex; flex-direction: column; align-items: center;
             margin-top: auto; margin-bottom: 10px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
         }
 
-        .price-val { font-size: 48px; font-weight: 800; color: #000; margin-bottom: 5px; }
-        .price-sub { font-size: 13px; color: #666; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        #camera-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; display: none; z-index: 5;
+        }
 
-        /* Путь к твоему файлу */
-        #qrcode-image { width: 170px; height: 170px; border-radius: 15px; margin-bottom: 20px; background: #fff; padding: 5px; }
+        #timer-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            color: #fff; font-size: 80px; font-weight: 800;
+            display: none; align-items: center; justify-content: center; z-index: 10;
+        }
+
+        .price-val { font-size: 48px; font-weight: 800; color: #000; margin-bottom: 5px; z-index: 1; }
+        .price-sub { font-size: 13px; color: #666; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; z-index: 1; }
+
+        #qrcode-image { width: 170px; height: 170px; border-radius: 15px; margin-bottom: 20px; background: #fff; padding: 5px; z-index: 1; }
 
         .btn-smile { 
             background: var(--accent-lime); 
             color: var(--text-dark); 
             border: none; width: 100%; padding: 20px; 
             border-radius: 20px; font-size: 17px; 
-            font-weight: 800; cursor: pointer;
+            font-weight: 800; cursor: pointer; z-index: 1;
         }
 
         .terminal-info { 
@@ -81,26 +91,20 @@
 <body>
 
     <div id="terminal-container">
-        <div class="header">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT0NDFrbAveSxU7yS0haDclGTTYiO7dA6WNEQ&s" class="sber-logo" alt="SberPay">
-        </div>
-
         <div id="screen-wait" class="screen active">
-            <div class="main-text">
-                платите<br>
-                <img src="https://www.sberbank.ru/common/img/uploaded/files/oplata_ulybkoy/images/blindssmile_howto.webp" class="smile-inline" alt="smile">
-                как вам<br>
-                удобно
-            </div>
+            <div class="main-text">платите<br><img src="www.sberbank.ru" class="smile-inline" alt="smile"> как вам<br>удобно</div>
         </div>
         
         <div id="screen-pay" class="screen">
             <div class="payment-card">
+                <video id="camera-layer" autoplay playsinline muted></video>
+                <div id="timer-overlay">3</div>
+                
                 <div id="amount-val" class="price-val">0 ₽</div>
-                <div class="price-sub">SberPay Терминал</div>
-                <!-- Указан путь к твоему SVG -->
+                <div class="price-sub">Терминал</div>
+                <!-- ПУТЬ К ТВОЕМУ ФАЙЛУ В ПАПКЕ A -->
                 <img id="qrcode-image" src="A/my_qr_code.svg" alt="QR">
-                <button class="btn-smile" onclick="confirmPayment()">ОПЛАТИТЬ УЛЫБКОЙ</button>
+                <button id="btn-smile-main" class="btn-smile" onclick="startSmileAuth()">ОПЛАТИТЬ УЛЫБКОЙ</button>
             </div>
         </div>
 
@@ -116,7 +120,9 @@
     
     <script>
         const FB_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
+        const QR_FILE_PATH = "A/my_qr_code.svg"; // Константа для пути
         let MY_TERMINAL_ID = "";
+        let cameraStream = null;
 
         function initID() {
             let savedID = sessionStorage.getItem('term_id_short');
@@ -126,6 +132,48 @@
             }
             MY_TERMINAL_ID = savedID;
             document.getElementById('display-id').innerText = MY_TERMINAL_ID;
+            // Сразу ставим картинку при инициализации
+            document.getElementById('qrcode-image').src = QR_FILE_PATH;
+        }
+
+        async function startSmileAuth() {
+            const video = document.getElementById('camera-layer');
+            const overlay = document.getElementById('timer-overlay');
+            const btn = document.getElementById('btn-smile-main');
+
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                video.srcObject = cameraStream;
+                video.style.display = 'block';
+                overlay.style.display = 'flex';
+                btn.style.visibility = 'hidden';
+
+                let timeLeft = 3;
+                overlay.innerText = timeLeft;
+
+                const interval = setInterval(() => {
+                    timeLeft--;
+                    if (timeLeft > 0) {
+                        overlay.innerText = timeLeft;
+                    } else {
+                        clearInterval(interval);
+                        stopCamera();
+                        confirmPayment();
+                    }
+                }, 1000);
+            } catch (err) {
+                alert("Ошибка камеры. Проверьте разрешения.");
+            }
+        }
+
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            document.getElementById('camera-layer').style.display = 'none';
+            document.getElementById('timer-overlay').style.display = 'none';
+            document.getElementById('btn-smile-main').style.visibility = 'visible';
         }
 
         async function sync() {
@@ -135,7 +183,6 @@
                 if (data && data.command === "PAY" && !isActive('screen-pay')) {
                     startPay(data.amount);
                 }
-
                 const stRes = await fetch(`${FB_URL}/status/${MY_TERMINAL_ID}.json`);
                 const stData = await stRes.json();
                 if (stData?.state === "SUCCESS" && !isActive('screen-success')) {
@@ -146,8 +193,8 @@
 
         function startPay(amount) {
             document.getElementById('amount-val').innerText = amount + " ₽";
-            // Теперь берет локальный файл из папки A
-            document.getElementById('qrcode-image').src = "A/my_qr_code.svg";
+            // Еще раз принудительно обновляем картинку
+            document.getElementById('qrcode-image').src = QR_FILE_PATH;
             showScreen('pay');
             updateStatus("WAITING_PAYMENT");
         }
@@ -163,10 +210,9 @@
         }
 
         async function reset() {
+            stopCamera();
             await updateStatus("IDLE");
-            try {
-                await fetch(`${FB_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
-            } catch(e) {}
+            try { await fetch(`${FB_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' }); } catch(e) {}
             showScreen('wait');
         }
 
