@@ -39,24 +39,22 @@
 
         async function sync() {
             try {
-                // ТЕРМИНАЛ СЛУШАЕТ ПАПКУ STATUS
-                const r = await fetch(`${DB}/status/${tid}.json`);
+                // *** ТЕРМИНАЛ СЛУШАЕТ КОРЕНЬ БАЗЫ ДАННЫХ ***
+                // Запрос идет прямо на cassa-simulator-4-default-rtdb.firebaseio.com
+                const r = await fetch(`${DB}/${tid}.json`); 
                 const data = await r.json();
                 
-                // Проверяем, пришел ли статус SUCCESS и не активен ли уже экран успеха
-                if (data && data.state === "SUCCESS" && !isActive('s-ok')) { 
+                // Проверяем, пришел ли статус SUCCESS
+                if (data === "SUCCESS" && !isActive('s-ok')) { 
                     show('ok');
-                    // Сразу после показа экрана успеха мы сбрасываем статус в IDLE (ожидание)
-                    await fetch(`${DB}/status/${tid}.json`, {
+                    
+                    // Сбрасываем статус в IDLE (или пусто), чтобы цикл не повторялся
+                    await fetch(`${DB}/${tid}.json`, {
                         method: 'PUT',
-                        body: JSON.stringify({ state: "IDLE", timestamp: Date.now() })
+                        body: JSON.stringify("IDLE") // Или null, чтобы удалить запись
                     });
                     
-                    // Через 4 секунды возвращаемся на экран ожидания
-                    setTimeout(() => { show('wait'); }, 4000); 
-                } else if (data && data.state === "IDLE" && isActive('s-ok')) {
-                   // Если статус уже IDLE, но экран успеха активен (если была ручная перезагрузка), сбрасываемся
-                   show('wait');
+                    setTimeout(() => { show('wait'); }, 4000); // Возвращаемся в ожидание
                 }
             } catch(e){}
         }
