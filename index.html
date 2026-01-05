@@ -3,26 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SberPay Terminal 2026 Dynamic ID</title>
+    <title>SberPay Terminal Exact Match UI Full Code</title>
     <style>
-        /* --- 1. Цвета и Фон (Фирменный Зеленый, без смены тем) --- */
+        /* --- 1. Цвета и Фон (Точно как на фото) --- */
         :root {
-            --sber-green-main: #21a038;
-            --sber-green-dark: #004d25;
-            --sber-green-light: #4caf50;
-            --text-color-light: #ffffff;
-            --text-color-dark: #000000;
+            --sber-green-start: #008040; /* Начало градиента */
+            --sber-green-end: #004d25;   /* Конец градиента */
+            --text-color: #ffffff;      /* Белый текст */
+            --accent-green: #7cec84;    /* Яркий зеленый для галочек/лого */
+            --terminal-id-color: #888;  /* Серый для ID терминала */
             --card-bg: rgba(255, 255, 255, 0.9);
             --button-bg: linear-gradient(45deg, #00ff41, #00e600);
+            --text-color-dark: #000000;
         }
 
         /* --- 2. Глобальные Стили и Адаптивный Контейнер --- */
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
 
         body { 
-            font-family: 'Segoe UI', Roboto, Arial, sans-serif; 
-            background: #000000; 
-            color: var(--text-color-dark); 
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif; /* Имитация шрифта Сбера */
+            background: #000000; /* ЧЕРНЫЙ ФОН ДЛЯ ПК */
+            color: var(--text-color); 
             display: flex; justify-content: center; align-items: center; 
             height: 100vh; overflow: hidden; 
         }
@@ -30,7 +31,7 @@
         #phone-screen-container {
             width: 100%; height: 100vh; 
             max-width: 450px; 
-            background: linear-gradient(135deg, var(--sber-green-dark), var(--sber-green-main)); 
+            background: linear-gradient(to bottom, var(--sber-green-start), var(--sber-green-end)); /* Точный градиент */
             position: relative; 
             display: flex; flex-direction: column; overflow: hidden;
             border-radius: 0px; 
@@ -45,34 +46,44 @@
         .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; padding: 20px; }
         .screen.active { display: flex !important; animation: fadeIn 0.4s; } 
 
-        .main-text { font-size: 36px; font-weight: 900; line-height: 1.2; margin: auto 0; text-align: left; color: var(--text-color-light); opacity: 0; animation: slideInLeft 0.8s cubic-bezier(0.1, 0.7, 0.1, 1) forwards; }
-        .price-text { font-size: 50px; font-weight: 800; margin: 0; color: var(--text-color-light); }
+        .main-text { 
+            font-size: 38px; font-weight: 800; line-height: 1.1; margin: auto 0; text-align: left; 
+            color: var(--text-color); 
+            opacity: 1; 
+            padding-left: 10px; /* Отступ слева как на фото */
+        }
+        
+        .sber-logo-check { color: var(--accent-green); display: inline-block; margin-right: 5px; font-size: 28px; vertical-align: middle;}
+        .sber-logo-check-small { color: var(--accent-green); display: inline-block; margin-left: 5px; font-size: 20px; vertical-align: middle;}
+        
+        /* ID терминала в углу (как на фото) */
+        .terminal-id-badge { position: absolute; bottom: 15px; left: 15px; font-size: 10px; opacity: 0.8; color: var(--terminal-id-color); }
+        
+        /* Стили для экрана оплаты */
+        .price-text { font-size: 50px; font-weight: 800; margin: 0; color: var(--text-color); }
         #qrcode-container { background: var(--card-bg); padding: 10px; border-radius: 8px; margin: 0; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
         #qrcode-image { width: 150px; height: 150px; display: none; }
         button { background: var(--button-bg); color: var(--text-color-dark); border: none; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 0 15px rgba(0, 255, 65, 0.5); }
         #nfc-area { display: none; width: 100%; padding: 15px; margin-bottom: 20px; background: rgba(255, 255, 255, 0.1); text-align: center; color: white; border-radius: 10px; }
-        .nfc-icon { font-size: 32px; color: white; animation: pulseNFC 1.5s infinite; }
         #payment-footer-area { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; margin-top: auto; }
         #smile-button { background: var(--button-bg); color: var(--text-color-dark); border: none; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; height: min-content; margin-left: 10px; }
-
-        /* !!! НОВЫЕ СТИЛИ ДЛЯ ID !!! */
-        /* ID в нижнем углу (постоянный) */
-        .terminal-id-badge { position: absolute; bottom: 15px; left: 15px; font-size: 10px; opacity: 0.7; color: #fff; }
-        /* ID посередине экрана оплаты (скрыт по умолчанию) */
-        #id-center-display { color: var(--text-color-light); font-size: 12px; opacity: 0.8; text-align: center; margin-bottom: auto; display: none; /* Скрыт по умолчанию */ }
+        #id-center-display { color: var(--text-color); font-size: 12px; opacity: 0.8; text-align: center; margin-bottom: auto; display: none; }
 
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-100px); } to { opacity: 1; transform: translateX(0); } }
 
     </style>
 </head>
 <body onclick="toggleFullScreen()">
 
     <div id="phone-screen-container">
-        <!-- Экран ожидания -->
+        <!-- Экран ожидания (Точно как на фото) -->
         <div id="screen-wait" class="screen active">
-            <div class="main-text">платите<br>Как Вам удобно</div>
+            <div class="main-text">
+                платите<br>
+                <span class="sber-logo-check">●</span> как вам<br>
+                удобно<span class="sber-logo-check-small">✔</span>
+            </div>
         </div>
         
         <!-- Экран оплаты (NFC сверху, ID по центру, QR/Улыбка снизу) -->
@@ -82,7 +93,7 @@
             
             <div id="amount-val" class="price-text">0.00 РУБ</div>
             
-            <!-- !!! ЭЛЕМЕНТ ID ПО ЦЕНТРУ !!! -->
+            <!-- ЭЛЕМЕНТ ID ПО ЦЕНТРУ -->
             <div id="id-center-display">Терминал ID: <span id="display-id-center-value">...</span></div>
 
             <!-- QR и Улыбка (Нижний угол) -->
@@ -96,22 +107,21 @@
 
         <!-- Экран успеха -->
         <div id="screen-success" class="screen">
-            <h1 style="color: var(--text-color-light); margin-top: 150px; font-size: 40px;">✅ ОПЛАЧЕНО</h1>
+            <h1 style="color: var(--text-color); margin-top: 150px; font-size: 40px;">✅ ОПЛАЧЕНО</h1>
             <button onclick="returnToWaitScreen()">В начало</button>
         </div>
 
-        <!-- !!! ID в нижнем углу (постоянный элемент) !!! -->
-        <div class="terminal-id-badge">ID: <span id="terminal-id-display-value">...</span></div>
+        <!-- ID терминала в углу (как на фото) -->
+        <div class="terminal-id-badge">Терминал: <span id="terminal-id-display-value">00544048</span></div>
     </div>
     
     <script>
-        // --- 4. ПОЛНЫЙ БЛОК СКРИПТОВ (Логика Firebase, NFC, Fullscreen) ---
+        // --- ПОЛНЫЙ БЛОК СКРИПТОВ ---
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
         let currentScreen = 'wait'; 
         let stream = null;
 
-        // Присваиваем ID обоим элементам сразу при загрузке
         document.getElementById('terminal-id-display-value').innerText = MY_TERMINAL_ID;
         document.getElementById('display-id-center-value').innerText = MY_TERMINAL_ID;
 
@@ -122,7 +132,6 @@
             document.getElementById(id).classList.add('active');
             currentScreen = id.replace('screen-', '');
             
-            // !!! ЛОГИКА СКРЫТИЯ/ПОКАЗА ЦЕНТРАЛЬНОГО ID !!!
             if (id === 'screen-pay') {
                 document.getElementById('id-center-display').style.display = 'block';
             } else {
@@ -134,20 +143,25 @@
         }
         
         function playSuccessSound() { try { const audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const oscillator = audioCtx.createOscillator(); const gainNode = audioCtx.createGain(); oscillator.connect(gainNode); gainNode.connect(audioCtx.destination); oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.2); } catch (e) { } }
-        async function initiateNFC() { const nfcArea = document.getElementById('nfc-area'); nfcArea.style.display = 'block';
+        
+        async function initiateNFC() {
+            const nfcArea = document.getElementById('nfc-area'); nfcArea.style.display = 'block';
             if ("NDEFReader" in window) { try { const reader = new NDEFReader(); await reader.scan(); reader.addEventListener("reading", async ({ message, serialNumber }) => { playSuccessSound(); setTimeout(() => { updateFirebaseStatus("SUCCESS"); reader.removeEventListener('reading', () => {}); }, 500); }); } catch (error) { } }
         }
+
         function startPayment(amount) {
             document.getElementById('amount-val').innerText = amount + " РУБ"; 
-            showScreen('screen-pay'); // showScreen теперь управляет видимостью ID
+            showScreen('screen-pay'); 
             initiateNFC();
             const qrImg = document.getElementById('qrcode-image'); qrImg.style.display = 'block';
             updateFirebaseStatus("WAITING_PAYMENT", amount);
         }
+        
         async function updateFirebaseStatus(state, amount = null) {
             const data = { state, lastUpdate: Date.now() }; if(amount) data.amount = amount;
             try { await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { method: 'PUT', body: JSON.stringify(data), headers: {'Content-Type': 'application/json'} }); } catch (e) { }
         }
+
         async function checkSync() {
             try {
                 const commandsRes = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`); const commandsData = await commandsRes.json();
@@ -156,9 +170,10 @@
                 if (statusData?.state === "SUCCESS" && currentScreen !== 'success') { showScreen('screen-success'); }
             } catch (e) { }
         }
+        
         async function returnToWaitScreen() { 
             await updateFirebaseStatus("IDLE"); await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' }); 
-            showScreen('screen-wait'); // showScreen теперь управляет видимостью ID
+            showScreen('screen-wait'); 
         }
 
         // Запуск приложения
