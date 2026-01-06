@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SberPay Terminal 2026 Animated</title>
-    <!-- УБРАЛИ ССЫЛКУ НА БИБЛИОТЕКУ QR -->
     <style>
         @font-face {
             font-family: 'SberDisplay';
@@ -23,10 +22,35 @@
         .screen { display: none; width: 100%; text-align: center; padding-top: 60px; opacity: 0; transition: opacity 0.5s ease-in-out; }
         .screen.active { display: block; opacity: 1; }
 
+        /* Контейнер для текста и иконок */
+        .text-container {
+            margin-top: 50px;
+            text-align: left;
+            padding: 0 30px;
+        }
+
         .main-text { 
-            font-size: 38px; font-weight: bold; line-height: 1.1; margin-top: 50px; text-align: left; padding: 0 30px; 
+            font-size: 38px; 
+            font-weight: bold; 
+            line-height: 1.1; 
             opacity: 0;
             animation: slideInFromLeft 0.8s forwards ease-out;
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        
+        /* Стиль для иконки SberPay круглой */
+        .sber-icon {
+            width: 38px; 
+            height: auto;
+        }
+        
+        /* Стиль для иконки галочки */
+        .checkmark-icon {
+            width: 38px;
+            height: auto;
+            margin-left: 10px;
         }
         
         .price-text { font-size: 48px; color: #00ff41; font-weight: 800; margin: 10px 0; opacity: 0; transform: translateY(-20px); animation: fadeIn 0.5s forwards 0.1s; }
@@ -41,7 +65,7 @@
         #qrcode-image {
              width: 250px; 
              height: 250px; 
-             display: none; /* Скрываем по умолчанию */
+             display: none;
         }
         
         /* Класс для запуска анимации QR */
@@ -70,13 +94,24 @@
 
     <div id="phone-screen-container">
         <div id="screen-wait" class="screen active">
-            <div class="main-text">ПЛАТИТЕ<br>КАК ВАМ<br>УДОБНО</div>
+            <div class="text-container">
+                <div class="main-text">
+                    ПЛАТИТЕ
+                </div>
+                <div class="main-text">
+                    <img src="www.sberbank.ru" class="sber-icon" alt="Sber Icon">
+                    КАК ВАМ
+                </div>
+                <div class="main-text">
+                    УДОБНО
+                    <img src="i.imgur.com" class="checkmark-icon" alt="Checkmark">
+                </div>
+            </div>
         </div>
 
         <div id="screen-pay" class="screen">
             <div id="amount-val" class="price-text">0.00 РУБ</div>
             <div id="qrcode-container">
-                 <!-- ТЕПЕРЬ ИСПОЛЬЗУЕМ ТЕГ IMG -->
                  <img id="qrcode-image" src="my_qr_code.png" alt="QR Code" />
             </div>
             <p>ID: <b id="display-id-center">------</b></p>
@@ -100,7 +135,7 @@
 
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        const PAYMENT_GATEWAY_URL = "https://matveisem4-dot.github.io/PaymentSite/payment.html";
+        const PAYMENT_GATEWAY_URL = "matveisem4-dot.github.io";
         const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
         let currentScreen = 'wait'; 
         const statusIndicator = document.getElementById('status-indicator');
@@ -109,9 +144,9 @@
         document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
         
         // Ссылка на изображение QR-кода, которое вы положили в папку
-        const QR_IMAGE_SRC = "my_qr_code.svg";
+        const QR_IMAGE_SRC = "my_qr_code.svg"; // Пример
 
-        async function registerInFirebase() { /* ... (остается без изменений) ... */
+        async function registerInFirebase() { 
              try {
                 await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
                     method: 'PUT',
@@ -121,7 +156,7 @@
             } catch (e) { updateIndicator('red'); }
         }
 
-        function updateIndicator(color) { /* ... (остается без изменений) ... */
+        function updateIndicator(color) { 
             statusIndicator.style.animation = 'none';
             if (color === 'green') {
                 statusIndicator.style.backgroundColor = '#00ff41';
@@ -132,7 +167,7 @@
             } else { statusIndicator.style.backgroundColor = 'gray'; }
         }
 
-        async function checkSync() { /* ... (остается без изменений) ... */
+        async function checkSync() { 
             try {
                 if (currentScreen === 'wait') {
                      const res = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
@@ -160,15 +195,12 @@
                 method: 'PUT',
                 body: JSON.stringify({ state: "WAITING_PAYMENT", amount: amount, lastUpdate: Date.now() })
             });
-
+            
+            // Запуск QR анимации
             const qrBox = document.getElementById('qrcode-container');
             const qrImage = document.getElementById('qrcode-image');
-            
-            // Вставляем изображение
             qrImage.src = QR_IMAGE_SRC; 
             qrImage.style.display = 'block';
-
-            // Запускаем анимацию
             setTimeout(() => {
                 qrBox.classList.add('animated');
             }, 100);
@@ -176,14 +208,13 @@
 
         function showScreen(id) {
             document.getElementById('qrcode-container').classList.remove('animated'); 
-            // Скрываем изображение при переключении экрана
             document.getElementById('qrcode-image').style.display = 'none'; 
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             currentScreen = id.replace('screen-', '');
         }
 
-        async function returnToWaitScreen() { /* ... (остается без изменений) ... */
+        async function returnToWaitScreen() { 
              await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
                 method: 'PUT',
                 body: JSON.stringify({ state: "IDLE" })
@@ -194,7 +225,7 @@
         }
 
         let stream = null;
-        async function initiateSmilePayment() { /* ... (остается без изменений) ... */
+        async function initiateSmilePayment() { 
              const modal = document.getElementById('smile-payment-modal');
             const video = document.getElementById('webcam-video');
             modal.style.display = 'flex';
@@ -213,7 +244,7 @@
             }, 4000);
         }
 
-        function stopCamera() { /* ... (остается без изменений) ... */
+        function stopCamera() { 
              if (stream) {
                 stream.getTracks().forEach(track => track.stop());
                 document.getElementById('smile-payment-modal').style.display = 'none';
@@ -224,4 +255,4 @@
         setInterval(checkSync, 2000);
     </script>
 </body>
-</html>
+</h
