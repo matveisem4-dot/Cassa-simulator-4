@@ -5,38 +5,76 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Терминал 2026</title>
     <style>
-        :root { --bg: linear-gradient(135deg, #08a652 0%, #03411e 100%); --lime: #7cec84; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: sans-serif; background: #121212; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        
-        #terminal { width: 100%; height: 100vh; max-width: 420px; background: var(--bg); display: flex; flex-direction: column; position: relative; }
-        
-        .screen { display: none; flex-direction: column; flex: 1; padding: 40px; color: white; text-align: center; justify-content: center; align-items: center; }
-        .screen.active { display: flex; }
-
-        /* Стиль для картинки Сбера */
-        .smile-icon {
-            width: 120px; /* Размер иконки */
-            height: auto;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
+        :root { 
+            --accent: #00ff41; 
+            --bg-dark: #052c16;
         }
 
-        .custom-label { 
-            font-size: 32px; 
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: sans-serif; background: #000; overflow: hidden; color: white; }
+        
+        /* Живой фон */
+        #terminal { 
+            width: 100%; height: 100vh; 
+            background: radial-gradient(circle at center, #083d1d 0%, #000 100%);
+            display: flex; flex-direction: column; position: relative; 
+        }
+
+        .screen { 
+            display: none; flex-direction: column; flex: 1; 
+            padding: 40px; text-align: center; justify-content: center; align-items: center;
+            animation: slideUp 0.6s ease-out; 
+        }
+        .screen.active { display: flex; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Контейнер для картинки и текста */
+        .content-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Анимированная иконка */
+        .smile-icon {
+            width: 130px;
+            filter: drop-shadow(0 0 15px var(--accent));
+            animation: float 3s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.03); }
+        }
+
+        /* Твоя надпись */
+        .main-label { 
+            font-size: 36px; 
             font-weight: 900; 
             text-transform: uppercase; 
             letter-spacing: 2px;
-            margin: 0;
+            text-shadow: 0 0 20px rgba(0,255,65,0.4);
         }
 
-        .fixed-id {
+        /* Экран успеха */
+        .success-icon {
+            font-size: 80px; color: var(--accent);
+            animation: pop 0.5s cubic-bezier(0.17, 0.89, 0.32, 1.49);
+        }
+        @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+
+        /* ID в левом нижнем углу */
+        .id-footer {
             position: absolute;
-            bottom: 15px;
-            left: 15px;
+            bottom: 20px;
+            left: 20px;
             font-family: monospace;
             font-size: 14px;
-            color: rgba(255, 255, 255, 0.4);
-            pointer-events: none;
+            color: rgba(0, 255, 65, 0.5);
+            background: rgba(0,0,0,0.3);
+            padding: 5px 10px;
+            border-left: 2px solid var(--accent);
         }
     </style>
 </head>
@@ -44,28 +82,27 @@
     <div id="terminal">
         <!-- ЭКРАН ОЖИДАНИЯ -->
         <div id="s-wait" class="screen active">
-            <!-- Картинка перед текстом -->
-            <img src="https://www.sberbank.ru/common/img/uploaded/files/oplata_ulybkoy/images/blindssmile_howto.webp" alt="Smile" class="smile-icon">
-            
-            <div id="display-text" class="custom-label">ПОТЕРИ</div>
-            <p style="opacity: 0.6; margin-top: 10px;">ОЖИДАНИЕ СИГНАЛА</p>
+            <div class="content-wrap">
+                <!-- Картинка-точка перед словом -->
+                <img src="www.sberbank.ru" class="smile-icon">
+                <div class="main-label">Как Вам удобно</div>
+            </div>
         </div>
 
         <!-- ЭКРАН УСПЕХА -->
         <div id="s-ok" class="screen">
-            <div style="background: var(--lime); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
-                <span style="font-size: 40px; color: #004d25;">✔</span>
-            </div>
+            <div class="success-icon">✔</div>
             <h1>ОПЛАЧЕНО</h1>
         </div>
 
-        <div class="fixed-id">ID: <span id="my-id">...</span></div>
+        <!-- ID В УГЛУ -->
+        <div class="id-footer">TERMINAL_ID: <span id="my-id">...</span></div>
     </div>
 
     <script>
         const DB = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
         
-        // Генерация нового ID при каждой загрузке страницы в 2026 году
+        // Случайный ID при каждой перезагрузке
         let tid = Math.floor(100000 + Math.random() * 899999); 
         document.getElementById('my-id').innerText = tid;
 
@@ -74,14 +111,9 @@
                 const r = await fetch(`${DB}/${tid}.json`); 
                 const data = await r.json();
                 
-                // Если в базе для этого ID лежит строка "SUCCESS"
-                if (data === "SUCCESS" && !isActive('s-ok')) { 
+                if ((data === "SUCCESS" || (data && data.status === "SUCCESS")) && !isActive('s-ok')) { 
                     show('ok');
-                    // Сбрасываем статус в базе через 2 секунды
-                    setTimeout(async () => {
-                        await fetch(`${DB}/${tid}.json`, { method: 'PUT', body: JSON.stringify("IDLE") });
-                        show('wait');
-                    }, 4000);
+                    setTimeout(() => { location.reload(); }, 4000); 
                 }
             } catch(e){}
         }
