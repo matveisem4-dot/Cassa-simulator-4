@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SberPay Terminal Premium</title>
+    <title>SberPay Terminal Premium 2026</title>
     <style>
-        /* Базовые стили */
-        body { margin: 0; font-family: 'Segoe UI', Roboto, sans-serif; background: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; color: #fff; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; color: #fff; overflow: hidden; }
         
         #phone-screen-container {
             width: 380px; height: 780px;
@@ -16,139 +15,139 @@
             display: flex; flex-direction: column;
         }
 
-        /* Анимированная улыбка */
-        .sber-smile-container {
-            margin-left: 40px; margin-top: 80px;
-            width: 65px; height: 65px; background: #fff; border-radius: 50%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        /* --- КНОПКА СО СБЕРКОТОМ --- */
+        .kot-button {
+            width: 85%; height: 90px; background: #fff; border-radius: 20px;
+            margin: 20px auto; display: flex; align-items: center; justify-content: flex-end;
+            padding: 0 20px; border: none; cursor: pointer; position: relative;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); transition: transform 0.2s;
         }
-        .smile-eyes { width: 30px; display: flex; justify-content: space-between; margin-bottom: 2px; }
-        .eye { width: 7px; height: 7px; background: #08a652; border-radius: 50%; animation: blink 4s infinite; }
-        .smile-mouth { width: 28px; height: 14px; border-bottom: 4px solid #08a652; border-radius: 0 0 20px 20px; }
+        .kot-button:active { transform: scale(0.96); }
 
-        /* Заголовок с галочкой */
-        .main-text { 
-            font-size: 42px; font-weight: 800; line-height: 1.1; 
-            margin-top: 25px; text-align: left; padding: 0 40px; color: #ffffff;
+        .kot-text { color: #08a652; font-size: 18px; font-weight: 800; width: 50%; text-align: left; }
+
+        /* Рисуем кота на CSS */
+        .kot-container {
+            position: absolute; left: 15px; bottom: 0;
+            width: 100px; height: 80px; overflow: visible;
         }
-        .text-row-inline { display: flex; align-items: center; gap: 15px; margin-top: 5px; }
         
-        .sber-check-icon {
-            width: 44px; height: 44px; background: #fff; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        .sber-check-icon::after {
-            content: ''; width: 12px; height: 22px;
-            border-right: 4px solid #08a652; border-bottom: 4px solid #08a652;
-            transform: rotate(45deg) translate(-2px, -2px);
+        .kot-body {
+            width: 70px; height: 60px; background: #ff9d42; /* Оранжевый кот */
+            border-radius: 30px 30px 0 0; position: absolute; bottom: 0;
         }
 
-        /* Экраны и кнопки */
-        .screen { display: none; width: 100%; height: 100%; flex-direction: column; text-align: center; opacity: 0; transition: opacity 0.5s ease; }
-        .screen.active { display: flex; opacity: 1; }
+        .kot-ear {
+            width: 20px; height: 20px; background: #ff9d42;
+            position: absolute; top: -10px; border-radius: 5px; transform: rotate(45deg);
+        }
+        .ear-left { left: 10px; } .ear-right { right: 10px; }
+
+        .kot-eye {
+            width: 6px; height: 6px; background: #000; border-radius: 50%;
+            position: absolute; top: 20px; animation: blink 3s infinite;
+        }
+        .eye-left { left: 20px; } .eye-right { right: 20px; }
+
+        /* Лапка, которая машет */
+        .kot-paw {
+            width: 25px; height: 15px; background: #ff9d42;
+            border-radius: 10px; position: absolute; left: -10px; top: 30px;
+            transform-origin: right center; animation: wave 1.5s infinite ease-in-out;
+            border: 2px solid rgba(0,0,0,0.1);
+        }
+
+        /* --- ОСТАЛЬНЫЕ СТИЛИ --- */
+        .sber-smile-container { margin-left: 40px; margin-top: 80px; width: 65px; height: 65px; background: #fff; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .smile-eyes { width: 30px; display: flex; justify-content: space-between; }
+        .eye-green { width: 7px; height: 7px; background: #08a652; border-radius: 50%; }
+        .smile-mouth { width: 28px; height: 14px; border-bottom: 4px solid #08a652; border-radius: 0 0 20px 20px; }
+        
+        .main-text { font-size: 42px; font-weight: 800; line-height: 1.1; margin-top: 25px; padding: 0 40px; }
+        .text-row-inline { display: flex; align-items: center; gap: 15px; margin-top: 5px; }
+        .sber-check-icon { width: 44px; height: 44px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .sber-check-icon::after { content: ''; width: 10px; height: 18px; border-right: 4px solid #08a652; border-bottom: 4px solid #08a652; transform: rotate(45deg); }
+
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; text-align: center; }
+        .screen.active { display: flex; }
         .price-text { font-size: 54px; font-weight: 800; margin: 60px 0 20px; }
-        #qrcode-container { background: #fff; padding: 20px; border-radius: 30px; margin: 20px auto; width: 220px; height: 220px; display: flex; align-items: center; justify-content: center; opacity: 0; }
-        #qrcode-container.animated { opacity: 1; transform: scale(1); transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        #qrcode-image { width: 100%; height: 100%; object-fit: contain; }
-        .sber-btn { background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 20px; border-radius: 22px; font-weight: 600; cursor: pointer; width: 85%; margin: 10px auto; }
-        .terminal-id-badge { position: absolute; bottom: 25px; width: 100%; text-align: center; font-size: 12px; color: rgba(255,255,255,0.3); }
-
+        #qrcode-container { background: #fff; padding: 20px; border-radius: 30px; margin: 20px auto; width: 180px; height: 180px; }
+        
+        /* Анимации */
+        @keyframes wave { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-30deg); } }
         @keyframes blink { 0%, 90%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
-        @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div id="phone-screen-container">
-        <div id="screen-wait" class="screen active">
-            <div class="sber-smile-container">
-                <div class="smile-eyes"><div class="eye"></div><div class="eye"></div></div>
-                <div class="smile-mouth"></div>
-            </div>
-            <div class="main-text">
-                ПЛАТИТЕ<br>КАК ВАМ<br>
-                <div class="text-row-inline">
-                    УДОБНО <div class="sber-check-icon"></div>
-                </div>
-            </div>
+<div id="phone-screen-container">
+    <div id="screen-wait" class="screen active">
+        <div class="sber-smile-container">
+            <div class="smile-eyes"><div class="eye-green"></div><div class="eye-green"></div></div>
+            <div class="smile-mouth"></div>
         </div>
-
-        <div id="screen-pay" class="screen">
-            <div id="amount-val" class="price-text">0.00 ₽</div>
-            <div id="qrcode-container">
-                 <img id="qrcode-image" src="my_qr_code.png" alt="QR Code" />
-            </div>
-            <div style="margin-bottom: 20px;">
-                <span style="color: rgba(255,255,255,0.6); font-size: 14px;">ID терминала:</span><br>
-                <b id="display-id-center" style="font-size: 24px; letter-spacing: 2px; color: #00ff41;">------</b>
-            </div>
-            <button class="sber-btn" onclick="initiateSmilePayment()">Оплатить улыбкой</button>
+        <div class="main-text">ПЛАТИТЕ<br>КАК ВАМ<br>
+            <div class="text-row-inline">УДОБНО <div class="sber-check-icon"></div></div>
         </div>
-
-        <div id="screen-success" class="screen">
-            <div style="font-size: 80px; margin-top: 150px;">✅</div>
-            <h1 style="font-size: 32px; margin-top: 20px;">ОПЛАЧЕНО</h1>
-            <button class="sber-btn" onclick="returnToWaitScreen()" style="margin-top: auto; margin-bottom: 80px;">Готово</button>
-        </div>
-
-        <div class="terminal-id-badge">SberPay Terminal // ID: <span id="terminal-id-display">...</span></div>
     </div>
 
-    <script>
-        // ... (Весь JavaScript остается прежним, он управляет сменой экранов и ID) ...
-        const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
-        let currentScreen = 'wait';
-        let stream = null;
+    <div id="screen-pay" class="screen">
+        <div id="amount-val" class="price-text">0.00 ₽</div>
+        <div id="qrcode-container">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=SberPay" style="width:100%">
+        </div>
+        
+        <div style="margin-top: 10px; color: rgba(255,255,255,0.6);">ID: <b id="display-id-center" style="color:#00ff41">000000</b></div>
 
-        document.getElementById('terminal-id-display').innerText = MY_TERMINAL_ID;
-        document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
+        <button class="kot-button" onclick="initiateSmilePayment()">
+            <div class="kot-container">
+                <div class="kot-ear ear-left"></div>
+                <div class="kot-ear ear-right"></div>
+                <div class="kot-body">
+                    <div class="kot-eye eye-left"></div>
+                    <div class="kot-eye eye-right"></div>
+                    <div class="kot-paw"></div>
+                </div>
+            </div>
+            <div class="kot-text">Оплатить<br>улыбкой</div>
+        </button>
+    </div>
 
-        async function registerInFirebase() {
-            try { await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { method: 'PUT', body: JSON.stringify({ state: "IDLE", lastUpdate: Date.now() }) }); } catch (e) {}
-        }
+    <div id="screen-success" class="screen">
+        <div style="font-size: 80px; margin-top: 150px;">✅</div>
+        <h1 style="font-size: 32px;">ОПЛАЧЕНО</h1>
+        <button class="kot-button" onclick="returnToWaitScreen()" style="justify-content: center;">
+            <div class="kot-text" style="width:100%; text-align:center;">Готово</div>
+        </button>
+    </div>
+</div>
 
-        async function checkSync() {
-            try {
-                if (currentScreen === 'wait') {
-                    const res = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
-                    const data = await res.json();
-                    if (data && data.command === "PAY") { startPayment(data.amount); }
-                }
-                if (currentScreen !== 'success') {
-                    const statusRes = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
-                    const statusData = await statusRes.json();
-                    if (statusData && statusData.state === "SUCCESS") { showScreen('screen-success'); stopCamera(); }
-                }
-            } catch (e) {}
-        }
+<script>
+    const MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
+    document.getElementById('display-id-center').innerText = MY_TERMINAL_ID;
 
-        function startPayment(amount) {
-            document.getElementById('amount-val').innerText = amount + " ₽";
-            showScreen('screen-pay');
-            setTimeout(() => document.getElementById('qrcode-container').classList.add('animated'), 100);
-            fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { method: 'PATCH', body: JSON.stringify({ state: "WAITING_PAYMENT", amount: amount }) });
-        }
+    function startPayment(amount) {
+        document.getElementById('amount-val').innerText = amount + " ₽";
+        document.getElementById('screen-wait').classList.remove('active');
+        document.getElementById('screen-pay').classList.add('active');
+    }
 
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            currentScreen = id.replace('screen-', '');
-        }
+    function initiateSmilePayment() {
+        alert("Ищем вашу улыбку...");
+        setTimeout(() => {
+            document.getElementById('screen-pay').classList.remove('active');
+            document.getElementById('screen-success').classList.add('active');
+        }, 2000);
+    }
 
-        async function initiateSmilePayment() { /* логика камеры как в прошлом сообщении */ }
-        function stopCamera() { /* логика стопа камеры как в прошлом сообщении */ }
+    function returnToWaitScreen() {
+        document.getElementById('screen-success').classList.remove('active');
+        document.getElementById('screen-wait').classList.add('active');
+    }
 
-        async function returnToWaitScreen() {
-            await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, { method: 'PUT', body: JSON.stringify({ state: "IDLE" }) });
-            showScreen('screen-wait');
-        }
+    // Симуляция: через 3 секунды придет команда на оплату
+    setTimeout(() => startPayment(1500), 3000);
+</script>
 
-        registerInFirebase();
-        setInterval(checkSync, 2000);
-    </script>
 </body>
 </html>
