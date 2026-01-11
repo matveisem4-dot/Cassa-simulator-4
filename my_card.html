@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моя Карта SBER SIM</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <style>
+        @font-face { font-family: 'SberDisplay'; src: local('Arial Bold'); font-weight: 700; }
+        body { margin: 0; font-family: 'SberDisplay', sans-serif; background: linear-gradient(to right, #004d25, #00a040); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card-container {
+            width: 320px; padding: 25px; border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.18);
+            text-align: left; position: relative;
+        }
+        .logo { font-size: 28px; font-weight: bold; margin-bottom: 20px; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
+        .chip { width: 50px; height: 35px; background: linear-gradient(45deg, #bbb, #eee); border-radius: 8px; margin-bottom: 20px; }
+        .card-number { font-size: 24px; letter-spacing: 3px; margin-bottom: 10px; font-weight: bold; }
+        .details { display: flex; justify-content: space-between; font-size: 14px; margin-top: 15px; }
+        .warning { position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 9px; color: rgba(255,255,255,0.6); }
+    </style>
+</head>
+<body>
+    <div class="card-container">
+        <div class="logo">SBER SIM</div>
+        <div class="chip"></div>
+        <div class="card-number" id="my-card-num">**** **** **** ****</div>
+        <div class="details">
+            <div>Баланс: <b id="my-balance">0</b> РУБ</div>
+            <div>ПИН: <b id="my-pin">****</b></div>
+        </div>
+        <div class="warning">ЭТО НЕ НАСТОЯЩАЯ КАРТА. НЕ ВВОДИТЕ РЕАЛЬНЫЕ ДАННЫЕ.</div>
+    </div>
+
+    <script>
+        // КОНФИГ FIREBASE (ЗАМЕНИ НА СВОЙ!)
+        const firebaseConfig = {
+            databaseURL: "https://cassa-simulator-4-default-rtdb.firebaseio.com", // ТВОЯ ССЫЛКА НА БАЗУ
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let myCard = localStorage.getItem('cardNum');
+        if (!myCard) {
+            myCard = '4400' + Math.floor(100000000000 + Math.random() * 900000000000);
+            let pin = Math.floor(1000 + Math.random() * 9000);
+            localStorage.setItem('cardNum', myCard);
+            db.ref('cards/' + myCard).set({ balance: 1000, pin: pin });
+        }
+
+        db.ref('cards/' + myCard).on('value', (snap) => {
+            const data = snap.val();
+            if (data) {
+                document.getElementById('my-card-num').innerText = myCard.replace(/(\d{4})/g, '$1 ').trim();
+                document.getElementById('my-balance').innerText = data.balance;
+                document.getElementById('my-pin').innerText = data.pin;
+            }
+        });
+    </script>
+</body>
+</html>
