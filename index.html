@@ -3,87 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SberPay Terminal Professional</title>
+    <title>SberPay Terminal Original</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        @font-face { font-family: 'SberDisplay'; src: local('Arial Bold'); font-weight: 700; }
-        body { margin: 0; font-family: 'SberDisplay', sans-serif; background: #000; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        body { margin: 0; font-family: sans-serif; background: #1a1a1a; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; }
         
-        #phone-screen {
-            width: 380px; height: 780px;
-            background: linear-gradient(135deg, #004d25 0%, #00a040 100%);
-            position: relative; border-radius: 45px; overflow: hidden;
-            display: flex; flex-direction: column; border: 8px solid #333;
-            box-shadow: 0 0 50px rgba(0,255,65,0.2);
+        #terminal {
+            width: 360px; height: 720px;
+            background: #00a040; /* Тот самый зеленый */
+            border-radius: 40px; position: relative; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center;
+            border: 10px solid #333;
         }
 
-        .screen { display: none; width: 100%; text-align: center; height: 100%; }
-        .active { display: flex; flex-direction: column; align-items: center; }
+        .screen { display: none; width: 100%; height: 100%; text-align: center; }
+        .active { display: block; }
 
-        /* Верхняя часть с логотипом */
-        .header { margin-top: 60px; display: flex; align-items: center; gap: 10px; font-size: 28px; font-weight: bold; }
-        .sber-logo { width: 45px; height: 45px; }
+        /* Та самая ГАЛОЧКА и ЛОГО */
+        .logo-box { margin-top: 50px; margin-bottom: 20px; }
+        .sber-icon { width: 60px; height: 60px; }
 
-        /* Текст ПЛАТИТЕ КАК ВАМ УДОБНО */
-        .promo-text { text-align: left; width: 80%; margin-top: 50px; }
-        .line { font-size: 40px; font-weight: 900; line-height: 1; letter-spacing: -1px; }
+        /* Твой старый текст */
+        .promo-header { font-size: 38px; font-weight: 900; line-height: 1; text-align: left; padding-left: 40px; margin-top: 20px; }
+        .green-text { color: #00ff41; }
 
-        .price-display { font-size: 56px; font-weight: 900; color: #00ff41; margin: 40px 0; }
-
-        .qr-frame { background: #fff; padding: 20px; border-radius: 30px; margin-top: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
-
-        .card-area { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); width: 85%; padding: 20px; border-radius: 25px; margin-top: 30px; }
-        input { width: 90%; padding: 15px; margin: 8px 0; border-radius: 12px; border: none; text-align: center; font-size: 18px; background: rgba(255,255,255,0.9); }
+        .price { font-size: 50px; font-weight: bold; margin: 40px 0; }
         
-        .pay-btn { background: #00ff41; color: #000; border: none; padding: 18px; border-radius: 15px; font-weight: bold; width: 90%; cursor: pointer; font-size: 20px; margin-top: 10px; }
+        .qr-white-box { background: #fff; padding: 15px; border-radius: 20px; display: inline-block; }
 
-        /* Индикаторы */
-        #status-light { position: absolute; bottom: 25px; right: 25px; width: 12px; height: 12px; border-radius: 50%; background: #00ff41; box-shadow: 0 0 15px #00ff41; animation: blink 2s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
-        .tid { position: absolute; bottom: 22px; left: 30px; font-size: 11px; opacity: 0.4; }
+        .input-group { margin-top: 30px; }
+        input { width: 80%; padding: 12px; margin: 5px 0; border-radius: 10px; border: none; font-size: 18px; }
+        
+        .btn-pay { background: #00ff41; color: #000; border: none; padding: 15px; border-radius: 10px; width: 80%; font-weight: bold; font-size: 20px; cursor: pointer; margin-top: 10px; }
+
+        /* Пульсирующая точка */
+        .dot { position: absolute; bottom: 20px; right: 20px; width: 10px; height: 10px; background: #00ff41; border-radius: 50%; box-shadow: 0 0 10px #00ff41; }
+        .tid-text { position: absolute; bottom: 15px; left: 25px; font-size: 10px; opacity: 0.5; }
     </style>
 </head>
 <body>
 
-<div id="phone-screen">
-    <div id="scr-wait" class="screen active">
-        <div class="header">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Sberbank_Logo_2020.svg" class="sber-logo">
-            SberPay
+<div id="terminal">
+    <div id="wait-scr" class="screen active">
+        <div class="logo-box">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Sberbank_Logo_2020.svg" class="sber-icon">
         </div>
-        <div class="promo-text">
-            <div class="line">ПЛАТИТЕ</div>
-            <div class="line" style="color: #00ff41;">КАК ВАМ</div>
-            <div class="line">УДОБНО</div>
+        <div class="promo-header">
+            ПЛАТИТЕ<br>
+            <span class="green-text">КАК ВАМ</span><br>
+            УДОБНО
         </div>
-        <div style="margin-top: 150px; font-size: 18px; opacity: 0.7;">Приложите карту или<br>считайте QR-код</div>
+        <div style="margin-top: 180px; font-size: 16px; opacity: 0.8;">Ожидание команды на оплату...</div>
     </div>
 
-    <div id="scr-pay" class="screen">
-        <div class="header">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Sberbank_Logo_2020.svg" class="sber-logo">
-            SberPay
+    <div id="pay-scr" class="screen">
+        <div class="logo-box" style="margin-top: 30px;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Sberbank_Logo_2020.svg" class="sber-icon" style="width: 40px; height: 40px;">
         </div>
-        <div id="val" class="price-display">0 РУБ</div>
-        <div class="qr-frame">
-            <img id="qr-code" src="" width="180">
+        <div id="amount-val" class="price">0 ₽</div>
+        <div class="qr-white-box">
+            <img id="qr-img" src="" width="160">
         </div>
-        <div class="card-area">
-            <input type="text" id="cn" placeholder="Номер карты">
-            <input type="password" id="cp" placeholder="ПИН" maxlength="4">
-            <button class="pay-btn" onclick="executePay()">ОПЛАТИТЬ</button>
+        <div class="input-group">
+            <input type="text" id="c-num" placeholder="Номер карты">
+            <input type="password" id="c-pin" placeholder="ПИН" maxlength="4">
+            <button class="btn-pay" onclick="doPay()">ОПЛАТИТЬ</button>
         </div>
     </div>
 
-    <div id="scr-ok" class="screen">
+    <div id="ok-scr" class="screen">
         <div style="font-size: 120px; margin-top: 180px;">✅</div>
-        <h1 style="color: #00ff41; font-size: 42px;">УСПЕШНО</h1>
-        <p>Благодарим за покупку!</p>
+        <h1 style="color: #00ff41;">УСПЕШНО</h1>
     </div>
 
-    <div class="tid">ТЕРМИНАЛ: <span id="tid-id"></span></div>
-    <div id="status-light"></div>
+    <div class="tid-text">ТЕРМИНАЛ ID: <span id="tid-display"></span></div>
+    <div class="dot"></div>
 </div>
 
 <script>
@@ -91,42 +86,40 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const t_id = "TERM-" + Math.floor(1000 + Math.random() * 9000);
-    document.getElementById('tid-id').innerText = t_id;
-    let total = 0;
+    const current_tid = Math.floor(100000 + Math.random() * 900000);
+    document.getElementById('tid-display').innerText = current_tid;
+    let current_sum = 0;
 
-    // СЛУШАЕМ БАЗУ (Твое приложение должно менять значение в orders/current)
-    db.ref('orders/current').on('value', (snapshot) => {
-        const val = snapshot.val();
+    // СЛУШАЕМ СУММУ ИЗ БАЗЫ
+    db.ref('orders/current').on('value', (s) => {
+        const val = s.val();
         if (val && val > 0) {
-            total = val;
-            document.getElementById('val').innerText = val + " ₽";
-            document.getElementById('qr-code').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=sber_${t_id}_${val}`;
-            changeScreen('scr-pay');
+            current_sum = val;
+            document.getElementById('amount-val').innerText = val + " ₽";
+            document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=pay_${current_tid}_${val}`;
+            show('pay-scr');
         }
     });
 
-    function changeScreen(id) {
+    function show(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
     }
 
-    async function executePay() {
-        const n = document.getElementById('cn').value.trim();
-        const p = document.getElementById('cp').value.trim();
-        
+    async function doPay() {
+        const n = document.getElementById('c-num').value;
+        const p = document.getElementById('c-pin').value;
         const snap = await db.ref('cards/' + n).once('value');
         const card = snap.val();
 
         if (card && card.pin == p) {
-            if (card.balance >= total) {
-                await db.ref('cards/' + n).update({ balance: card.balance - total });
-                // Сбрасываем заказ в базе, чтобы терминал очистился
-                await db.ref('orders/current').set(0);
-                changeScreen('scr-ok');
-                setTimeout(() => { location.reload(); }, 5000);
-            } else { alert("Недостаточно средств!"); }
-        } else { alert("Ошибка данных!"); }
+            if (card.balance >= current_sum) {
+                await db.ref('cards/' + n).update({ balance: card.balance - current_sum });
+                await db.ref('orders/current').set(0); // Сброс
+                show('ok-scr');
+                setTimeout(() => { location.reload(); }, 4000);
+            } else { alert("Недостаточно средств"); }
+        } else { alert("Ошибка данных"); }
     }
 </script>
 </body>
