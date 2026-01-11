@@ -2,71 +2,70 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SberPay Terminal 2026 Animated</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SberPay Terminal Fullscreen</title>
     <style>
         @font-face {
             font-family: 'SberDisplay';
             src: local('Arial Bold'), sans-serif;
             font-weight: 700;
         }
-        body { margin: 0; font-family: 'SberDisplay', sans-serif; background: #1a1a1a; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         
-        #phone-screen-container {
-            width: 380px; height: 780px;
+        /* Растягиваем на весь экран */
+        * { box-sizing: border-box; }
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            font-family: 'SberDisplay', sans-serif; background: #1a1a1a; 
+            overflow: hidden; touch-action: manipulation;
+        }
+        
+        #main-container {
+            width: 100vw; height: 100vh;
             background: linear-gradient(to bottom, #004d25, #00a040);
-            position: relative; border-radius: 45px; overflow: hidden;
+            position: relative;
             display: flex; flex-direction: column; align-items: center;
-            border: 8px solid #333;
         }
 
-        .screen { display: none; width: 100%; text-align: center; padding-top: 60px; opacity: 0; transition: opacity 0.5s ease-in-out; height: 100%; }
-        .screen.active { display: block; opacity: 1; }
+        .screen { display: none; width: 100%; height: 100%; text-align: center; padding-top: 20%; opacity: 0; transition: opacity 0.5s ease; }
+        .screen.active { display: flex; flex-direction: column; align-items: center; opacity: 1; }
 
-        .text-container { margin-top: 50px; text-align: left; padding: 0 30px; }
-        .main-text { font-size: 38px; font-weight: bold; line-height: 1.1; opacity: 0; animation: slideInFromLeft 0.8s forwards ease-out; display: flex; align-items: center; gap: 10px; }
-        .sber-icon { width: 38px; height: auto; }
-        .checkmark-icon { width: 38px; height: auto; margin-left: 10px; }
+        .text-container { width: 100%; text-align: left; padding: 0 10%; margin-top: 20px; }
+        .main-text { font-size: 10vw; font-weight: bold; line-height: 1.1; opacity: 0; animation: slideInFromLeft 0.8s forwards ease-out; display: flex; align-items: center; gap: 15px; }
         
-        .price-text { font-size: 48px; color: #00ff41; font-weight: 800; margin: 10px 0; opacity: 0; transform: translateY(-20px); animation: fadeIn 0.5s forwards 0.1s; }
+        .sber-icon { width: 10vw; max-width: 50px; height: auto; }
+        .checkmark-icon { width: 10vw; max-width: 50px; height: auto; margin-left: 10px; }
         
-        #qrcode-container { background: #fff; padding: 20px; border-radius: 15px; display: inline-block; margin: 10px auto; min-width: 250px; min-height: 250px; opacity: 0; transform: translateY(50px); }
-        #qrcode-image { width: 250px; height: 250px; display: none; }
+        .price-text { font-size: 12vw; color: #00ff41; font-weight: 800; margin: 20px 0; opacity: 0; transform: translateY(-20px); animation: fadeIn 0.5s forwards 0.1s; }
+        
+        #qrcode-container { background: #fff; padding: 15px; border-radius: 20px; display: inline-block; margin: 10px auto; width: 70vw; height: 70vw; max-width: 300px; max-height: 300px; opacity: 0; transform: translateY(50px); }
+        #qrcode-image { width: 100%; height: 100%; display: none; }
         .animated { animation: slideInUp 0.6s forwards; }
 
-        .terminal-id-badge { position: absolute; bottom: 15px; left: 15px; font-size: 10px; opacity: 0.5; }
-
-        .card-input-area { background: rgba(0,0,0,0.25); width: 85%; padding: 15px; border-radius: 20px; margin: 10px auto; backdrop-filter: blur(10px); }
-        .card-input-area input { width: 90%; padding: 12px; margin: 5px 0; border-radius: 10px; border: none; text-align: center; font-size: 16px; background: #fff; color: #000; }
+        .card-input-area { background: rgba(0,0,0,0.2); width: 85%; padding: 20px; border-radius: 25px; margin: 10px auto; backdrop-filter: blur(10px); }
+        .card-input-area input { width: 100%; padding: 15px; margin: 8px 0; border-radius: 12px; border: none; text-align: center; font-size: 18px; }
         
-        button { background: #00ff41; color: #000; border: none; padding: 15px 25px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; width: 80%; margin-top: 8px; }
-        .btn-smile { background: rgba(255,255,255,0.15); color: #fff; margin-top: 5px; }
+        button { background: #00ff41; color: #000; border: none; padding: 18px; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 20px; width: 85%; margin-top: 10px; }
+        .btn-smile { background: rgba(255,255,255,0.15); color: #fff; }
 
-        /* Модальное окно камеры */
-        #smile-modal { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
-        #v { width: 280px; height: 280px; object-fit: cover; border-radius: 50%; border: 4px solid #00ff41; transform: scaleX(-1); background: #222; }
+        #smile-modal { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: #000; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
+        #v { width: 70vw; height: 70vw; max-width: 320px; max-height: 320px; object-fit: cover; border-radius: 50%; border: 5px solid #00ff41; transform: scaleX(-1); }
 
         @keyframes slideInUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideInFromLeft { from { opacity: 0; transform: translateX(-100px); } to { opacity: 1; transform: translateX(0); } }
 
-        /* ИНДИКАТОР ЖИВОЙ СВЯЗИ */
-        #status-indicator { 
-            position: absolute; bottom: 18px; right: 15px; width: 10px; height: 10px; 
-            border-radius: 50%; background-color: #00ff41; 
-            box-shadow: 0 0 10px #00ff41;
-            animation: pulse-bank 2.5s infinite ease-in-out; 
-        }
+        #status-indicator { position: absolute; bottom: 20px; right: 20px; width: 12px; height: 12px; border-radius: 50%; background-color: #00ff41; box-shadow: 0 0 10px #00ff41; animation: pulse-bank 2.5s infinite ease-in-out; }
+        .terminal-id-badge { position: absolute; bottom: 18px; left: 20px; font-size: 12px; opacity: 0.6; }
+
         @keyframes pulse-bank {
-            0% { opacity: 1; transform: scale(1); box-shadow: 0 0 5px #00ff41; }
-            50% { opacity: 0.4; transform: scale(0.8); box-shadow: 0 0 15px #00ff41; }
-            100% { opacity: 1; transform: scale(1); box-shadow: 0 0 5px #00ff41; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
         }
     </style>
 </head>
 <body>
 
-    <div id="phone-screen-container">
+    <div id="main-container">
         <div id="screen-wait" class="screen active">
             <div class="text-container">
                 <div class="main-text">ПЛАТИТЕ</div>
@@ -82,7 +81,7 @@
         </div>
 
         <div id="screen-pay" class="screen">
-            <div id="amount-val" class="price-text">0.00 РУБ</div>
+            <div id="amount-val" class="price-text">0.00 ₽</div>
             <div id="qrcode-container">
                  <img id="qrcode-image" src="my_qr_code.svg" alt="QR Code" />
             </div>
@@ -92,13 +91,12 @@
                 <input type="password" id="card-pin" placeholder="ПИН-КОД" maxlength="4">
                 <button onclick="payByCard()">ОПЛАТИТЬ</button>
             </div>
-
             <button class="btn-smile" onclick="initiateSmilePayment()">Оплата улыбкой</button>
         </div>
 
         <div id="screen-success" class="screen">
-            <div style="font-size: 100px; margin-top: 150px;">✅</div>
-            <h1 style="color: #00ff41; font-size: 36px;">ОПЛАЧЕНО</h1>
+            <div style="font-size: 120px; margin-top: 100px;">✅</div>
+            <h1 style="color: #00ff41; font-size: 42px;">ОПЛАЧЕНО</h1>
         </div>
 
         <div class="terminal-id-badge">ID: <span id="terminal-id-display">...</span></div>
@@ -106,7 +104,7 @@
 
         <div id="smile-modal">
             <video id="v" autoplay playsinline></video>
-            <h2 style="color: #00ff41; margin-top: 20px;">Улыбнитесь</h2>
+            <h2 style="color: #00ff41; margin-top: 30px; font-size: 24px;">УЛЫБНИТЕСЬ</h2>
         </div>
     </div>
 
@@ -119,7 +117,6 @@
 
         document.getElementById('terminal-id-display').innerText = MY_TERMINAL_ID;
 
-        // Слежка за командами
         async function checkSync() { 
             try {
                 if (currentScreen === 'wait') {
@@ -129,12 +126,12 @@
                          startPayment(data.amount);
                      }
                 }
-            } catch (e) { console.error("Ошибка связи"); }
+            } catch (e) { }
         }
 
         function startPayment(amount) {
             currentAmount = amount;
-            document.getElementById('amount-val').innerText = amount + " РУБ";
+            document.getElementById('amount-val').innerText = amount + " ₽";
             showScreen('screen-pay'); 
             document.getElementById('qrcode-image').style.display = 'block';
             setTimeout(() => {
@@ -156,32 +153,23 @@
                     });
                     finishPay();
                 } else { alert("Недостаточно средств!"); }
-            } else { alert("Ошибка карты!"); }
+            } else { alert("Ошибка данных карты!"); }
         }
 
         async function initiateSmilePayment() { 
             const modal = document.getElementById('smile-modal');
-            const video = document.getElementById('v');
             modal.style.display = 'flex';
-            
             try {
                 camStream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = camStream;
-                // Имитация распознавания 3 секунды
+                document.getElementById('v').srcObject = camStream;
                 setTimeout(() => {
-                    stopCam();
+                    if (camStream) camStream.getTracks().forEach(t => t.stop());
+                    modal.style.display = 'none';
                     finishPay();
                 }, 3500);
             } catch (err) {
-                alert("Камера заблокирована браузером!");
+                alert("Нет доступа к камере");
                 modal.style.display = 'none';
-            }
-        }
-
-        function stopCam() {
-            if (camStream) {
-                camStream.getTracks().forEach(t => t.stop());
-                document.getElementById('smile-modal').style.display = 'none';
             }
         }
 
