@@ -3,95 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SberPay Terminal FULL</title>
+    <title>SberPay Terminal Professional</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
         @font-face { font-family: 'SberDisplay'; src: local('Arial Bold'); font-weight: 700; }
-        body { margin: 0; font-family: 'SberDisplay', sans-serif; background: #1a1a1a; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        body { margin: 0; font-family: 'SberDisplay', sans-serif; background: #000; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         
         #phone-screen {
             width: 380px; height: 780px;
-            background: linear-gradient(to bottom, #004d25, #00a040);
+            background: linear-gradient(135deg, #004d25 0%, #00a040 100%);
             position: relative; border-radius: 45px; overflow: hidden;
             display: flex; flex-direction: column; border: 8px solid #333;
+            box-shadow: 0 0 50px rgba(0,255,65,0.2);
         }
 
-        .screen { display: none; width: 100%; text-align: center; padding-top: 60px; height: 100%; }
-        .active { display: block; }
+        .screen { display: none; width: 100%; text-align: center; height: 100%; }
+        .active { display: flex; flex-direction: column; align-items: center; }
 
-        /* Тот самый крутой текст */
-        .text-container { text-align: left; padding: 20px 35px; margin-top: 40px; }
-        .main-text { font-size: 38px; font-weight: bold; line-height: 1.1; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; }
-        .sber-icon { width: 42px; height: 42px; }
+        /* Верхняя часть с логотипом */
+        .header { margin-top: 60px; display: flex; align-items: center; gap: 10px; font-size: 28px; font-weight: bold; }
+        .sber-logo { width: 45px; height: 45px; }
 
-        .price-text { font-size: 52px; color: #00ff41; font-weight: 800; margin: 30px 0; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        /* Текст ПЛАТИТЕ КАК ВАМ УДОБНО */
+        .promo-text { text-align: left; width: 80%; margin-top: 50px; }
+        .line { font-size: 40px; font-weight: 900; line-height: 1; letter-spacing: -1px; }
+
+        .price-display { font-size: 56px; font-weight: 900; color: #00ff41; margin: 40px 0; }
+
+        .qr-frame { background: #fff; padding: 20px; border-radius: 30px; margin-top: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+
+        .card-area { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); width: 85%; padding: 20px; border-radius: 25px; margin-top: 30px; }
+        input { width: 90%; padding: 15px; margin: 8px 0; border-radius: 12px; border: none; text-align: center; font-size: 18px; background: rgba(255,255,255,0.9); }
         
-        /* QR и Карты */
-        .qr-box { background: #fff; padding: 20px; border-radius: 25px; display: inline-block; margin-top: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
-        .card-form { background: rgba(0,0,0,0.25); padding: 20px; border-radius: 25px; width: 80%; margin: 20px auto; backdrop-filter: blur(10px); }
-        
-        input { width: 90%; padding: 15px; margin: 8px 0; border-radius: 12px; border: none; text-align: center; font-size: 18px; }
-        
-        button { 
-            background: #00ff41; color: #000; border: none; padding: 18px; 
-            border-radius: 18px; font-weight: bold; width: 85%; cursor: pointer; 
-            font-size: 18px; margin: 10px 0; transition: 0.2s;
-        }
-        button:active { transform: scale(0.96); }
+        .pay-btn { background: #00ff41; color: #000; border: none; padding: 18px; border-radius: 15px; font-weight: bold; width: 90%; cursor: pointer; font-size: 20px; margin-top: 10px; }
 
-        /* Индикатор */
-        #status-dot { 
-            position: absolute; bottom: 25px; right: 25px; width: 12px; height: 12px; 
-            border-radius: 50%; background: #00ff41; 
-            box-shadow: 0 0 10px #00ff41; animation: pulse 2s infinite; 
-        }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-
-        .tid-label { position: absolute; bottom: 22px; left: 30px; font-size: 12px; opacity: 0.5; letter-spacing: 1px; }
+        /* Индикаторы */
+        #status-light { position: absolute; bottom: 25px; right: 25px; width: 12px; height: 12px; border-radius: 50%; background: #00ff41; box-shadow: 0 0 15px #00ff41; animation: blink 2s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+        .tid { position: absolute; bottom: 22px; left: 30px; font-size: 11px; opacity: 0.4; }
     </style>
 </head>
 <body>
 
 <div id="phone-screen">
     <div id="scr-wait" class="screen active">
-        <div class="text-container">
-            <div class="main-text">ПЛАТИТЕ</div>
-            <div class="main-text">
-                <img src="https://www.sberbank.ru/common/img/uploaded/files/oplata_ulybkoy/images/blindssmile_howto.webp" class="sber-icon"> 
-                КАК ВАМ
-            </div>
-            <div class="main-text">УДОБНО</div>
+        <div class="header">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Sberbank_Logo_2020.svg" class="sber-logo">
+            SberPay
         </div>
-        
-        <button style="margin-top: 180px;" onclick="initPay(990)">Оплатить 990 РУБ</button>
-        <p style="opacity: 0.6; font-size: 14px;">Приложите карту или отсканируйте QR</p>
+        <div class="promo-text">
+            <div class="line">ПЛАТИТЕ</div>
+            <div class="line" style="color: #00ff41;">КАК ВАМ</div>
+            <div class="line">УДОБНО</div>
+        </div>
+        <div style="margin-top: 150px; font-size: 18px; opacity: 0.7;">Приложите карту или<br>считайте QR-код</div>
     </div>
 
     <div id="scr-pay" class="screen">
-        <div id="amt" class="price-text">0 РУБ</div>
-        
-        <div class="qr-box">
+        <div class="header">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Sberbank_Logo_2020.svg" class="sber-logo">
+            SberPay
+        </div>
+        <div id="val" class="price-display">0 РУБ</div>
+        <div class="qr-frame">
             <img id="qr-code" src="" width="180">
         </div>
-
-        <div class="card-form">
-            <input type="text" id="card-n" placeholder="Номер карты">
-            <input type="password" id="card-p" placeholder="ПИН" maxlength="4">
-            <button onclick="confirmCardPay()">ПОДТВЕРДИТЬ</button>
+        <div class="card-area">
+            <input type="text" id="cn" placeholder="Номер карты">
+            <input type="password" id="cp" placeholder="ПИН" maxlength="4">
+            <button class="pay-btn" onclick="executePay()">ОПЛАТИТЬ</button>
         </div>
-        
-        <button style="background: rgba(255,255,255,0.2); color: #fff;" onclick="location.reload()">ОТМЕНА</button>
     </div>
 
     <div id="scr-ok" class="screen">
-        <div style="font-size: 100px; margin-top: 150px;">✅</div>
-        <h1 style="color: #00ff41; font-size: 40px;">ОПЛАЧЕНО</h1>
-        <button onclick="location.reload()" style="margin-top: 50px;">В НАЧАЛО</button>
+        <div style="font-size: 120px; margin-top: 180px;">✅</div>
+        <h1 style="color: #00ff41; font-size: 42px;">УСПЕШНО</h1>
+        <p>Благодарим за покупку!</p>
     </div>
 
-    <div class="tid-label">ID: <span id="tid">------</span></div>
-    <div id="status-dot"></div>
+    <div class="tid">ТЕРМИНАЛ: <span id="tid-id"></span></div>
+    <div id="status-light"></div>
 </div>
 
 <script>
@@ -99,38 +91,42 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    const currentTID = Math.floor(100000 + Math.random() * 900000);
-    document.getElementById('tid').innerText = currentTID;
-    let payAmount = 0;
+    const t_id = "TERM-" + Math.floor(1000 + Math.random() * 9000);
+    document.getElementById('tid-id').innerText = t_id;
+    let total = 0;
 
-    function initPay(sum) {
-        payAmount = sum;
-        document.getElementById('amt').innerText = sum + " РУБ";
-        // Генерация QR
-        document.getElementById('qr-code').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=sberpay_${currentTID}`;
-        
-        show('scr-pay');
-    }
+    // СЛУШАЕМ БАЗУ (Твое приложение должно менять значение в orders/current)
+    db.ref('orders/current').on('value', (snapshot) => {
+        const val = snapshot.val();
+        if (val && val > 0) {
+            total = val;
+            document.getElementById('val').innerText = val + " ₽";
+            document.getElementById('qr-code').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=sber_${t_id}_${val}`;
+            changeScreen('scr-pay');
+        }
+    });
 
-    function show(id) {
+    function changeScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
     }
 
-    async function confirmCardPay() {
-        const num = document.getElementById('card-n').value.trim();
-        const pin = document.getElementById('card-p').value.trim();
+    async function executePay() {
+        const n = document.getElementById('cn').value.trim();
+        const p = document.getElementById('cp').value.trim();
+        
+        const snap = await db.ref('cards/' + n).once('value');
+        const card = snap.val();
 
-        const snap = await db.ref('cards/' + num).once('value');
-        const data = snap.val();
-
-        if (data && data.pin == pin) {
-            if (data.balance >= payAmount) {
-                // Списываем
-                await db.ref('cards/' + num).update({ balance: data.balance - payAmount });
-                show('scr-ok');
-            } else { alert("❌ Недостаточно средств!"); }
-        } else { alert("❌ Ошибка: проверьте номер и ПИН"); }
+        if (card && card.pin == p) {
+            if (card.balance >= total) {
+                await db.ref('cards/' + n).update({ balance: card.balance - total });
+                // Сбрасываем заказ в базе, чтобы терминал очистился
+                await db.ref('orders/current').set(0);
+                changeScreen('scr-ok');
+                setTimeout(() => { location.reload(); }, 5000);
+            } else { alert("Недостаточно средств!"); }
+        } else { alert("Ошибка данных!"); }
     }
 </script>
 </body>
