@@ -3,279 +3,335 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кассовая система 2026 (Web)</title>
+    <title>Cassa Simulator 2026 | Pro UI</title>
     <style>
         :root {
-            --bg-color: #1e1e1e;
-            --panel-color: #2d2d2d;
-            --accent-color: #0088cc;
-            --text-color: #ffffff;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
+            /* Цветовая палитра */
+            --bg-gradient: linear-gradient(135deg, #1c1c2e 0%, #111119 100%);
+            --card-bg: rgba(40, 40, 55, 0.7);
+            --card-border: 1px solid rgba(255, 255, 255, 0.1);
+            
+            --primary: #4f8aff; /* Яркий синий */
+            --primary-hover: #3a6ecc;
+            --success: #00d26a; /* Неоновый зеленый */
+            --danger: #ff4757; /* Мягкий красный */
+            
+            --text-main: #ffffff;
+            --text-muted: #a0a0b0;
+            
+            --radius: 16px;
+            --shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
+
+        * { box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            height: 90vh;
+            overflow: hidden; /* Чтобы не скроллился весь body */
         }
 
-        /* Верхняя панель */
+        /* --- СКРОЛЛБАРЫ --- */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #777; }
+
+        /* --- ВЕРХНЯЯ ПАНЕЛЬ --- */
         .top-bar {
-            background-color: var(--panel-color);
-            padding: 15px;
-            border-radius: 8px;
+            background: rgba(30, 30, 40, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            justify-content: space-between;
+            border-bottom: var(--card-border);
+            z-index: 10;
         }
 
-        input[type="text"], input[type="number"] {
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #555;
-            background-color: #444;
+        .brand { font-size: 1.2rem; font-weight: 800; color: var(--primary); letter-spacing: 1px; }
+
+        .terminal-control { display: flex; align-items: center; gap: 15px; }
+
+        input {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #444;
             color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
             outline: none;
+            transition: 0.3s;
+            font-size: 0.95rem;
         }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 138, 255, 0.2); }
 
+        /* --- КНОПКИ --- */
         button {
-            padding: 8px 16px;
-            border-radius: 4px;
             border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
             cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
+        button:active { transform: scale(0.96); }
 
-        .btn-primary { background-color: var(--accent-color); color: white; }
-        .btn-primary:hover { background-color: #0077b5; }
-        
-        .btn-danger { background-color: var(--danger-color); color: white; }
-        .btn-danger:hover { background-color: #c82333; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(79, 138, 255, 0.3); }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
 
-        .btn-success { background-color: var(--success-color); color: white; }
+        .btn-success { background: var(--success); color: #000; box-shadow: 0 4px 15px rgba(0, 210, 106, 0.3); }
+        .btn-success:hover { filter: brightness(1.1); transform: translateY(-2px); }
 
-        /* Вкладки */
-        .tabs {
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #e03b4b; }
+
+        /* --- НАВИГАЦИЯ (ТАБЫ) --- */
+        .nav-tabs {
             display: flex;
-            gap: 5px;
-            margin-bottom: 10px;
+            gap: 20px;
+            padding: 20px 30px 0;
         }
 
         .tab-btn {
-            background-color: #444;
-            color: #aaa;
-            padding: 10px 20px;
-            border-bottom: none;
-            border-radius: 5px 5px 0 0;
+            background: transparent;
+            color: var(--text-muted);
+            padding: 10px 0;
+            border-radius: 0;
+            font-size: 1rem;
+            position: relative;
+        }
+        .tab-btn:hover { color: white; }
+        .tab-btn.active { color: white; }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; left: 0; width: 100%; height: 3px;
+            background: var(--primary);
+            border-radius: 2px;
+            box-shadow: 0 0 10px var(--primary);
         }
 
-        .tab-btn.active {
-            background-color: var(--panel-color);
-            color: white;
-            border-top: 3px solid var(--accent-color);
-        }
-
-        /* Контент вкладок */
-        .tab-content {
-            background-color: var(--panel-color);
+        /* --- ОСНОВНОЙ КОНТЕНТ --- */
+        .main-container {
             flex: 1;
-            border-radius: 0 8px 8px 8px;
-            padding: 20px;
-            display: none;
+            padding: 20px 30px;
+            overflow: hidden;
+            display: flex;
         }
 
+        .tab-content { display: none; width: 100%; height: 100%; }
         .tab-content.active { display: flex; flex-direction: column; }
 
-        /* Таблицы */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: #333;
-            margin-top: 10px;
-        }
-        
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #444;
-        }
-
-        th { background-color: #222; }
-        tr:hover { background-color: #3a3a3a; cursor: pointer; }
-
-        /* Сетка продаж */
-        .sales-container {
-            display: flex;
-            gap: 20px;
+        /* СЕТКА ДЛЯ ПРОДАЖ */
+        .sales-layout {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr; /* Левая часть шире */
+            gap: 25px;
             height: 100%;
         }
 
-        .left-panel, .right-panel {
-            flex: 1;
+        .card {
+            background: var(--card-bg);
+            border: var(--card-border);
+            border-radius: var(--radius);
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            border: 1px solid #444;
-            padding: 10px;
-            border-radius: 8px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
         }
 
+        h2 { margin: 0 0 15px 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        .badge { background: #333; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; color: #aaa; }
+
+        /* --- ТАБЛИЦЫ --- */
+        .table-wrapper { flex: 1; overflow-y: auto; margin-right: -10px; padding-right: 10px; }
+        
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        
+        th { text-align: left; color: var(--text-muted); padding: 10px; font-size: 0.85rem; text-transform: uppercase; }
+        
+        td { background: rgba(255,255,255,0.03); padding: 12px 15px; first-child: border-radius: 8px 0 0 8px; last-child: border-radius: 0 8px 8px 0; transition: 0.2s; }
+        
+        tr.item-row:hover td { background: rgba(255,255,255,0.08); cursor: pointer; transform: scale(1.01); }
+
+        .price-tag { font-family: 'Courier New', monospace; font-weight: bold; color: var(--success); }
+
+        /* --- ИТОГО И КОРЗИНА --- */
         .total-section {
             margin-top: auto;
-            padding-top: 15px;
-            border-top: 2px solid #555;
-            font-size: 1.5em;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
         }
+        .total-label { font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; }
+        .total-amount { font-size: 2.5rem; font-weight: 800; color: white; margin: 5px 0 15px; }
 
-        /* Модальные окна */
+        .action-grid { display: grid; gap: 10px; }
+        .action-grid button { width: 100%; padding: 15px; font-size: 1rem; }
+
+        /* --- МОДАЛЬНЫЕ ОКНА --- */
         .modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 100;
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
+        .modal.show { opacity: 1; }
 
-        .modal-content {
-            background: var(--panel-color);
+        .modal-box {
+            background: #252530;
+            width: 90%; max-width: 400px;
             padding: 30px;
-            border-radius: 10px;
-            width: 300px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
             text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            transform: translateY(20px);
+            transition: transform 0.3s;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
+        .modal.show .modal-box { transform: translateY(0); }
 
-        .status-text { margin-left: auto; font-weight: bold; }
+        .status-dot { height: 10px; width: 10px; background: #555; border-radius: 50%; display: inline-block; margin-right: 5px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        .status-dot.active { background: var(--success); box-shadow: 0 0 10px var(--success); }
+
+        /* Менеджер товаров */
+        .manager-controls { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <label>ID Терминала:</label>
-        <input type="number" id="terminalInput" placeholder="Введите ID">
-        <button class="btn-primary" onclick="bindTerminal()">Привязать</button>
-        <span class="status-text" id="statusLabel" style="color: red;">Статус: Не привязан</span>
+        <div class="brand">CASSA <span style="color:white; font-weight:300;">SIMULATOR</span> <span style="font-size:0.8em; opacity:0.5;">v4.0</span></div>
+        
+        <div class="terminal-control">
+            <span id="statusLabel" style="font-size: 0.9rem; color: #777;">
+                <span class="status-dot" id="statusDot"></span> Терминал не подключен
+            </span>
+            <input type="number" id="terminalInput" placeholder="ID Терминала" style="width: 120px;">
+            <button class="btn-primary" onclick="bindTerminal()">Подключить</button>
+        </div>
     </div>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('sales')">🛒 ПРОДАЖИ</button>
-        <button class="tab-btn" onclick="switchTab('products')">📦 ТОВАРЫ</button>
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('sales')">🛒 Продажи</button>
+        <button class="tab-btn" onclick="switchTab('products')">📦 Управление товарами</button>
     </div>
 
-    <div id="sales" class="tab-content active">
-        <div class="sales-container">
-            <div class="left-panel">
-                <h3>Доступные товары</h3>
-                <div style="overflow-y: auto; flex: 1;">
-                    <table id="salesTable">
-                        <thead>
-                            <tr>
-                                <th width="50">ID</th>
-                                <th>Название</th>
-                                <th width="100">Цена</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="main-container">
 
-            <div class="right-panel">
-                <h3>Корзина</h3>
-                <div style="overflow-y: auto; flex: 1;">
-                    <table id="cartTable">
-                        <thead>
-                            <tr>
-                                <th>Название</th>
-                                <th width="100">Цена</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+        <div id="sales" class="tab-content active">
+            <div class="sales-layout">
                 
-                <div class="total-section">
-                    <span>ИТОГО:</span>
-                    <span id="totalLabel" style="color: lightgreen;">0.00 РУБ</span>
+                <div class="card">
+                    <h2>Каталог <span class="badge" id="catalogCount">0</span></h2>
+                    <div class="table-wrapper">
+                        <table id="salesTable">
+                            <thead><tr><th>Товар</th><th style="text-align:right">Цена</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
-                <br>
-                <button class="btn-success" style="width: 100%; padding: 15px;" id="payBtn" onclick="showPaymentOptions()">ПЕРЕЙТИ К ОПЛАТЕ</button>
-                <br><br>
-                <button class="btn-danger" style="width: 100%;" onclick="clearCart()">ОЧИСТИТЬ КОРЗИНУ</button>
+
+                <div class="card" style="background: rgba(30, 30, 45, 0.9);">
+                    <h2>Текущий чек</h2>
+                    <div class="table-wrapper" style="border-bottom: 1px dashed #444; margin-bottom: 15px;">
+                        <table id="cartTable">
+                            <thead><tr><th>Товар</th><th style="text-align:right">Стоимость</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <div class="total-section">
+                        <div class="total-label">К оплате</div>
+                        <div class="total-amount" id="totalLabel">0.00 ₽</div>
+                        
+                        <div class="action-grid">
+                            <button class="btn-success" id="payBtn" onclick="showPaymentOptions()">ОПЛАТИТЬ</button>
+                            <button class="btn-danger" style="background: rgba(255, 71, 87, 0.2); color: #ff4757;" onclick="clearCart()">ОЧИСТИТЬ</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="products" class="tab-content">
-        <div class="top-bar" style="background: #333; margin: 0;">
-            <input type="text" id="prodName" placeholder="Название товара">
-            <input type="number" id="prodPrice" placeholder="Цена" step="0.01">
-            <button class="btn-primary" onclick="addProduct()">СОХРАНИТЬ</button>
+        <div id="products" class="tab-content">
+            <div class="card" style="height: 100%;">
+                <div class="manager-controls">
+                    <input type="text" id="prodName" placeholder="Название товара" style="flex:2;">
+                    <input type="number" id="prodPrice" placeholder="Цена" step="0.01" style="flex:1;">
+                    <button class="btn-primary" onclick="addProduct()">+ Добавить</button>
+                </div>
+                <div class="table-wrapper">
+                    <table id="managerTable">
+                        <thead><tr><th width="50">ID</th><th>Название</th><th>Цена</th><th style="text-align:right">Действия</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div style="overflow-y: auto; flex: 1;">
-            <table id="managerTable">
-                <thead>
-                    <tr>
-                        <th width="50">ID</th>
-                        <th>Название</th>
-                        <th>Цена</th>
-                        <th width="100">Действие</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
+
     </div>
 
     <div id="paymentModal" class="modal">
-        <div class="modal-content">
-            <h3>Способ оплаты</h3>
-            <p id="modalTotalPay">К оплате: 0.00</p>
-            <button class="btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="payCard()">Картой (QR/Terminal)</button>
-            <button class="btn-success" style="width: 100%; margin-bottom: 10px;" onclick="payCashInput()">Наличными</button>
-            <button class="btn-danger" style="width: 100%;" onclick="closeModal('paymentModal')">Отмена</button>
+        <div class="modal-box">
+            <h2 style="justify-content: center;">Способ оплаты</h2>
+            <p id="modalTotalPay" style="color: #aaa; margin-bottom: 25px;">К оплате: 0.00</p>
+            <div class="action-grid">
+                <button class="btn-primary" onclick="payCard()">💳 Банковская карта</button>
+                <button class="btn-success" onclick="payCashInput()">💵 Наличные</button>
+                <button class="btn-danger" style="background: transparent; color: #aaa;" onclick="closeModal('paymentModal')">Отмена</button>
+            </div>
         </div>
     </div>
 
     <div id="cashModal" class="modal">
-        <div class="modal-content">
-            <h3>Оплата наличными</h3>
-            <p id="cashTotalLabel">Итого: 0.00</p>
-            <input type="number" id="cashInput" placeholder="Внесено клиентом" style="width: 80%; margin-bottom: 10px;" onkeyup="calcChange()">
-            <p id="changeLabel">Сдача: 0.00</p>
-            <button class="btn-success" onclick="confirmCashPay()">Подтвердить</button>
-            <button class="btn-danger" onclick="closeModal('cashModal')">Отмена</button>
+        <div class="modal-box">
+            <h2 style="justify-content: center;">Наличные</h2>
+            <div style="font-size: 2rem; font-weight: bold; margin: 10px 0;" id="cashTotalLabel">0.00</div>
+            
+            <input type="number" id="cashInput" placeholder="Внесено клиентом" 
+                   style="width: 100%; font-size: 1.2rem; text-align: center; margin: 15px 0; padding: 15px; background: rgba(0,0,0,0.4);" 
+                   onkeyup="calcChange()">
+            
+            <p id="changeLabel" style="font-size: 1.1rem;">Сдача: 0.00</p>
+            
+            <div class="action-grid" style="margin-top: 20px;">
+                <button class="btn-success" onclick="confirmCashPay()">Подтвердить оплату</button>
+                <button class="btn-danger" style="background: transparent;" onclick="closeModal('cashModal')">Отмена</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // --- КОНФИГУРАЦИЯ ---
+        // === ЛОГИКА (БЕЗ ИЗМЕНЕНИЙ, ТОЛЬКО АДАПТАЦИЯ ПОД UI) ===
+        
         const FIREBASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
         
-        // --- ПЕРЕМЕННЫЕ СОСТОЯНИЯ ---
         let products = [];
         let cart = [];
         let terminalId = null;
         let total = 0.0;
         let pollInterval = null;
 
-        // --- ИНИЦИАЛИЗАЦИЯ ---
         window.onload = function() {
             loadProducts();
-            // Проверка, был ли ID терминала сохранен ранее (опционально)
             const savedTerm = localStorage.getItem('terminalId');
             if(savedTerm) {
                 document.getElementById('terminalInput').value = savedTerm;
@@ -283,98 +339,85 @@
             }
         };
 
-        // --- УПРАВЛЕНИЕ ВКЛАДКАМИ ---
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            
             document.getElementById(tabName).classList.add('active');
-            // Находим кнопку
-            const index = tabName === 'sales' ? 0 : 1;
-            document.querySelectorAll('.tab-btn')[index].classList.add('active');
+            
+            const btns = document.querySelectorAll('.tab-btn');
+            if(tabName === 'sales') btns[0].classList.add('active');
+            else btns[1].classList.add('active');
         }
 
-        // --- ЛОГИКА ТОВАРОВ (LocalStorage) ---
+        // --- ТОВАРЫ ---
         function loadProducts() {
             const saved = localStorage.getItem('products');
             products = saved ? JSON.parse(saved) : [];
+            updateCounts();
             renderTables();
         }
 
         function saveProducts() {
             localStorage.setItem('products', JSON.stringify(products));
+            updateCounts();
             renderTables();
+        }
+        
+        function updateCounts() {
+            document.getElementById('catalogCount').innerText = products.length;
         }
 
         function addProduct() {
             const name = document.getElementById('prodName').value.trim();
             const price = parseFloat(document.getElementById('prodPrice').value);
 
-            if (!name || isNaN(price)) {
-                alert("Заполните название и корректную цену!");
-                return;
-            }
+            if (!name || isNaN(price)) return alert("Ошибка ввода");
 
-            // Генерация ID
             const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-            
             products.push({ id: newId, name: name, price: price });
             saveProducts();
-
-            // Очистка полей
+            
             document.getElementById('prodName').value = '';
             document.getElementById('prodPrice').value = '';
-            alert(`Товар '${name}' добавлен!`);
         }
 
         function deleteProduct(id) {
-            if(confirm('Удалить товар ID ' + id + '?')) {
+            if(confirm('Удалить?')) {
                 products = products.filter(p => p.id !== id);
                 saveProducts();
             }
         }
 
         function renderTables() {
-            // Таблица менеджера
+            // Менеджер
             const mgrBody = document.querySelector('#managerTable tbody');
             mgrBody.innerHTML = '';
             products.forEach(p => {
                 mgrBody.innerHTML += `
-                    <tr>
-                        <td>${p.id}</td>
-                        <td>${p.name}</td>
-                        <td>${p.price.toFixed(2)}</td>
-                        <td><button class="btn-danger" style="padding: 5px;" onclick="deleteProduct(${p.id})">X</button></td>
-                    </tr>
-                `;
+                    <tr class="item-row">
+                        <td style="color:#777;">#${p.id}</td>
+                        <td style="font-weight:600;">${p.name}</td>
+                        <td class="price-tag">${p.price.toFixed(2)}</td>
+                        <td style="text-align:right;"><button class="btn-danger" style="padding: 5px 10px; font-size:0.7rem;" onclick="deleteProduct(${p.id})">Удалить</button></td>
+                    </tr>`;
             });
 
-            // Таблица продаж (доступные товары)
+            // Продажи
             const salesBody = document.querySelector('#salesTable tbody');
             salesBody.innerHTML = '';
             products.forEach(p => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${p.id}</td><td>${p.name}</td><td>${p.price.toFixed(2)}</td>`;
+                tr.className = "item-row";
+                tr.innerHTML = `
+                    <td><div style="font-weight:600;">${p.name}</div><div style="font-size:0.7em; color:#777;">Код: ${p.id}</div></td>
+                    <td class="price-tag" style="text-align:right;">${p.price.toFixed(2)} ₽</td>
+                `;
                 tr.onclick = () => addToCart(p);
                 salesBody.appendChild(tr);
             });
         }
 
-        // --- ЛОГИКА ТЕРМИНАЛА ---
-        function bindTerminal() {
-            const val = document.getElementById('terminalInput').value;
-            if (val) {
-                terminalId = val;
-                localStorage.setItem('terminalId', terminalId); // Сохраняем в браузере
-                const lbl = document.getElementById('statusLabel');
-                lbl.innerText = `Статус: Привязан к ${terminalId}`;
-                lbl.style.color = "lightgreen";
-            } else {
-                alert("Введите ID!");
-            }
-        }
-
-        // --- ЛОГИКА КОРЗИНЫ ---
+        // --- КОРЗИНА ---
         function addToCart(product) {
             cart.push(product);
             updateCartUI();
@@ -392,30 +435,61 @@
 
             cart.forEach(p => {
                 total += p.price;
-                cartBody.innerHTML += `<tr><td>${p.name}</td><td>${p.price.toFixed(2)}</td></tr>`;
+                cartBody.innerHTML += `
+                    <tr>
+                        <td>${p.name}</td>
+                        <td style="text-align:right; color:white;">${p.price.toFixed(2)}</td>
+                    </tr>`;
             });
 
-            document.getElementById('totalLabel').innerText = `${total.toFixed(2)} РУБ`;
+            document.getElementById('totalLabel').innerText = `${total.toFixed(2)} ₽`;
         }
 
-        // --- ОПЛАТА ---
+        // --- ТЕРМИНАЛ И СТАТУС ---
+        function bindTerminal() {
+            const val = document.getElementById('terminalInput').value;
+            if (val) {
+                terminalId = val;
+                localStorage.setItem('terminalId', terminalId);
+                const lbl = document.getElementById('statusLabel');
+                const dot = document.getElementById('statusDot');
+                
+                lbl.innerHTML = ''; 
+                lbl.appendChild(dot);
+                lbl.append(` Терминал #${terminalId}`);
+                
+                dot.classList.add('active');
+                lbl.style.color = "white";
+            }
+        }
+
+        // --- МОДАЛКИ ---
         function showPaymentOptions() {
-            if (total <= 0) return alert("Корзина пуста!");
-            document.getElementById('modalTotalPay').innerText = `К оплате: ${total.toFixed(2)} РУБ`;
-            document.getElementById('paymentModal').style.display = 'flex';
+            if (total <= 0) return alert("Корзина пуста");
+            document.getElementById('modalTotalPay').innerText = `К оплате: ${total.toFixed(2)} ₽`;
+            openModal('paymentModal');
+        }
+
+        function openModal(id) {
+            const el = document.getElementById(id);
+            el.style.display = 'flex';
+            setTimeout(() => el.classList.add('show'), 10);
         }
 
         function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
+            const el = document.getElementById(id);
+            el.classList.remove('show');
+            setTimeout(() => el.style.display = 'none', 300);
         }
 
-        // Оплата Наличными
+        // --- ОПЛАТА ---
         function payCashInput() {
             closeModal('paymentModal');
-            document.getElementById('cashModal').style.display = 'flex';
-            document.getElementById('cashTotalLabel').innerText = `Итого: ${total.toFixed(2)}`;
+            openModal('cashModal');
+            document.getElementById('cashTotalLabel').innerText = `${total.toFixed(2)} ₽`;
             document.getElementById('cashInput').value = '';
             document.getElementById('changeLabel').innerText = 'Сдача: 0.00';
+            document.getElementById('cashInput').focus();
         }
 
         function calcChange() {
@@ -423,70 +497,55 @@
             const change = paid - total;
             const lbl = document.getElementById('changeLabel');
             if (change >= 0) {
-                lbl.innerText = `Сдача: ${change.toFixed(2)} РУБ`;
-                lbl.style.color = "lightgreen";
+                lbl.innerText = `Сдача: ${change.toFixed(2)} ₽`;
+                lbl.style.color = "var(--success)";
             } else {
-                lbl.innerText = `Недостаточно: ${Math.abs(change).toFixed(2)}`;
-                lbl.style.color = "red";
+                lbl.innerText = `Не хватает: ${Math.abs(change).toFixed(2)} ₽`;
+                lbl.style.color = "var(--danger)";
             }
         }
 
         function confirmCashPay() {
             const paid = parseFloat(document.getElementById('cashInput').value) || 0;
             if (paid >= total) {
-                alert(`Оплата принята!\nСдача: ${(paid - total).toFixed(2)} РУБ`);
+                alert("Успешно!");
                 closeModal('cashModal');
                 clearCart();
             } else {
-                alert("Сумма меньше итоговой!");
+                alert("Недостаточно средств");
             }
         }
 
-        // Оплата Картой (Firebase)
         async function payCard() {
-            if (!terminalId) return alert("Привяжите терминал!");
+            if (!terminalId) return alert("Ошибка: Терминал не привязан!");
             closeModal('paymentModal');
             
             const btn = document.getElementById('payBtn');
+            const originalText = btn.innerText;
             btn.disabled = true;
-            btn.innerText = "Ожидание оплаты...";
+            btn.innerHTML = "⏳ Ожидание...";
 
             const url = `${FIREBASE_URL}/commands/${terminalId}.json`;
             const data = { command: "PAY", amount: total.toFixed(2) };
 
             try {
-                // Отправляем команду (PUT request)
-                await fetch(url, {
-                    method: 'PUT',
-                    body: JSON.stringify(data)
-                });
-
-                alert(`Команда отправлена на терминал ${terminalId}. Ждем...`);
+                await fetch(url, { method: 'PUT', body: JSON.stringify(data) });
                 
-                // Запускаем поллинг (опрос) статуса
                 let checks = 0;
                 pollInterval = setInterval(async () => {
                     checks++;
-                    if (checks > 60) { // Тайм-аут 120 сек (60 * 2сек)
-                        stopPolling(false);
-                        return;
-                    }
-                    
+                    if (checks > 60) { stopPolling(false); return; }
                     try {
                         const res = await fetch(`${FIREBASE_URL}/status/${terminalId}.json`);
                         const statusData = await res.json();
-                        
-                        if (statusData && statusData.state === "SUCCESS") {
-                            stopPolling(true);
-                        }
-                    } catch (e) { console.error(e); }
-
-                }, 2000); // Проверка каждые 2 секунды
+                        if (statusData && statusData.state === "SUCCESS") stopPolling(true);
+                    } catch (e) {}
+                }, 2000);
 
             } catch (e) {
-                alert("Ошибка сети: " + e);
+                alert("Ошибка сети");
                 btn.disabled = false;
-                btn.innerText = "ПЕРЕЙТИ К ОПЛАТЕ";
+                btn.innerText = originalText;
             }
         }
 
@@ -494,19 +553,28 @@
             clearInterval(pollInterval);
             const btn = document.getElementById('payBtn');
             btn.disabled = false;
-            btn.innerText = "ПЕРЕЙТИ К ОПЛАТЕ";
+            btn.innerText = "ОПЛАТИТЬ";
 
-            // Очистка данных в Firebase
+            // Чистка базы
             try {
-                await fetch(`${FIREBASE_URL}/status/${terminalId}.json`, { method: 'DELETE' });
-                await fetch(`${FIREBASE_URL}/commands/${terminalId}.json`, { method: 'DELETE' });
+                fetch(`${FIREBASE_URL}/status/${terminalId}.json`, { method: 'DELETE' });
+                fetch(`${FIREBASE_URL}/commands/${terminalId}.json`, { method: 'DELETE' });
             } catch(e) {}
 
             if (success) {
-                alert("Успех! Оплата картой прошла.");
-                clearCart();
+                // Красивое уведомление
+                const prevColor = btn.style.background;
+                btn.style.background = "white";
+                btn.style.color = "black";
+                btn.innerText = "УСПЕШНО!";
+                setTimeout(() => {
+                    btn.style.background = "";
+                    btn.style.color = "";
+                    btn.innerText = "ОПЛАТИТЬ";
+                    clearCart();
+                }, 2000);
             } else {
-                alert("Тайм-аут оплаты или ошибка.");
+                alert("Тайм-аут оплаты");
             }
         }
     </script>
