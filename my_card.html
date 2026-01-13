@@ -2,40 +2,36 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Моя Сбер Карта</title>
+    <title>SBER SIM - Моя Карта</title>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
         body { background: #121212; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; }
-        .card {
-            width: 340px; height: 210px; background: linear-gradient(45deg, #008a3c, #005a28);
-            border-radius: 18px; padding: 25px; position: relative; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
+        .card { width: 340px; height: 210px; background: linear-gradient(45deg, #008a3c, #005a28); border-radius: 18px; padding: 25px; position: relative; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .chip { width: 50px; height: 40px; background: #d4af37; border-radius: 8px; margin-bottom: 20px; }
-        .number { font-size: 22px; letter-spacing: 3px; margin-bottom: 10px; }
+        .number { font-size: 22px; letter-spacing: 3px; margin-bottom: 10px; font-family: monospace; }
         .balance { font-size: 28px; font-weight: bold; margin-top: 15px; }
         .label { font-size: 10px; opacity: 0.7; text-transform: uppercase; }
-        .warning { color: #555; font-size: 10px; margin-top: 20px; text-align: center; }
+        .pin-display { position: absolute; right: 25px; bottom: 25px; font-size: 14px; background: rgba(0,0,0,0.2); padding: 5px 10px; border-radius: 5px; }
     </style>
 </head>
 <body>
-    <div>
-        <div class="card">
-            <div style="font-weight: bold; font-size: 20px;">SBER SIM</div>
-            <div class="chip"></div>
-            <div class="number" id="num">0000 0000 0000 0000</div>
-            <div class="label">Баланс</div>
-            <div class="balance"><span id="bal">0</span> ₽</div>
-            <div style="position:absolute; right:25px; bottom:25px;">ПИН: <span id="pin">****</span></div>
-        </div>
-        <p class="warning">ЭТО ВИРТУАЛЬНЫЙ ТРЕНАЖЕР. НЕ НАСТОЯЩИЕ ДЕНЬГИ.</p>
+    <div class="card">
+        <div style="font-weight: bold; font-size: 20px;">SBER SIMULATOR</div>
+        <div class="chip"></div>
+        <div class="number" id="num">Загрузка...</div>
+        <div class="label">Баланс</div>
+        <div class="balance"><span id="bal">0</span> ₽</div>
+        <div class="pin-display">PIN: <span id="pin">****</span></div>
     </div>
 
 <script>
+    // Настройка базы
     const firebaseConfig = { databaseURL: "https://cassa-simulator-4-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // Генерация или загрузка карты
     let myNum = localStorage.getItem('sber_sim_num');
     if (!myNum) {
         myNum = '4400' + Math.floor(100000000000 + Math.random() * 899999999999);
@@ -44,11 +40,14 @@
         db.ref('cards/' + myNum).set({ balance: 5000, pin: myPin });
     }
 
-    db.ref('cards/' + myNum).on('value', (s) => {
-        const d = s.val();
-        document.getElementById('num').innerText = myNum.match(/.{1,4}/g).join(' ');
-        document.getElementById('bal').innerText = d.balance;
-        document.getElementById('pin').innerText = d.pin;
+    // Слушатель обновлений баланса
+    db.ref('cards/' + myNum).on('value', (snapshot) => {
+        const data = snapshot.val();
+        if(data) {
+            document.getElementById('num').innerText = myNum.match(/.{1,4}/g).join(' ');
+            document.getElementById('bal').innerText = data.balance.toLocaleString();
+            document.getElementById('pin').innerText = data.pin;
+        }
     });
 </script>
 </body>
