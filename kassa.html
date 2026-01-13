@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cassa  2026 </title>
+    <title>Cassa 2026</title>
     <style>
         :root {
             --bg-gradient: linear-gradient(135deg, #1c1c2e 0%, #111119 100%);
@@ -16,124 +16,70 @@
             --text-muted: #a0a0b0;
             --radius: 16px;
         }
-
         * { box-sizing: border-box; }
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: sans-serif;
             background: var(--bg-gradient);
             color: var(--text-main);
             margin: 0; height: 100vh;
             display: flex; flex-direction: column; overflow: hidden;
         }
-
-        /* --- СИСТЕМА УВЕДОМЛЕНИЙ (TOASTS) --- */
-        #toast-container {
-            position: fixed; top: 20px; right: 20px; z-index: 1000;
-            display: flex; flex-direction: column; gap: 10px;
-        }
-        .toast {
-            padding: 15px 25px; border-radius: 10px; background: #252530;
-            color: white; border-left: 5px solid var(--primary);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            transform: translateX(120%); transition: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            font-size: 0.9rem; min-width: 250px;
-        }
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+        .toast { padding: 15px 25px; border-radius: 10px; background: #252530; color: white; border-left: 5px solid var(--primary); transform: translateX(120%); transition: 0.3s; }
         .toast.show { transform: translateX(0); }
-        .toast.success { border-left-color: var(--success); }
-        .toast.error { border-left-color: var(--danger); }
-
-        /* --- ВЕРХНЯЯ ПАНЕЛЬ --- */
-        .top-bar {
-            background: rgba(30, 30, 40, 0.8); backdrop-filter: blur(10px);
-            padding: 15px 30px; display: flex; align-items: center; justify-content: space-between;
-            border-bottom: var(--card-border);
-        }
+        .top-bar { background: rgba(30, 30, 40, 0.8); backdrop-filter: blur(10px); padding: 15px 30px; display: flex; align-items: center; justify-content: space-between; border-bottom: var(--card-border); }
         .brand { font-size: 1.2rem; font-weight: 800; color: var(--primary); }
-        .terminal-control { display: flex; gap: 10px; align-items: center; }
-
-        input {
-            background: rgba(0,0,0,0.3); border: 1px solid #444; color: white;
-            padding: 10px 15px; border-radius: 8px; outline: none; transition: 0.3s;
-        }
-        input:focus { border-color: var(--primary); }
-
-        button {
-            border: none; padding: 10px 20px; border-radius: 10px;
-            cursor: pointer; font-weight: 600; transition: 0.2s;
-        }
+        input { background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; padding: 10px 15px; border-radius: 8px; outline: none; }
+        button { border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: #000; }
         .btn-danger { background: var(--danger); color: white; }
-        button:active { transform: scale(0.95); }
-
-        /* --- КОНТЕНТ --- */
         .main-container { flex: 1; padding: 20px 30px; display: grid; grid-template-columns: 1fr 350px; gap: 20px; overflow: hidden; }
         .card { background: var(--card-bg); border: var(--card-border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; overflow: hidden; }
-        
-        .table-wrapper { overflow-y: auto; flex: 1; margin-top: 15px; }
+        .table-wrapper { overflow-y: auto; flex: 1; }
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; color: var(--text-muted); font-size: 0.8rem; padding-bottom: 10px; }
         td { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-
         .total-amount { font-size: 2.2rem; font-weight: 800; text-align: center; margin: 20px 0; }
-        
-        /* МОДАЛКА ОПЛАТЫ */
-        #payment-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 500;
-        }
-        .modal-box { background: #252530; padding: 30px; border-radius: 20px; width: 350px; text-align: center; border: var(--card-border); }
+        #payment-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 500; }
+        .modal-box { background: #252530; padding: 30px; border-radius: 20px; width: 350px; text-align: center; }
     </style>
 </head>
 <body>
-
     <div id="toast-container"></div>
-
     <div class="top-bar">
-        <div class="brand">CASSA PRO <span style="font-weight: 300; color: white;">2026</span></div>
-        <div class="terminal-control">
+        <div class="brand">CASSA PRO 2026</div>
+        <div>
             <input type="number" id="terminalInput" placeholder="Terminal ID">
             <button class="btn-primary" onclick="bindTerminal()">Connect</button>
         </div>
     </div>
-
     <div class="main-container">
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="margin:0">Catalog</h2>
+            <div style="display: flex; justify-content: space-between;">
+                <h2>Catalog</h2>
                 <div>
-                    <input type="text" id="p-name" placeholder="Item Name" style="width: 150px;">
-                    <input type="number" id="p-price" placeholder="Price" style="width: 80px;">
+                    <input type="text" id="p-name" placeholder="Name">
+                    <input type="number" id="p-price" placeholder="Price">
                     <button class="btn-primary" onclick="addProduct()">+</button>
                 </div>
             </div>
             <div class="table-wrapper">
-                <table id="catalogTable">
-                    <thead><tr><th>Product</th><th>Price</th><th>Action</th></tr></thead>
-                    <tbody></tbody>
-                </table>
+                <table id="catalogTable"><tbody></tbody></table>
             </div>
         </div>
-
-        <div class="card" style="background: rgba(20,20,30,0.8);">
-            <h2 style="margin:0">Current Receipt</h2>
-            <div class="table-wrapper">
-                <table id="cartTable">
-                    <tbody></tbody>
-                </table>
-            </div>
+        <div class="card">
+            <h2>Receipt</h2>
+            <div class="table-wrapper"><table id="cartTable"><tbody></tbody></table></div>
             <div class="total-amount" id="totalLabel">0.00 ₽</div>
-            <button class="btn-success" style="width: 100%; padding: 20px;" onclick="openPayment()">PAYMENT</button>
-            <button class="btn-danger" style="width: 100%; margin-top: 10px; background: transparent; border: 1px solid var(--danger);" onclick="clearCart()">Clear</button>
+            <button class="btn-success" onclick="openPayment()">PAYMENT</button>
         </div>
     </div>
 
     <div id="payment-modal">
         <div class="modal-box">
-            <h3>Select Payment</h3>
-            <button class="btn-primary" style="width: 100%; margin-bottom: 10px; padding: 15px;" id="cardPayBtn" onclick="payByCard()">💳 Card / Terminal</button>
-            <button class="btn-success" style="width: 100%; padding: 15px;" onclick="closePayment()">💵 Cash (Fast)</button>
-            <button style="background:none; color:#666; margin-top:15px;" onclick="closePayment()">Cancel</button>
+            <h3>Payment</h3>
+            <button class="btn-primary" id="cardPayBtn" onclick="payByCard()">💳 Card</button>
+            <button onclick="closePayment()">Cancel</button>
         </div>
     </div>
 
@@ -143,127 +89,59 @@
         let cart = [];
         let terminalId = localStorage.getItem('t_id') || null;
 
-        // --- УВЕДОМЛЕНИЯ ---
-        function showToast(msg, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerText = msg;
-            container.appendChild(toast);
-            setTimeout(() => toast.classList.add('show'), 100);
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+        function showToast(msg) {
+            const t = document.createElement('div'); t.className = 'toast show'; t.innerText = msg;
+            document.getElementById('toast-container').appendChild(t);
+            setTimeout(() => t.remove(), 3000);
         }
 
-        // --- ЛОГИКА ТЕРМИНАЛА ---
         function bindTerminal() {
-            const val = document.getElementById('terminalInput').value;
-            if(!val) return showToast("Enter Terminal ID", "error");
-            terminalId = val;
+            terminalId = document.getElementById('terminalInput').value;
             localStorage.setItem('t_id', terminalId);
-            showToast(`Terminal #${terminalId} connected`, "success");
+            showToast("Connected: " + terminalId);
         }
 
-        // --- ТОВАРЫ ---
         function addProduct() {
             const n = document.getElementById('p-name').value;
             const p = parseFloat(document.getElementById('p-price').value);
-            if(!n || !p) return showToast("Invalid product data", "error");
-            
-            products.push({ id: Date.now(), name: n, price: p });
-            localStorage.setItem('p_data', JSON.stringify(products));
-            render();
-            showToast("Added to catalog");
+            if(n && p) {
+                products.push({ id: Date.now(), name: n, price: p });
+                localStorage.setItem('p_data', JSON.stringify(products));
+                render();
+            }
         }
 
-        function deleteProduct(id) {
-            products = products.filter(x => x.id !== id);
-            localStorage.setItem('p_data', JSON.stringify(products));
-            render();
-        }
-
-        function addToCart(p) {
-            cart.push(p);
-            updateCart();
-        }
-
-        function clearCart() { cart = []; updateCart(); }
-
-        function updateCart() {
-            const body = document.querySelector('#cartTable tbody');
-            body.innerHTML = '';
-            let total = 0;
-            cart.forEach(item => {
-                total += item.price;
-                body.innerHTML += `<tr><td>${item.name}</td><td style="text-align:right">${item.price.toFixed(2)}</td></tr>`;
-            });
+        function addToCart(name, price) {
+            cart.push({name, price});
+            let total = cart.reduce((s, x) => s + x.price, 0);
             document.getElementById('totalLabel').innerText = total.toFixed(2) + " ₽";
+            const body = document.querySelector('#cartTable tbody');
+            body.innerHTML += `<tr><td>${name}</td><td>${price}</td></tr>`;
         }
 
         function render() {
             const body = document.querySelector('#catalogTable tbody');
             body.innerHTML = '';
             products.forEach(p => {
-                body.innerHTML += `<tr>
-                    <td><b>${p.name}</b></td>
-                    <td>${p.price.toFixed(2)} ₽</td>
-                    <td>
-                        <button class="btn-primary" onclick='addToCart(${JSON.stringify(p)})'>Add</button>
-                        <button class="btn-danger" style="padding:5px 10px" onclick="deleteProduct(${p.id})">×</button>
-                    </td>
-                </tr>`;
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${p.name}</td><td>${p.price}</td><td><button class="btn-primary">Add</button></td>`;
+                row.querySelector('button').onclick = () => addToCart(p.name, p.price);
+                body.appendChild(row);
             });
         }
 
-        // --- ОПЛАТА ---
-        function openPayment() {
-            if(cart.length === 0) return showToast("Cart is empty", "error");
-            document.getElementById('payment-modal').style.display = 'flex';
-        }
+        function openPayment() { document.getElementById('payment-modal').style.display = 'flex'; }
         function closePayment() { document.getElementById('payment-modal').style.display = 'none'; }
 
         async function payByCard() {
-            if(!terminalId) return showToast("Terminal not connected", "error");
-            
-            const btn = document.getElementById('cardPayBtn');
+            if(!terminalId) return alert("No terminal");
             const total = cart.reduce((s, x) => s + x.price, 0);
-            
-            btn.disabled = true;
-            btn.innerText = "WAITING TERMINAL...";
-
-            try {
-                // Отправляем команду
-                await fetch(`${DB_URL}/status/${terminalId}.json`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ state: "WAITING_PAYMENT", amount: total.toFixed(2) })
-                });
-
-                // Слушаем ответ (Long Polling)
-                const interval = setInterval(async () => {
-                    const res = await fetch(`${DB_URL}/status/${terminalId}.json`);
-                    const data = await res.json();
-                    
-                    if(data && data.state === "SUCCESS") {
-                        clearInterval(interval);
-                        btn.disabled = false;
-                        btn.innerText = "💳 Card / Terminal";
-                        closePayment();
-                        clearCart();
-                        showToast("PAID SUCCESSFULLY", "success");
-                        // Удаляем статус после успеха
-                        fetch(`${DB_URL}/status/${terminalId}.json`, { method: 'DELETE' });
-                    }
-                }, 2000);
-
-            } catch(e) {
-                showToast("Connection error", "error");
-                btn.disabled = false;
-            }
+            await fetch(`${DB_URL}/status/${terminalId}.json`, {
+                method: 'PUT',
+                body: JSON.stringify({ state: "WAITING_PAYMENT", amount: total })
+            });
+            showToast("Waiting for terminal...");
         }
-
-        if(terminalId) document.getElementById('terminalInput').value = terminalId;
         render();
     </script>
 </body>
