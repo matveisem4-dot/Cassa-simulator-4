@@ -2,102 +2,124 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>OpenStream: Self-Broadcast</title>
+    <title>OpenStream Hub</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        :root { --accent: #10b981; --bg: #0f172a; --surface: #1e293b; }
-        body { margin: 0; font-family: sans-serif; background: var(--bg); color: white; display: flex; flex-direction: column; height: 100vh; }
+        :root { --accent: #00ff88; --bg: #0f172a; --surface: #1e293b; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; }
         
-        header { padding: 15px 20px; background: var(--surface); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
+        /* Начальный экран */
+        #lobby { display: flex; flex-direction: column; align-items: center; padding: 50px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; width: 100%; max-width: 1000px; margin-top: 30px; }
+        .card { background: var(--surface); padding: 20px; border-radius: 15px; border: 1px solid #334155; text-align: center; cursor: pointer; transition: 0.3s; }
+        .card:hover { border-color: var(--accent); transform: translateY(-5px); }
         
-        .main-layout { display: flex; flex: 1; overflow: hidden; }
-        
-        /* Список каналов */
-        .sidebar { width: 260px; background: var(--surface); border-right: 1px solid #334155; padding: 15px; }
-        .channel-item { padding: 10px; background: #0f172a; border-radius: 8px; margin-bottom: 10px; cursor: pointer; border: 1px solid transparent; }
-        .channel-item:hover { border-color: var(--accent); }
+        /* Экран трансляции */
+        #room { display: none; height: 100vh; flex-direction: column; }
+        video { flex: 1; background: #000; width: 100%; max-height: 80vh; border-bottom: 2px solid var(--accent); }
+        .controls { padding: 20px; display: flex; justify-content: center; gap: 20px; background: var(--surface); }
 
-        /* Зона вещания */
-        .viewer-zone { flex: 1; display: flex; flex-direction: column; background: #000; position: relative; }
-        video { width: 100%; height: 100%; object-fit: contain; background: #000; }
-
-        .controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; }
-        button { padding: 12px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-stream { background: var(--accent); color: white; }
-        .btn-stop { background: #ef4444; color: white; display: none; }
+        button { padding: 12px 25px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; background: var(--accent); color: #000; }
+        .btn-exit { background: #ef4444; color: white; }
+        input { padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-<header>
-    <div style="font-size: 20px; font-weight: bold;">OpenStream <span style="color: var(--accent)">LIVE</span></div>
-    <div id="status-info">Зритель</div>
-</header>
-
-<div class="main-layout">
-    <div class="sidebar">
-        <h3>Эфиры</h3>
-        <div id="stream-list">
-            <div class="channel-item">Пока нет активных трансляций...</div>
-        </div>
+<div id="lobby">
+    <h1>OpenStream Hub</h1>
+    <div style="background: var(--surface); padding: 30px; border-radius: 20px; width: 350px; text-align: center;">
+        <h3>Начать свою трансляцию</h3>
+        <input type="text" id="stream-name" placeholder="Название комнаты..." style="width: 100%; box-sizing: border-box;">
+        <button onclick="startHosting()">ЗАПУСТИТЬ ЭФИР</button>
     </div>
 
-    <div class="viewer-zone">
-        <video id="live-video" autoplay playsinline muted></video>
-        
-        <div class="controls">
-            <button id="start-btn" class="btn-stream" onclick="startCapture()">ТРАНСЛИРОВАТЬ ЭКРАН</button>
-            <button id="stop-btn" class="btn-stop" onclick="stopCapture()">ОСТАНОВИТЬ</button>
-        </div>
+    <h2 style="margin-top: 50px;">🔴 Прямой эфир сейчас:</h2>
+    <div id="room-list" class="grid">
+        <p style="color: #64748b;">Активных трансляций пока нет...</p>
+    </div>
+</div>
+
+<div id="room">
+    <div style="padding: 15px; background: #000; display: flex; justify-content: space-between;">
+        <span id="room-title" style="font-weight: bold; color: var(--accent);">Эфир</span>
+        <button class="btn-exit" onclick="location.reload()">ВЫЙТИ</button>
+    </div>
+    <video id="remote-video" autoplay playsinline></video>
+    <div class="controls" id="host-controls" style="display: none;">
+        <button onclick="shareScreen()">ПОКАЗАТЬ ЭКРАН</button>
     </div>
 </div>
 
 <script>
-    let localStream = null;
-    const videoElement = document.getElementById('live-video');
-    const startBtn = document.getElementById('start-btn');
-    const stopBtn = document.getElementById('stop-btn');
+    const DB_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com/rooms.json";
+    let peer = new Peer(); // Создаем уникальный ID для видео-связи
+    let myPeerId = "";
 
-    // Функция захвата экрана
-    async function startCapture() {
-        try {
-            // Запрашиваем доступ к экрану
-            localStream = await navigator.mediaDevices.getDisplayMedia({
-                video: { cursor: "always" },
-                audio: true
-            });
+    peer.on('open', (id) => { myPeerId = id; loadRooms(); });
 
-            videoElement.srcObject = localStream;
-            
-            // Интерфейсные изменения
-            startBtn.style.display = 'none';
-            stopBtn.style.display = 'block';
-            document.getElementById('status-info').innerText = "В ЭФИРЕ";
-            document.getElementById('status-info').style.color = "#10b981";
+    // 1. Создание комнаты (Стример)
+    async function startHosting() {
+        const name = document.getElementById('stream-name').value;
+        if (!name) return alert("Введите название!");
 
-            // Когда пользователь нажимает "Прекратить доступ" в системном окне
-            localStream.getVideoTracks()[0].onended = () => stopCapture();
+        // Сохраняем комнату в Firebase
+        await fetch(DB_URL.replace('.json', `/${myPeerId}.json`), {
+            method: 'PUT',
+            body: JSON.stringify({ name: name, hostId: myPeerId })
+        });
 
-            // В реальном проекте здесь бы шел код отправки потока через WebRTC (SimplePeer)
-            console.log("Поток захвачен. Готов к передаче.");
-            
-        } catch (err) {
-            console.error("Ошибка захвата: " + err);
-            alert("Не удалось захватить экран.");
+        showRoom(name, true);
+    }
+
+    // 2. Вход в чужую комнату (Зритель)
+    function joinRoom(hostId, name) {
+        showRoom(name, false);
+        // Подключаемся к стримеру
+        const call = peer.call(hostId, null); // Отправляем пустой вызов, чтобы получить поток
+        call.on('stream', (remoteStream) => {
+            document.getElementById('remote-video').srcObject = remoteStream;
+        });
+    }
+
+    // 3. Захват экрана
+    async function shareScreen() {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        document.getElementById('remote-video').srcObject = stream;
+        
+        // Отвечаем на все входящие звонки от зрителей своим потоком
+        peer.on('call', (call) => {
+            call.answer(stream);
+        });
+    }
+
+    // Вспомогательные функции
+    function showRoom(title, isHost) {
+        document.getElementById('lobby').style.display = 'none';
+        document.getElementById('room').style.display = 'flex';
+        document.getElementById('room-title').innerText = "ЭФИР: " + title;
+        if (isHost) document.getElementById('host-controls').style.display = 'flex';
+    }
+
+    async function loadRooms() {
+        const res = await fetch(DB_URL);
+        const data = await res.json();
+        const list = document.getElementById('room-list');
+        if (!data) return;
+        list.innerHTML = "";
+        
+        for (let id in data) {
+            const r = data[id];
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `<h3>${r.name}</h3><p>Нажмите, чтобы войти</p>`;
+            card.onclick = () => joinRoom(r.hostId, r.name);
+            list.appendChild(card);
         }
     }
 
-    function stopCapture() {
-        if (localStream) {
-            localStream.getTracks().forEach(track => track.stop());
-            videoElement.srcObject = null;
-        }
-        startBtn.style.display = 'block';
-        stopBtn.style.display = 'none';
-        document.getElementById('status-info').innerText = "Зритель";
-        document.getElementById('status-info').style.color = "white";
-    }
-
-    // В будущем здесь будет логика Firebase для обмена Peer ID
+    setInterval(loadRooms, 5000); // Обновляем список комнат каждые 5 сек
 </script>
+
 </body>
 </html>
