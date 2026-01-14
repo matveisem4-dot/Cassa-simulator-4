@@ -2,196 +2,187 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>OpenStream PRO | Multi-Connect</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OpenStream PRO | Mobile Ready</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root { --accent: #00ff88; --bg: #0a0a0f; --surface: #16161e; --text: #eee; }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica; background: var(--bg); color: var(--text); overflow: hidden; }
 
-        /* ЭКРАН ВХОДА */
-        #lobby { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 40px 20px; box-sizing: border-box; }
-        .setup-card { background: var(--surface); padding: 30px; border-radius: 20px; border: 1px solid #333; width: 100%; max-width: 400px; text-align: center; margin-bottom: 40px; }
+        /* ЛОББИ */
+        #lobby { display: flex; flex-direction: column; align-items: center; padding: 20px; height: 100vh; overflow-y: auto; box-sizing: border-box; }
+        .setup-card { background: var(--surface); padding: 25px; border-radius: 20px; border: 1px solid #333; width: 100%; max-width: 400px; text-align: center; margin-bottom: 30px; }
         
-        /* КАРТОЧКИ СТРИМОВ */
-        .streams-container { width: 100%; max-width: 800px; }
-        .stream-card { 
-            background: #1c1c27; border: 1px solid #333; padding: 20px; border-radius: 15px; 
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
-            transition: 0.3s;
-        }
-        .stream-card:hover { border-color: var(--accent); background: #252535; }
+        /* СПИСОК СТРИМОВ */
+        .streams-list { width: 100%; max-width: 500px; }
+        .stream-item { background: #1c1c27; border: 1px solid #333; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 
-        /* ИНТЕРФЕЙС ЭФИРА */
-        #room { display: none; height: 100vh; grid-template-columns: 1fr 350px; }
-        .main-video-zone { background: #000; position: relative; display: flex; flex-direction: column; }
-        video { width: 100%; height: 100%; object-fit: contain; }
+        /* ИНТЕРФЕЙС КОМНАТЫ */
+        #room { display: none; height: 100vh; flex-direction: column; }
+        header { height: 60px; background: #000; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid #222; }
+        
+        .video-container { flex: 1; background: #000; position: relative; display: flex; align-items: center; justify-content: center; }
+        video { width: 100%; height: 100%; object-fit: contain; background: #000; }
 
-        /* ЧАТ И БОКОВАЯ ПАНЕЛЬ */
-        .sidebar { background: var(--surface); border-left: 1px solid #222; display: flex; flex-direction: column; }
-        #chat-content { flex: 1; overflow-y: auto; padding: 15px; font-size: 14px; }
-        .chat-input-area { padding: 15px; background: #000; display: flex; gap: 5px; }
+        /* ЧАТ ВНИЗУ (для мобильных) */
+        .chat-area { height: 30%; background: var(--surface); border-top: 1px solid #222; display: flex; flex-direction: column; }
+        #chat-msgs { flex: 1; overflow-y: auto; padding: 10px; font-size: 14px; }
+        .chat-input { padding: 10px; background: #000; display: flex; gap: 8px; }
 
-        /* КНОПКИ */
-        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #050505; color: white; margin-bottom: 10px; box-sizing: border-box; }
-        button { padding: 12px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #050505; color: white; margin-bottom: 10px; box-sizing: border-box; font-size: 16px; }
+        button { padding: 10px 18px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; }
         .btn-green { background: var(--accent); color: #000; }
-        .btn-join { background: var(--accent); color: #000; white-space: nowrap; }
         .btn-red { background: #ff4757; color: white; }
-
-        .live-dot { height: 10px; width: 10px; background-color: red; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div id="lobby">
     <div class="setup-card">
-        <h2>Начать свой стрим</h2>
-        <input type="text" id="user-name" placeholder="Ваше имя">
-        <input type="text" id="stream-title" placeholder="Название эфира">
-        <button class="btn-green" style="width: 100%;" onclick="createStream()">ВЫЙТИ В ПРЯМОЙ ЭФИР</button>
+        <h2>Создать эфир</h2>
+        <input type="text" id="user-nick" placeholder="Твое имя">
+        <input type="text" id="room-title" placeholder="Название стрима">
+        <button class="btn-green" style="width: 100%" onclick="startHosting()">ВЫЙТИ В ЭФИР</button>
     </div>
 
-    <div class="streams-container">
-        <h2 style="text-align: center;"><span class="live-dot"></span> ДОСТУПНЫЕ ЭФИРЫ</h2>
-        <div id="room-list">
-            <p style="text-align: center; color: #666;">Поиск активных трансляций...</p>
-        </div>
+    <div class="streams-list">
+        <h3 style="text-align: center;">🔴 Активные трансляции</h3>
+        <div id="room-list-box"></div>
     </div>
 </div>
 
 <div id="room">
-    <div class="main-video-zone">
-        <div style="padding: 15px; background: rgba(0,0,0,0.7); display: flex; justify-content: space-between; align-items: center;">
-            <b id="current-title">Эфир</b>
-            <button class="btn-red" onclick="closeStream()">ЗАВЕРШИТЬ / ВЫЙТИ</button>
-        </div>
-        <video id="video-player" autoplay playsinline></video>
+    <header>
+        <div id="display-title" style="font-weight: bold; font-size: 14px;">Эфир</div>
+        <button class="btn-red" onclick="terminate()">ЗАВЕРШИТЬ</button>
+    </header>
+
+    <div class="video-container">
+        <video id="player" autoplay playsinline webkit-playsinline muted></video>
     </div>
 
-    <div class="sidebar">
-        <div style="padding: 15px; border-bottom: 1px solid #222;">ЧАТ</div>
-        <div id="chat-content"></div>
-        <div class="chat-input-area">
-            <input type="text" id="chat-msg" placeholder="Сообщение..." style="margin:0">
-            <button class="btn-green" onclick="sendChat()">></button>
+    <div class="chat-area">
+        <div id="chat-msgs"></div>
+        <div class="chat-input">
+            <input type="text" id="m-input" placeholder="Сообщение..." style="margin:0">
+            <button class="btn-green" onclick="broadcastMsg()">></button>
         </div>
     </div>
 </div>
 
 <script>
-    const DB_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com/openstream_v3";
+    const DB_PATH = "https://cassa-simulator-4-default-rtdb.firebaseio.com/live_v4";
     const peer = new Peer();
     let myId = "";
     let myStream = null;
-    let activeRoomId = "";
+    let activeId = "";
 
-    peer.on('open', id => { myId = id; refreshLobby(); });
+    peer.on('open', id => { myId = id; refreshRooms(); });
 
-    // 1. СОЗДАТЬ СТРИМ
-    async function createStream() {
-        const name = document.getElementById('user-name').value;
-        const title = document.getElementById('stream-title').value;
-        if (!name || !title) return alert("Введите имя и название!");
+    // 1. ЗАПУСК ЭФИРА (ХОСТ)
+    async function startHosting() {
+        const nick = document.getElementById('user-nick').value;
+        const title = document.getElementById('room-title').value;
+        if (!nick || !title) return alert("Заполни поля!");
 
         try {
-            myStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            document.getElementById('video-player').srcObject = myStream;
-            document.getElementById('video-player').muted = true; // Стример не слышит сам себя
+            // Настройки для мобильных (фронтальная камера)
+            myStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "user" },
+                audio: true
+            });
 
-            activeRoomId = myId;
-            await fetch(`${DB_URL}/rooms/${myId}.json`, {
+            const player = document.getElementById('player');
+            player.srcObject = myStream;
+            player.play(); // Принудительный старт
+
+            activeId = myId;
+            await fetch(`${DB_PATH}/rooms/${myId}.json`, {
                 method: 'PUT',
-                body: JSON.stringify({ title, hostName: name, hostId: myId })
+                body: JSON.stringify({ title, host: nick, id: myId })
             });
 
             peer.on('call', call => call.answer(myStream));
-            openRoomUI(title);
-            listenChat(myId);
-        } catch (e) { alert("Ошибка доступа к камере!"); }
+            
+            toggleUI(title);
+            startChatLoop(myId, nick);
+        } catch (e) {
+            alert("Ошибка! Проверь HTTPS и доступ к камере.");
+        }
     }
 
-    // 2. ПОДКЛЮЧИТЬСЯ К СТРИМУ
-    async function joinStream(hostId, title) {
-        activeRoomId = hostId;
-        openRoomUI(title);
-        
+    // 2. ПОДКЛЮЧЕНИЕ (ЗРИТЕЛЬ)
+    function joinLive(hostId, title) {
+        const nick = document.getElementById('user-nick').value || "Зритель";
+        activeId = hostId;
+        toggleUI(title);
+
         const call = peer.call(hostId, null);
         call.on('stream', remoteStream => {
-            const player = document.getElementById('video-player');
+            const player = document.getElementById('player');
             player.srcObject = remoteStream;
-            player.muted = false; // Зритель СЛЫШИТ звук
+            player.muted = false; // Зритель должен слышать
+            player.play().catch(() => console.log("Нажми на видео для звука"));
         });
-        listenChat(hostId);
+        startChatLoop(hostId, nick);
     }
 
-    // 3. ОБНОВЛЕНИЕ СПИСКА (ЛОББИ)
-    async function refreshLobby() {
-        const res = await fetch(`${DB_URL}/rooms.json`);
-        const data = await res.json();
-        const container = document.getElementById('room-list');
-        container.innerHTML = "";
-
-        if (!data || Object.keys(data).length === 0) {
-            container.innerHTML = "<p style='text-align: center; color: #666;'>Стримов пока нет. Стань первым!</p>";
-            return;
-        }
-
-        for (let id in data) {
-            const r = data[id];
-            const card = document.createElement('div');
-            card.className = 'stream-card';
-            card.innerHTML = `
-                <div>
-                    <div style="font-weight: bold; font-size: 18px;">${r.title}</div>
-                    <div style="color: #888; font-size: 14px;">Автор: ${r.hostName}</div>
-                </div>
-                <button class="btn-join" onclick="joinStream('${r.hostId}', '${r.title}')">ПОДКЛЮЧИТЬСЯ</button>
-            `;
-            container.appendChild(card);
-        }
-    }
-
-    // 4. ЧАТ И ЗАВЕРШЕНИЕ
-    async function sendChat() {
-        const inp = document.getElementById('chat-msg');
-        const nick = document.getElementById('user-name').value || "Гость";
+    // 3. ЧАТ И СПИСОК
+    async function broadcastMsg() {
+        const inp = document.getElementById('m-input');
+        const nick = document.getElementById('user-nick').value || "Гость";
         if (!inp.value.trim()) return;
 
-        await fetch(`${DB_BASE}/chats/${activeRoomId}.json`, {
+        await fetch(`${DB_PATH}/chats/${activeId}.json`, {
             method: 'POST',
-            body: JSON.stringify({ user: nick, text: inp.value })
+            body: JSON.stringify({ u: nick, t: inp.value })
         });
         inp.value = "";
     }
 
-    function listenChat(roomId) {
+    function startChatLoop(roomId, nick) {
         setInterval(async () => {
-            const res = await fetch(`${DB_URL}/chats/${roomId}.json`);
+            const res = await fetch(`${DB_PATH}/chats/${roomId}.json`);
             const data = await res.json();
-            const box = document.getElementById('chat-content');
+            const box = document.getElementById('chat-msgs');
             box.innerHTML = "";
-            for (let id in data) {
-                box.innerHTML += `<div><b>${data[id].user}:</b> ${data[id].text}</div>`;
+            for (let i in data) {
+                box.innerHTML += `<div><b>${data[i].u}:</b> ${data[id=i].t}</div>`;
             }
-        }, 2000);
+            box.scrollTop = box.scrollHeight;
+        }, 2500);
     }
 
-    function openRoomUI(title) {
-        document.getElementById('lobby').style.display = 'none';
-        document.getElementById('room').style.display = 'grid';
-        document.getElementById('current-title').innerText = title;
-    }
+    async function refreshRooms() {
+        const res = await fetch(`${DB_PATH}/rooms.json`);
+        const data = await res.json();
+        const box = document.getElementById('room-list-box');
+        box.innerHTML = "";
+        if (!data) return box.innerHTML = "<p>Эфиров пока нет</p>";
 
-    async function closeStream() {
-        if (myStream) myStream.getTracks().forEach(t => t.stop());
-        if (activeRoomId === myId) {
-            await fetch(`${DB_URL}/rooms/${myId}.json`, { method: 'DELETE' });
+        for (let id in data) {
+            const r = data[id];
+            box.innerHTML += `
+                <div class="stream-item">
+                    <div><b>${r.title}</b><br><small>${r.host}</small></div>
+                    <button class="btn-green" onclick="joinLive('${r.id}', '${r.title}')">СМОТРЕТЬ</button>
+                </div>`;
         }
+    }
+
+    function toggleUI(title) {
+        document.getElementById('lobby').style.display = 'none';
+        document.getElementById('room').style.display = 'flex';
+        document.getElementById('display-title').innerText = title;
+    }
+
+    async function terminate() {
+        if (myStream) myStream.getTracks().forEach(t => t.stop());
+        if (activeId === myId) await fetch(`${DB_PATH}/rooms/${myId}.json`, { method: 'DELETE' });
         location.reload();
     }
 
-    setInterval(refreshLobby, 5000);
+    setInterval(refreshRooms, 5000);
 </script>
 </body>
 </html>
