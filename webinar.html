@@ -2,148 +2,142 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Мой Бесплатный Вебинар</title>
+    <title>OpenStream | Вход на Вебинар</title>
     <style>
-        :root {
-            --primary: #6200ee;
-            --bg: #0f172a;
-            --surface: #1e293b;
-            --text: #f8fafc;
+        :root { --primary: #6200ee; --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+
+        /* Начальный экран */
+        #entry-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; transition: 0.5s;
+        }
+        .login-card {
+            background: var(--surface); padding: 40px; border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center; border: 1px solid #334155;
+        }
+        .login-card input {
+            width: 250px; padding: 15px; border-radius: 8px; border: 1px solid #334155;
+            background: #0f172a; color: white; margin-bottom: 20px; font-size: 16px;
         }
 
-        body {
-            margin: 0; font-family: 'Inter', sans-serif;
-            background-color: var(--bg); color: var(--text);
-            display: flex; flex-direction: column; height: 100vh;
-        }
-
-        /* Шапка */
-        header {
-            height: 60px; background: var(--surface);
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 20px; border-bottom: 1px solid #334155;
-        }
-
+        /* Основной интерфейс (скрыт по умолчанию) */
+        #main-interface { display: none; flex-direction: column; height: 100vh; }
+        header { height: 60px; background: var(--surface); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #334155; }
         .container { display: flex; flex: 1; overflow: hidden; }
-
-        /* Левая часть: Видео и описание */
-        .main-view { flex: 3; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
-        
-        .video-wrapper {
-            width: 100%; aspect-ratio: 16/9;
-            background: #000; border-radius: 12px; overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
-
-        .info-card {
-            margin-top: 20px; background: var(--surface);
-            padding: 20px; border-radius: 12px;
-        }
-
-        /* Правая часть: Чат */
-        .sidebar {
-            flex: 1; min-width: 350px; background: var(--surface);
-            border-left: 1px solid #334155; display: flex; flex-direction: column;
-        }
-
+        .main-view { flex: 3; padding: 20px; overflow-y: auto; }
+        .video-wrapper { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 12px; }
+        .sidebar { flex: 1; min-width: 320px; background: var(--surface); border-left: 1px solid #334155; display: flex; flex-direction: column; }
         #chat-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .message { background: #334155; padding: 10px; border-radius: 8px; font-size: 14px; animation: slideIn 0.3s ease-out; }
+        .message b { color: #818cf8; display: block; margin-bottom: 2px; }
+        .bot-msg b { color: #10b981; } /* Боты выделены зеленым */
         
-        .message { background: #334155; padding: 10px; border-radius: 8px; font-size: 14px; }
-        .message b { color: #818cf8; display: block; margin-bottom: 4px; }
-
         .chat-input-area { padding: 15px; background: #0f172a; display: flex; gap: 10px; }
-        
-        input {
-            flex: 1; background: #1e293b; border: 1px solid #334155;
-            color: white; padding: 10px; border-radius: 6px; outline: none;
-        }
-
-        button {
-            background: var(--primary); color: white; border: none;
-            padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;
-        }
-
-        .online-count { font-size: 14px; color: #10b981; }
+        button { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
     </style>
 </head>
 <body>
 
-<header>
-    <div style="font-size: 1.2rem; font-weight: bold;">🚀 LIVE: Создаем проект с нуля</div>
-    <div class="online-count">● <span id="counter">0</span> Зрителей</div>
-</header>
+<div id="entry-screen">
+    <div class="login-card">
+        <h1 style="margin-top:0">Добро пожаловать</h1>
+        <p style="color: #94a3b8">Введите ваше имя для входа в эфир</p>
+        <input type="text" id="user-nickname" placeholder="Ваш никнейм..." maxlength="15">
+        <br>
+        <button onclick="startWebinar()" style="width: 100%; padding: 15px;">ВОЙТИ В ЭФИР</button>
+    </div>
+</div>
 
-<div class="container">
-    <main class="main-view">
-        <div class="video-wrapper">
-            <iframe width="100%" height="100%" 
-                src="https://www.youtube.com/embed/live_stream?channel=ID_ТВОЕГО_КАНАЛА" 
-                frameborder="0" allowfullscreen>
-            </iframe>
-        </div>
-        <div class="info-card">
-            <h2>О чем этот вебинар?</h2>
-            <p>Сегодня мы изучим, как связывать веб-страницы с реальными базами данных и создавать интерактивные приложения.</p>
-        </div>
-    </main>
+<div id="main-interface">
+    <header>
+        <div style="font-weight: bold;">🔴 ПРЯМОЙ ЭФИР: Обучение разработке</div>
+        <div style="color: #10b981">● <span id="counter">48</span> Зрителей</div>
+    </header>
 
-    <aside class="sidebar">
-        <div style="padding: 15px; border-bottom: 1px solid #334155; font-weight: bold;">Чат трансляции</div>
-        <div id="chat-box"></div>
-        <div class="chat-input-area">
-            <input type="text" id="msgInput" placeholder="Введите сообщение...">
-            <button onclick="sendMessage()">Отправить</button>
-        </div>
-    </aside>
+    <div class="container">
+        <main class="main-view">
+            <div class="video-wrapper">
+                <div style="display:flex; height:100%; align-items:center; justify-content:center; color:#666">
+                    [ Место для вашего стрима ]
+                </div>
+            </div>
+            <div style="margin-top:20px; background: var(--surface); padding: 20px; border-radius:12px">
+                <h2>Программа вебинара</h2>
+                <p>1. Введение в облачные БД. 2. Синхронизация данных. 3. Ответы на вопросы.</p>
+            </div>
+        </main>
+
+        <aside class="sidebar">
+            <div id="chat-box"></div>
+            <div class="chat-input-area">
+                <input type="text" id="msgInput" placeholder="Написать в чат...">
+                <button onclick="sendUserMessage()">></button>
+            </div>
+        </aside>
+    </div>
 </div>
 
 <script>
-    const FIREBASE_CHAT_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com/webinar/messages.json";
+    let myName = "";
+    const chatBox = document.getElementById('chat-box');
 
-    // Отправка сообщения
-    async function sendMessage() {
+    // Фразы для ботов, чтобы создать активность
+    const botPhrases = [
+        "Всем привет из Москвы!", "Ого, интересная тема", "А запись будет?", 
+        "Классный звук сегодня", "Можно поподробнее про БД?", "+", "Я тоже так пробовал",
+        "Круто!", "А на Python это можно сделать?", "Спасибо за инфу!"
+    ];
+    const botNames = ["Алексей", "Дмитрий", "Елена", "Cyber_Kat", "Ivan_Web", "Мария", "TechBro"];
+
+    function startWebinar() {
+        const input = document.getElementById('user-nickname');
+        if (input.value.trim().length < 2) return alert("Введите имя!");
+        
+        myName = input.value;
+        document.getElementById('entry-screen').style.opacity = "0";
+        setTimeout(() => {
+            document.getElementById('entry-screen').style.display = "none";
+            document.getElementById('main-interface').style.display = "flex";
+            addMessage("Система", "Вы присоединились к чату", true);
+            startBotActivity(); // Запускаем искусственный интеллект (ботов)
+        }, 500);
+    }
+
+    function addMessage(user, text, isBot = false) {
+        const div = document.createElement('div');
+        div.className = isBot ? 'message bot-msg' : 'message';
+        div.innerHTML = `<b>${user}</b> ${text}`;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendUserMessage() {
         const input = document.getElementById('msgInput');
         if (!input.value.trim()) return;
-
-        const payload = {
-            user: "Гость", // Можно добавить поле для ввода имени
-            text: input.value,
-            timestamp: Date.now()
-        };
-
-        await fetch(FIREBASE_CHAT_URL, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
+        addMessage(myName, input.value);
         input.value = "";
     }
 
-    // Загрузка сообщений в реальном времени
-    function listenChat() {
-        setInterval(async () => {
-            try {
-                const res = await fetch(FIREBASE_CHAT_URL);
-                const data = await res.json();
-                const chatBox = document.getElementById('chat-box');
-                chatBox.innerHTML = "";
-                
-                for (let id in data) {
-                    const m = data[id];
-                    chatBox.innerHTML += `<div class="message"><b>${m.user}</b>${m.text}</div>`;
-                }
-                chatBox.scrollTop = chatBox.scrollHeight;
-            } catch (e) {}
-        }, 2000);
+    // Логика имитации зрителей (Боты)
+    function startBotActivity() {
+        setInterval(() => {
+            if (Math.random() > 0.6) { // Сообщение появляется не каждую секунду
+                const name = botNames[Math.floor(Math.random() * botNames.length)];
+                const text = botPhrases[Math.floor(Math.random() * botPhrases.length)];
+                addMessage(name, text, true);
+            }
+        }, 4000); // Бот пишет раз в 4 секунды (примерно)
+
+        // Имитация изменения счетчика зрителей
+        setInterval(() => {
+            const count = 40 + Math.floor(Math.random() * 20);
+            document.getElementById('counter').innerText = count;
+        }, 5000);
     }
-
-    // Имитация счетчика зрителей
-    setInterval(() => {
-        const count = Math.floor(Math.random() * (55 - 45) + 45);
-        document.getElementById('counter').innerText = count;
-    }, 5000);
-
-    listenChat();
 </script>
-
 </body>
 </html>
