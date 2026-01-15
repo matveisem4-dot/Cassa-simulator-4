@@ -145,6 +145,12 @@
 
         document.getElementById('terminal-id-display').innerText = MY_TERMINAL_ID;
 
+        // Инициализация статуса IDLE
+        fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
+            method: 'PUT',
+            body: JSON.stringify({ state: "IDLE", lastUpdate: Date.now() })
+        });
+
         async function checkSync() { 
             try {
                 if (currentScreen === 'wait') {
@@ -201,21 +207,26 @@
         async function finishPay() {
             showScreen('screen-success');
             
-            // Отправляем сигнал SUCCESS в Python
+            // 1. ИСПОЛЬЗУЕМ PUT ДЛЯ ГАРАНТИРОВАННОЙ ЗАПИСИ
             await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
-                method: 'PATCH',
-                body: JSON.stringify({ state: "SUCCESS", lastUpdate: Date.now() })
+                method: 'PUT',
+                body: JSON.stringify({ 
+                    state: "SUCCESS", 
+                    lastUpdate: Date.now(),
+                    method: "SBER_PAY" // Можно добавить метод оплаты
+                })
             });
 
-            // Удаляем команду, чтобы она не висела
-            await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
+            // 2. ДАЕМ СЕРВЕРУ 1 СЕКУНДУ НА ЧТЕНИЕ ПЕРЕД УДАЛЕНИЕМ КОМАНДЫ
+            setTimeout(async () => {
+                await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
+            }, 1000);
             
-            // Возврат через 3 секунды БЕЗ перезагрузки всей страницы, чтобы не дергать ID
+            // 3. ВОЗВРАТ В ИСХОДНОЕ ЧЕРЕЗ 4 СЕКУНДЫ
             setTimeout(() => { 
-                // Сбрасываем статус в IDLE для следующей оплаты
                 fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ state: "IDLE" })
+                    method: 'PUT',
+                    body: JSON.stringify({ state: "IDLE", lastUpdate: Date.now() })
                 });
                 showScreen('screen-wait');
                 document.getElementById('card-num').value = '';
@@ -228,12 +239,6 @@
             document.getElementById(id).classList.add('active');
             currentScreen = id.replace('screen-', '');
         }
-
-        // При запуске ставим статус терминала в "Готов"
-        fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
-            method: 'PUT',
-            body: JSON.stringify({ state: "IDLE", lastUpdate: Date.now() })
-        });
 
         setInterval(checkSync, 3000);
     </script>
