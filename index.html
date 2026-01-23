@@ -49,7 +49,9 @@
             width: 55vw; height: 55vw; max-width: 220px; max-height: 220px; 
             opacity: 0; transform: translateY(30px); 
         }
-        #qrcode-image { width: 100%; height: 100%; display: none; }
+        /* Центрируем и масштабируем SVG */
+        #qrcode-image { width: 100%; height: 100%; display: block; object-fit: contain; }
+        
         .animated { animation: slideInUp 0.6s forwards; }
 
         .card-input-area { 
@@ -104,7 +106,7 @@
         <div id="screen-pay" class="screen">
             <div id="amount-val" class="price-text">0.00 ₽</div>
             <div id="qrcode-container">
-                 <img id="qrcode-image" src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="QR Code" />
+                 <img id="qrcode-image" src="my_qr_code.svg" alt="QR Code" />
             </div>
             
             <div class="card-input-area">
@@ -144,7 +146,7 @@
 
         document.getElementById('terminal-id-display').innerText = MY_TERMINAL_ID;
 
-        // Инициализация
+        // Инициализация статуса
         fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
             method: 'PUT',
             body: JSON.stringify({ state: "IDLE", lastUpdate: Date.now() })
@@ -155,12 +157,13 @@
                 const statusRes = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
                 const statusData = await statusRes.json();
                 
-                // Если админ/кассир принудительно подтвердил
+                // Если пришел SUCCESS извне (от кассы)
                 if (statusData && statusData.state === "SUCCESS" && currentScreen !== 'success') {
                     finishPay(true); 
                     return;
                 }
 
+                // Проверка команд на главном экране
                 if (currentScreen === 'wait') {
                      const cmdRes = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
                      const cmdData = await cmdRes.json();
@@ -175,14 +178,16 @@
             currentAmount = parseFloat(amount);
             document.getElementById('amount-val').innerText = currentAmount.toFixed(2) + " ₽";
             showScreen('screen-pay'); 
-            document.getElementById('qrcode-image').style.display = 'block';
-            setTimeout(() => { document.getElementById('qrcode-container').classList.add('animated'); }, 100);
+            // Анимация QR-кода
+            setTimeout(() => { 
+                document.getElementById('qrcode-container').classList.add('animated'); 
+            }, 100);
         }
 
         async function payByCard() {
             const num = document.getElementById('card-num').value.trim();
             const pin = document.getElementById('card-pin').value.trim();
-            if(!num || !pin) return alert("Введите данные карты");
+            if(!num || !pin) return alert("Введите данные");
 
             try {
                 const res = await fetch(`${FIREBASE_BASE_URL}/cards/${num}.json`);
@@ -195,7 +200,7 @@
                         });
                         finishPay();
                     } else alert("Недостаточно средств");
-                } else alert("Неверная карта или ПИН");
+                } else alert("Ошибка карты или ПИН");
             } catch(e) { alert("Ошибка сети"); }
         }
 
@@ -218,12 +223,12 @@
 
         async function finishPay(isExternal = false) {
             try {
-                // Если оплата инициирована с терминала, проверяем, есть ли команда в базе
+                // Если платим сами, проверяем наличие счета в БД
                 if (!isExternal) {
                     const checkRes = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
                     const cmdData = await checkRes.json();
                     if (!cmdData || parseFloat(cmdData.amount) !== currentAmount) {
-                        alert("Ошибка: Оплата невозможна без активного счета");
+                        alert("Ошибка: Нет активного счета на оплату");
                         showScreen('screen-wait');
                         return;
                     }
@@ -231,7 +236,7 @@
 
                 showScreen('screen-success');
                 
-                // Фиксируем успех в статусе
+                // Ставим SUCCESS в БД
                 await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
                     method: 'PUT',
                     body: JSON.stringify({ 
@@ -241,10 +246,10 @@
                     })
                 });
 
-                // Удаляем команду сразу
+                // Сразу удаляем команду
                 await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
 
-                // Сброс терминала через 4 секунды
+                // Сброс через 4 секунды
                 setTimeout(async () => { 
                     await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
                         method: 'PUT',
@@ -256,7 +261,7 @@
                 }, 4000);
 
             } catch (e) {
-                console.error("Finish Pay Error:", e);
+                console.error("Payment Process Error:", e);
             }
         }
 
