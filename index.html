@@ -218,17 +218,56 @@ setInterval(checkSync, 1000);
         }
 
         async function finishPay() {
-            showScreen('screen-success');
-            
-            // 1. ИСПОЛЬЗУЕМ PUT ДЛЯ ГАРАНТИРОВАННОЙ ЗАПИСИ
+    const statusIndicator = document.getElementById('status-text'); // для вывода инфы
+
+    try {
+        // 1. ПРОВЕРКА ПЕРЕД ОПЛАТОЙ: Спрашиваем у базы, какой сейчас запрос
+        const checkRes = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
+        const cmdData = await checkRes.json();
+
+        // Если команды нет или сумма в базе не совпадает с тем, что на экране
+        if (!cmdData || parseFloat(cmdData.amount) !== currentAmount) {
+            alert("Ошибка безопасности: Данные платежа не совпадают!");
+            showScreen('screen-wait'); // Сбрасываем на главный экран
+            return;
+        }
+
+        // 2. Если проверка прошла — показываем успех на экране
+        showScreen('screen-success');
+        
+        // 3. Обновляем статус в Firebase (чтобы касса увидела успех)
+        await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
+            method: 'PUT',
+            body: JSON.stringify({ 
+                state: "SUCCESS", 
+                lastUpdate: Date.now(),
+                amount: currentAmount,
+                method: "SBER_PAY"
+            })
+        });
+
+        // 4. УДАЛЯЕМ КОМАНДУ, чтобы её нельзя было использовать второй раз
+        await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { 
+            method: 'DELETE' 
+        });
+
+        // 5. Возврат в режим ожидания через 4 секунды
+        setTimeout(async () => { 
             await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
-                method: 'PUT',
-                body: JSON.stringify({ 
-                    state: "SUCCESS", 
-                    lastUpdate: Date.now(),
-                    method: "SBER_PAY" // Можно добавить метод оплаты
-                })
+                method: 'PATCH',
+                body: JSON.stringify({ state: "IDLE" })
             });
+            showScreen('screen-wait');
+            // Чистим поля ввода если они были
+            if(document.getElementById('card-num')) document.getElementById('card-num').value = '';
+            if(document.getElementById('card-pin')) document.getElementById('card-pin').value = '';
+        }, 4000);
+
+    } catch (error) {
+        console.error("Критическая ошибка оплаты:", error);
+        alert("Сбой связи с банком");
+    }
+}
 
             // 2. ДАЕМ СЕРВЕРУ 1 СЕКУНДУ НА ЧТЕНИЕ ПЕРЕД УДАЛЕНИЕМ КОМАНДЫ
             setTimeout(async () => {
