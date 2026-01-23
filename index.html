@@ -151,15 +151,28 @@
             body: JSON.stringify({ state: "IDLE", lastUpdate: Date.now() })
         });
 
-        async function checkSync() { 
-            try {
-                if (currentScreen === 'wait') {
-                     const res = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
-                     const data = await res.json();
-                     if (data && data.command === "PAY") startPayment(data.amount);
-                }
-            } catch (e) { }
+       async function checkSync() { 
+    try {
+        // Проверяем статус терминала (не сказал ли кассир "Успешно"?)
+        const statusRes = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
+        const statusData = await statusRes.json();
+        
+        if (statusData && statusData.state === "SUCCESS" && currentScreen !== 'success') {
+            finishPay(); // Если в базе SUCCESS — сразу показываем галочку
+            return;
         }
+
+        // Если мы на главном экране, проверяем, не пришла ли команда PAY
+        if (currentScreen === 'wait') {
+             const cmdRes = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
+             const cmdData = await cmdRes.json();
+             if (cmdData && cmdData.command === "PAY") startPayment(cmdData.amount);
+        }
+    } catch (e) { console.error("Ошибка синхронизации:", e); }
+}
+
+// Ускорим проверку до 1 секунды, чтобы не ждать 3 года
+setInterval(checkSync, 1000);
 
         function startPayment(amount) {
             currentAmount = amount;
