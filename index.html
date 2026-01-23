@@ -104,7 +104,7 @@
         <div id="screen-pay" class="screen">
             <div id="amount-val" class="price-text">0.00 ₽</div>
             <div id="qrcode-container">
-                 <img id="qrcode-image" src="my_qr_code.svg" alt="QR Code" />
+                 <img id="qrcode-image" src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="QR Code" />
             </div>
             
             <div class="card-input-area">
@@ -132,7 +132,6 @@
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
         
-        // ЛОГИКА ПОСТОЯННОГО ID
         let MY_TERMINAL_ID = localStorage.getItem('terminal_id');
         if (!MY_TERMINAL_ID) {
             MY_TERMINAL_ID = Math.floor(100000 + Math.random() * 900000).toString();
@@ -145,38 +144,36 @@
 
         document.getElementById('terminal-id-display').innerText = MY_TERMINAL_ID;
 
-        // Инициализация статуса IDLE
+        // Инициализация
         fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
             method: 'PUT',
             body: JSON.stringify({ state: "IDLE", lastUpdate: Date.now() })
         });
 
-       async function checkSync() { 
-    try {
-        // Проверяем статус терминала (не сказал ли кассир "Успешно"?)
-        const statusRes = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
-        const statusData = await statusRes.json();
-        
-        if (statusData && statusData.state === "SUCCESS" && currentScreen !== 'success') {
-            finishPay(); // Если в базе SUCCESS — сразу показываем галочку
-            return;
+        async function checkSync() { 
+            try {
+                const statusRes = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
+                const statusData = await statusRes.json();
+                
+                // Если админ/кассир принудительно подтвердил
+                if (statusData && statusData.state === "SUCCESS" && currentScreen !== 'success') {
+                    finishPay(true); 
+                    return;
+                }
+
+                if (currentScreen === 'wait') {
+                     const cmdRes = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
+                     const cmdData = await cmdRes.json();
+                     if (cmdData && cmdData.command === "PAY") startPayment(cmdData.amount);
+                }
+            } catch (e) { console.error("Sync Error:", e); }
         }
 
-        // Если мы на главном экране, проверяем, не пришла ли команда PAY
-        if (currentScreen === 'wait') {
-             const cmdRes = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
-             const cmdData = await cmdRes.json();
-             if (cmdData && cmdData.command === "PAY") startPayment(cmdData.amount);
-        }
-    } catch (e) { console.error("Ошибка синхронизации:", e); }
-}
-
-// Ускорим проверку до 1 секунды, чтобы не ждать 3 года
-setInterval(checkSync, 1000);
+        setInterval(checkSync, 1500);
 
         function startPayment(amount) {
-            currentAmount = amount;
-            document.getElementById('amount-val').innerText = amount + " ₽";
+            currentAmount = parseFloat(amount);
+            document.getElementById('amount-val').innerText = currentAmount.toFixed(2) + " ₽";
             showScreen('screen-pay'); 
             document.getElementById('qrcode-image').style.display = 'block';
             setTimeout(() => { document.getElementById('qrcode-container').classList.add('animated'); }, 100);
@@ -185,6 +182,8 @@ setInterval(checkSync, 1000);
         async function payByCard() {
             const num = document.getElementById('card-num').value.trim();
             const pin = document.getElementById('card-pin').value.trim();
+            if(!num || !pin) return alert("Введите данные карты");
+
             try {
                 const res = await fetch(`${FIREBASE_BASE_URL}/cards/${num}.json`);
                 const card = await res.json();
@@ -195,8 +194,8 @@ setInterval(checkSync, 1000);
                             body: JSON.stringify({ balance: card.balance - currentAmount })
                         });
                         finishPay();
-                    } else alert("Мало денег!");
-                } else alert("Ошибка карты!");
+                    } else alert("Недостаточно средств");
+                } else alert("Неверная карта или ПИН");
             } catch(e) { alert("Ошибка сети"); }
         }
 
@@ -212,78 +211,53 @@ setInterval(checkSync, 1000);
                     finishPay();
                 }, 3000);
             } catch (err) {
-                alert("Нет доступа к камере");
+                alert("Камера недоступна");
                 modal.style.display = 'none';
             }
         }
 
-        async function finishPay() {
-    const statusIndicator = document.getElementById('status-text'); // для вывода инфы
+        async function finishPay(isExternal = false) {
+            try {
+                // Если оплата инициирована с терминала, проверяем, есть ли команда в базе
+                if (!isExternal) {
+                    const checkRes = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
+                    const cmdData = await checkRes.json();
+                    if (!cmdData || parseFloat(cmdData.amount) !== currentAmount) {
+                        alert("Ошибка: Оплата невозможна без активного счета");
+                        showScreen('screen-wait');
+                        return;
+                    }
+                }
 
-    try {
-        // 1. ПРОВЕРКА ПЕРЕД ОПЛАТОЙ: Спрашиваем у базы, какой сейчас запрос
-        const checkRes = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
-        const cmdData = await checkRes.json();
-
-        // Если команды нет или сумма в базе не совпадает с тем, что на экране
-        if (!cmdData || parseFloat(cmdData.amount) !== currentAmount) {
-            alert("Ошибка безопасности: Данные платежа не совпадают!");
-            showScreen('screen-wait'); // Сбрасываем на главный экран
-            return;
-        }
-
-        // 2. Если проверка прошла — показываем успех на экране
-        showScreen('screen-success');
-        
-        // 3. Обновляем статус в Firebase (чтобы касса увидела успех)
-        await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
-            method: 'PUT',
-            body: JSON.stringify({ 
-                state: "SUCCESS", 
-                lastUpdate: Date.now(),
-                amount: currentAmount,
-                method: "SBER_PAY"
-            })
-        });
-
-        // 4. УДАЛЯЕМ КОМАНДУ, чтобы её нельзя было использовать второй раз
-        await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { 
-            method: 'DELETE' 
-        });
-
-        // 5. Возврат в режим ожидания через 4 секунды
-        setTimeout(async () => { 
-            await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
-                method: 'PATCH',
-                body: JSON.stringify({ state: "IDLE" })
-            });
-            showScreen('screen-wait');
-            // Чистим поля ввода если они были
-            if(document.getElementById('card-num')) document.getElementById('card-num').value = '';
-            if(document.getElementById('card-pin')) document.getElementById('card-pin').value = '';
-        }, 4000);
-
-    } catch (error) {
-        console.error("Критическая ошибка оплаты:", error);
-        alert("Сбой связи с банком");
-    }
-}
-
-            // 2. ДАЕМ СЕРВЕРУ 1 СЕКУНДУ НА ЧТЕНИЕ ПЕРЕД УДАЛЕНИЕМ КОМАНДЫ
-            setTimeout(async () => {
-                await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
-            }, 1000);
-            
-            // 3. ВОЗВРАТ В ИСХОДНОЕ ЧЕРЕЗ 4 СЕКУНДЫ
-            setTimeout(() => { 
-                fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
+                showScreen('screen-success');
+                
+                // Фиксируем успех в статусе
+                await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
                     method: 'PUT',
-                    body: JSON.stringify({ state: "IDLE", lastUpdate: Date.now() })
+                    body: JSON.stringify({ 
+                        state: "SUCCESS", 
+                        lastUpdate: Date.now(),
+                        amount: currentAmount 
+                    })
                 });
-                showScreen('screen-wait');
-                document.getElementById('card-num').value = '';
-                document.getElementById('card-pin').value = '';
-            }, 4000);
+
+                // Удаляем команду сразу
+                await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
+
+                // Сброс терминала через 4 секунды
+                setTimeout(async () => { 
+                    await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ state: "IDLE", lastUpdate: Date.now() })
+                    });
+                    showScreen('screen-wait');
+                    document.getElementById('card-num').value = '';
+                    document.getElementById('card-pin').value = '';
+                }, 4000);
+
+            } catch (e) {
+                console.error("Finish Pay Error:", e);
+            }
         }
 
         function showScreen(id) {
@@ -291,8 +265,6 @@ setInterval(checkSync, 1000);
             document.getElementById(id).classList.add('active');
             currentScreen = id.replace('screen-', '');
         }
-
-        setInterval(checkSync, 3000);
     </script>
 </body>
 </html>
