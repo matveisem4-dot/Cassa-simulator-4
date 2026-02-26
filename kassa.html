@@ -3,189 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cassa Simulator 2026 | NFC Pro Edition</title>
+    <title>Cassa Simulator 2026 | Pro UI</title>
     <style>
         :root {
             --bg-gradient: linear-gradient(135deg, #1c1c2e 0%, #111119 100%);
             --card-bg: rgba(40, 40, 55, 0.7);
             --card-border: 1px solid rgba(255, 255, 255, 0.1);
-            --primary: #4f8aff;
-            --success: #00d26a;
-            --danger: #ff4757;
+            --primary: #4f8aff; 
+            --success: #00d26a; 
+            --danger: #ff4757; 
             --text-main: #ffffff;
+            --text-muted: #a0a0b0;
             --radius: 16px;
         }
 
+        * { box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: var(--bg-gradient); color: var(--text-main); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        .top-bar { background: rgba(30, 30, 40, 0.8); backdrop-filter: blur(10px); padding: 15px 30px; display: flex; align-items: center; justify-content: space-between; border-bottom: var(--card-border); }
-        .brand { font-size: 1.2rem; font-weight: 800; color: var(--primary); }
-        .terminal-control { display: flex; align-items: center; gap: 15px; }
+        .top-bar { background: rgba(30, 30, 40, 0.8); backdrop-filter: blur(10px); padding: 15px 30px; display: flex; align-items: center; justify-content: space-between; border-bottom: var(--card-border); z-index: 10; }
+        .brand { font-size: 1.2rem; font-weight: 800; color: var(--primary); letter-spacing: 1px; }
 
+        .terminal-control { display: flex; align-items: center; gap: 15px; }
         input { background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; padding: 10px 15px; border-radius: 8px; outline: none; }
-        
-        button { border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+
+        button { border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: #000; }
-        .btn-nfc { background: #6c5ce7; color: white; } /* Фиолетовый для NFC */
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-nfc { background: #6c5ce7; color: white; }
 
-        .main-container { flex: 1; padding: 20px 30px; display: flex; gap: 20px; }
-        .card { background: var(--card-bg); border: var(--card-border); border-radius: var(--radius); padding: 20px; flex: 1; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .nav-tabs { display: flex; gap: 20px; padding: 20px 30px 0; }
+        .tab-btn { background: transparent; color: var(--text-muted); padding: 10px 0; border-radius: 0; font-size: 1rem; position: relative; }
+        .tab-btn.active { color: white; }
+        .tab-btn.active::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 3px; background: var(--primary); box-shadow: 0 0 10px var(--primary); }
 
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; color: #777; font-size: 0.8rem; padding: 10px; }
-        td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .item-row:hover { background: rgba(255,255,255,0.05); cursor: pointer; }
+        .main-container { flex: 1; padding: 20px 30px; overflow: hidden; display: flex; }
+        .tab-content { display: none; width: 100%; height: 100%; }
+        .tab-content.active { display: flex; flex-direction: column; }
 
-        .total-amount { font-size: 2.5rem; font-weight: 800; text-align: center; margin: 20px 0; }
+        .sales-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 25px; height: 100%; }
+        .card { background: var(--card-bg); border: var(--card-border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
 
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 100; }
-        .modal-box { background: #252530; width: 90%; max-width: 400px; padding: 30px; border-radius: 20px; text-align: center; }
+        .table-wrapper { flex: 1; overflow-y: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        td { background: rgba(255,255,255,0.03); padding: 12px 15px; }
+        tr.item-row:hover td { background: rgba(255,255,255,0.08); cursor: pointer; }
 
-        .status-dot { height: 10px; width: 10px; background: #555; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        .status-dot.active { background: var(--success); box-shadow: 0 0 10px var(--success); }
+        .total-section { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; text-align: center; margin-top: auto; }
+        .total-amount { font-size: 2.5rem; font-weight: 800; margin: 10px 0; }
+
+        /* NFC Модуль */
+        .nfc-setup { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; height: 100%; }
+        .nfc-icon { font-size: 50px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <div class="brand">CASSA <span style="color:white; font-weight:300;">PRO</span></div>
+        <div class="brand">CASSA <span style="color:white; font-weight:300;">SIMULATOR</span></div>
         <div class="terminal-control">
-            <span id="statusLabel" style="color:#777;"><span class="status-dot" id="statusDot"></span> Оффлайн</span>
+            <span id="statusLabel" style="font-size: 0.9rem; color: #777;"><span class="status-dot" id="statusDot"></span> Оффлайн</span>
             <input type="number" id="terminalInput" placeholder="ID Терминала">
             <button class="btn-primary" onclick="bindTerminal()">Подключить</button>
         </div>
     </div>
 
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('sales')">🛒 Продажи</button>
+        <button class="tab-btn" onclick="switchTab('products')">📦 Товары</button>
+        <button class="tab-btn" onclick="switchTab('nfc-tab')">📡 NFC Модуль</button>
+    </div>
+
     <div class="main-container">
-        <div class="card">
-            <h2>📦 Каталог</h2>
-            <div style="overflow-y:auto;">
-                <table id="salesTable">
-                    <thead><tr><th>Товар</th><th style="text-align:right">Цена</th></tr></thead>
-                    <tbody></tbody>
-                </table>
+        <div id="sales" class="tab-content active">
+            <div class="sales-layout">
+                <div class="card">
+                    <h2>Каталог</h2>
+                    <div class="table-wrapper">
+                        <table id="salesTable"><tbody></tbody></table>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2>Чек</h2>
+                    <div class="table-wrapper"><table id="cartTable"><tbody></tbody></table></div>
+                    <div class="total-section">
+                        <div class="total-amount" id="totalLabel">0.00 ₽</div>
+                        <button class="btn-success" style="width:100%; padding:15px;" onclick="payCard()">ОПЛАТИТЬ КАРТОЙ</button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="card" style="max-width: 400px;">
-            <h2>🛒 Текущий чек</h2>
-            <div style="flex:1; overflow-y:auto;" id="cartList">
-                <table id="cartTable"><tbody></tbody></table>
-            </div>
-            <div class="total-amount" id="totalLabel">0.00 ₽</div>
-            <button class="btn-success" style="width:100%; padding:20px;" onclick="openModal('paymentModal')">ОПЛАТИТЬ</button>
-        </div>
-    </div>
-
-    <div id="paymentModal" class="modal">
-        <div class="modal-box">
-            <h2>Способ оплаты</h2>
-            <div style="display:grid; gap:10px; margin-top:20px;">
-                <button class="btn-primary" onclick="payCard()">💳 Оплата по карте (Терминал)</button>
-                <button class="btn-nfc" onclick="openNFC()">📡 Эмулировать NFC метку</button>
-                <button class="btn-success" onclick="alert('Оплачено наличными!'); clearCart(); closeModal('paymentModal');">💵 Наличные</button>
-                <button style="background:transparent; color:#777;" onclick="closeModal('paymentModal')">Отмена</button>
+        <div id="products" class="tab-content">
+            <div class="card">
+                <div style="display:flex; gap:10px; margin-bottom:20px;">
+                    <input type="text" id="pName" placeholder="Название">
+                    <input type="number" id="pPrice" placeholder="Цена">
+                    <button class="btn-primary" onclick="addProduct()">Добавить</button>
+                </div>
+                <div class="table-wrapper"><table id="mgrTable"><tbody></tbody></table></div>
             </div>
         </div>
-    </div>
 
-    <div id="nfcModal" class="modal">
-        <div class="modal-box">
-            <h2 style="color: #6c5ce7;">📡 NFC Эмулятор</h2>
-            <p style="font-size: 0.9rem; color: #aaa;">Введите номер карты для "прикладывания" к терминалу #${terminalId || '?'}</p>
-            <input type="text" id="nfcCardInput" placeholder="4400 0000..." style="width:100%; margin: 15px 0; text-align:center; font-size:1.2rem;">
-            <button class="btn-nfc" style="width:100%;" onclick="sendNFCToTerminal()">ПРИЛОЖИТЬ МЕТКУ</button>
-            <button style="background:transparent; color:#777; margin-top:10px;" onclick="closeModal('nfcModal')">Закрыть</button>
+        <div id="nfc-tab" class="tab-content">
+            <div class="card nfc-setup">
+                <div class="nfc-icon">📡</div>
+                <h2>Эмуляция NFC-метки</h2>
+                <p style="color:var(--text-muted)">Введите номер карты, который "записан" на метку</p>
+                <input type="text" id="nfcCardNum" placeholder="4400 0000 0000 0000" style="width:300px; text-align:center; font-size:1.2rem;">
+                <button class="btn-nfc" onclick="emulateNFC()">ПРИЛОЖИТЬ К КАССЕ (ОТПРАВИТЬ)</button>
+            </div>
         </div>
     </div>
 
     <script>
         const DB_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        let products = [
-            {id: 1, name: "Кофе Лате", price: 250},
-            {id: 2, name: "Бургер Классик", price: 450},
-            {id: 3, name: "Чипсы Lay's", price: 120}
-        ];
+        let products = JSON.parse(localStorage.getItem('products')) || [];
         let cart = [];
-        let total = 0;
         let terminalId = localStorage.getItem('terminalId');
 
-        window.onload = () => {
-            renderCatalog();
-            if(terminalId) {
-                document.getElementById('terminalInput').value = terminalId;
-                bindTerminal();
-            }
-        };
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
 
-        function renderCatalog() {
-            const tbody = document.querySelector('#salesTable tbody');
-            tbody.innerHTML = products.map(p => `
-                <tr class="item-row" onclick="addToCart(${p.id})">
-                    <td>${p.name}</td>
-                    <td style="text-align:right; color:var(--success); font-weight:bold;">${p.price} ₽</td>
-                </tr>
-            `).join('');
+        function render() {
+            const sTable = document.querySelector('#salesTable tbody');
+            sTable.innerHTML = products.map(p => `<tr class="item-row" onclick="addToCart(${p.id})"><td>${p.name}</td><td style="text-align:right">${p.price} ₽</td></tr>`).join('');
+            
+            const mTable = document.querySelector('#mgrTable tbody');
+            mTable.innerHTML = products.map(p => `<tr><td>${p.name}</td><td>${p.price} ₽</td><td style="text-align:right"><button class="btn-danger" onclick="del(${p.id})">Удалить</button></td></tr>`).join('');
         }
 
         function addToCart(id) {
-            const p = products.find(x => x.id === id);
-            cart.push(p);
-            updateCart();
-        }
-
-        function updateCart() {
-            const tbody = document.querySelector('#cartTable tbody');
-            total = cart.reduce((sum, p) => sum + p.price, 0);
-            tbody.innerHTML = cart.map(p => `<tr><td>${p.name}</td><td style="text-align:right;">${p.price}</td></tr>`).join('');
+            cart.push(products.find(p => p.id === id));
+            let total = cart.reduce((s, p) => s + p.price, 0);
+            document.getElementById('cartTable').innerHTML = cart.map(p => `<tr><td>${p.name}</td><td>${p.price}</td></tr>`).join('');
             document.getElementById('totalLabel').innerText = total.toFixed(2) + " ₽";
         }
 
-        function clearCart() { cart = []; updateCart(); }
+        function addProduct() {
+            const name = document.getElementById('pName').value;
+            const price = parseFloat(document.getElementById('pPrice').value);
+            if(name && price) {
+                products.push({id: Date.now(), name, price});
+                localStorage.setItem('products', JSON.stringify(products));
+                render();
+            }
+        }
 
         function bindTerminal() {
             terminalId = document.getElementById('terminalInput').value;
-            if(!terminalId) return;
             localStorage.setItem('terminalId', terminalId);
-            document.getElementById('statusDot').classList.add('active');
-            document.getElementById('statusLabel').innerHTML = `<span class="status-dot active"></span> Терминал #${terminalId}`;
+            document.getElementById('statusDot').style.background = "#00d26a";
+            document.getElementById('statusLabel').innerText = "Терминал #" + terminalId;
         }
 
-        // --- NFC ЛОГИКА ---
-        function openNFC() {
-            if(!terminalId) return alert("Сначала подключите терминал!");
-            closeModal('paymentModal');
-            openModal('nfcModal');
-        }
-
-        async function sendNFCToTerminal() {
-            const cardNum = document.getElementById('nfcCardInput').value.replace(/\s/g, '');
-            if(!cardNum) return alert("Введите номер карты!");
-
-            try {
-                // Записываем номер карты в базу NFC для конкретного терминала
-                await fetch(`${DB_URL}/nfc_data/${terminalId}.json`, {
-                    method: 'PUT',
-                    body: JSON.stringify(cardNum)
-                });
-                alert("Сигнал NFC отправлен на терминал!");
-                closeModal('nfcModal');
-            } catch (e) { alert("Ошибка связи"); }
+        async function emulateNFC() {
+            const cardNum = document.getElementById('nfcCardNum').value.replace(/\s/g, '');
+            if(!terminalId) return alert("Подключи терминал!");
+            await fetch(`${DB_URL}/nfc_data/${terminalId}.json`, { method: 'PUT', body: JSON.stringify(cardNum) });
+            alert("Карта отправлена в терминал!");
         }
 
         async function payCard() {
-            if(!terminalId) return alert("Нет связи с терминалом");
-            await fetch(`${DB_URL}/commands/${terminalId}.json`, {
-                method: 'PUT',
-                body: JSON.stringify({ command: "PAY", amount: total })
-            });
-            alert("Команда отправлена. Ждите оплаты на терминале.");
-            closeModal('paymentModal');
+            const total = parseFloat(document.getElementById('totalLabel').innerText);
+            await fetch(`${DB_URL}/commands/${terminalId}.json`, { method: 'PUT', body: JSON.stringify({command: "PAY", amount: total}) });
+            alert("Ждите оплаты на терминале...");
         }
 
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        render();
     </script>
 </body>
 </html>
