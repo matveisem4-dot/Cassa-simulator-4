@@ -10,109 +10,200 @@
             --card-bg: rgba(40, 40, 55, 0.7);
             --card-border: 1px solid rgba(255, 255, 255, 0.1);
             --primary: #4f8aff; 
+            --primary-hover: #3a6ecc;
             --success: #00d26a; 
             --danger: #ff4757; 
             --text-main: #ffffff;
             --text-muted: #a0a0b0;
             --radius: 16px;
+            --shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-gradient); color: var(--text-main); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        .top-bar { background: rgba(30, 30, 40, 0.8); backdrop-filter: blur(10px); padding: 15px 30px; display: flex; align-items: center; justify-content: space-between; border-bottom: var(--card-border); z-index: 10; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- ВЕРХНЯЯ ПАНЕЛЬ --- */
+        .top-bar {
+            background: rgba(30, 30, 40, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: var(--card-border);
+            z-index: 10;
+        }
+
         .brand { font-size: 1.2rem; font-weight: 800; color: var(--primary); letter-spacing: 1px; }
 
         .terminal-control { display: flex; align-items: center; gap: 15px; }
-        input { background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; padding: 10px 15px; border-radius: 8px; outline: none; }
 
-        button { border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        input {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #444;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            outline: none;
+            transition: 0.3s;
+        }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 138, 255, 0.2); }
+
+        /* --- КНОПКИ --- */
+        button {
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: #000; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-nfc { background: #6c5ce7; color: white; }
+        .btn-nfc { background: #6c5ce7; color: white; box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3); }
 
+        /* --- ТАБЫ --- */
         .nav-tabs { display: flex; gap: 20px; padding: 20px 30px 0; }
-        .tab-btn { background: transparent; color: var(--text-muted); padding: 10px 0; border-radius: 0; font-size: 1rem; position: relative; }
+        .tab-btn {
+            background: transparent;
+            color: var(--text-muted);
+            padding: 10px 0;
+            border-radius: 0;
+            font-size: 1rem;
+            position: relative;
+        }
         .tab-btn.active { color: white; }
-        .tab-btn.active::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 3px; background: var(--primary); box-shadow: 0 0 10px var(--primary); }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; left: 0; width: 100%; height: 3px;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+        }
 
-        .main-container { flex: 1; padding: 20px 30px; overflow: hidden; display: flex; }
+        /* --- КОНТЕНТ --- */
+        .main-container { flex: 1; padding: 20px 30px; display: flex; overflow: hidden; }
         .tab-content { display: none; width: 100%; height: 100%; }
-        .tab-content.active { display: flex; flex-direction: column; }
+        .tab-content.active { display: flex; }
 
-        .sales-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 25px; height: 100%; }
-        .card { background: var(--card-bg); border: var(--card-border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
+        .sales-layout {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 25px;
+            width: 100%;
+        }
 
-        .table-wrapper { flex: 1; overflow-y: auto; }
+        .card {
+            background: var(--card-bg);
+            border: var(--card-border);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        .table-wrapper { flex: 1; overflow-y: auto; margin-top: 10px; }
         table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        th { text-align: left; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; padding: 0 10px; }
         td { background: rgba(255,255,255,0.03); padding: 12px 15px; }
-        tr.item-row:hover td { background: rgba(255,255,255,0.08); cursor: pointer; }
+        tr.item-row:hover td { background: rgba(255,255,255,0.08); cursor: pointer; transform: scale(1.01); }
 
         .total-section { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; text-align: center; margin-top: auto; }
-        .total-amount { font-size: 2.5rem; font-weight: 800; margin: 10px 0; }
+        .total-amount { font-size: 2.5rem; font-weight: 800; color: white; margin: 10px 0; }
 
-        /* NFC Модуль */
-        .nfc-setup { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; height: 100%; }
-        .nfc-icon { font-size: 50px; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        .status-dot { height: 10px; width: 10px; background: #555; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .status-dot.active { background: var(--success); box-shadow: 0 0 10px var(--success); }
+
+        /* NFC UI */
+        .nfc-panel { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+        .nfc-ring {
+            width: 120px; height: 120px; border: 4px dashed var(--primary);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 40px; animation: rotate 10s linear infinite;
+        }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <div class="brand">CASSA <span style="color:white; font-weight:300;">SIMULATOR</span></div>
+        <div class="brand">CASSA <span style="color:white; font-weight:300;">SIMULATOR</span> <span style="font-size:0.8em; opacity:0.5;">v4.0</span></div>
         <div class="terminal-control">
             <span id="statusLabel" style="font-size: 0.9rem; color: #777;"><span class="status-dot" id="statusDot"></span> Оффлайн</span>
-            <input type="number" id="terminalInput" placeholder="ID Терминала">
+            <input type="number" id="terminalInput" placeholder="ID Терминала" style="width: 120px;">
             <button class="btn-primary" onclick="bindTerminal()">Подключить</button>
         </div>
     </div>
 
     <div class="nav-tabs">
         <button class="tab-btn active" onclick="switchTab('sales')">🛒 Продажи</button>
-        <button class="tab-btn" onclick="switchTab('products')">📦 Товары</button>
-        <button class="tab-btn" onclick="switchTab('nfc-tab')">📡 NFC Модуль</button>
+        <button class="tab-btn" onclick="switchTab('products')">📦 Управление</button>
+        <button class="tab-btn" onclick="switchTab('nfc')">📡 NFC Модуль</button>
     </div>
 
     <div class="main-container">
         <div id="sales" class="tab-content active">
             <div class="sales-layout">
                 <div class="card">
-                    <h2>Каталог</h2>
+                    <h2>Каталог товаров</h2>
                     <div class="table-wrapper">
-                        <table id="salesTable"><tbody></tbody></table>
+                        <table id="salesTable">
+                            <thead><tr><th>Товар</th><th style="text-align:right">Цена</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="card">
-                    <h2>Чек</h2>
+                <div class="card" style="background: rgba(30, 30, 45, 0.9);">
+                    <h2>Текущий чек</h2>
                     <div class="table-wrapper"><table id="cartTable"><tbody></tbody></table></div>
                     <div class="total-section">
+                        <div style="color: var(--text-muted); font-size: 0.9rem;">ИТОГО</div>
                         <div class="total-amount" id="totalLabel">0.00 ₽</div>
-                        <button class="btn-success" style="width:100%; padding:15px;" onclick="payCard()">ОПЛАТИТЬ КАРТОЙ</button>
+                        <button class="btn-success" style="width: 100%; padding: 15px; font-size: 1.1rem;" onclick="payByCard()">ОПЛАТИТЬ КАРТОЙ</button>
                     </div>
                 </div>
             </div>
         </div>
 
         <div id="products" class="tab-content">
-            <div class="card">
+            <div class="card" style="width: 100%;">
                 <div style="display:flex; gap:10px; margin-bottom:20px;">
-                    <input type="text" id="pName" placeholder="Название">
-                    <input type="number" id="pPrice" placeholder="Цена">
-                    <button class="btn-primary" onclick="addProduct()">Добавить</button>
+                    <input type="text" id="pName" placeholder="Название товара" style="flex:2;">
+                    <input type="number" id="pPrice" placeholder="Цена" style="flex:1;">
+                    <button class="btn-primary" onclick="addProduct()">+ Добавить</button>
                 </div>
-                <div class="table-wrapper"><table id="mgrTable"><tbody></tbody></table></div>
+                <div class="table-wrapper">
+                    <table id="mgrTable">
+                        <thead><tr><th>Название</th><th>Цена</th><th style="text-align:right">Действие</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <div id="nfc-tab" class="tab-content">
-            <div class="card nfc-setup">
-                <div class="nfc-icon">📡</div>
-                <h2>Эмуляция NFC-метки</h2>
-                <p style="color:var(--text-muted)">Введите номер карты, который "записан" на метку</p>
-                <input type="text" id="nfcCardNum" placeholder="4400 0000 0000 0000" style="width:300px; text-align:center; font-size:1.2rem;">
-                <button class="btn-nfc" onclick="emulateNFC()">ПРИЛОЖИТЬ К КАССЕ (ОТПРАВИТЬ)</button>
+        <div id="nfc" class="tab-content">
+            <div class="card nfc-panel" style="width: 100%;">
+                <div class="nfc-ring">📡</div>
+                <h2 style="margin:0;">Эмуляция NFC-метки</h2>
+                <p style="color: var(--text-muted);">Привяжите карту к терминалу #${terminalId || '...'}</p>
+                <input type="text" id="nfcCardInput" placeholder="Введите номер карты" style="width: 300px; text-align: center; font-size: 1.2rem;">
+                <button class="btn-nfc" style="padding: 15px 40px;" onclick="sendNFC()">ПРИЛОЖИТЬ МЕТКУ</button>
             </div>
         </div>
     </div>
@@ -123,25 +214,34 @@
         let cart = [];
         let terminalId = localStorage.getItem('terminalId');
 
-        function switchTab(id) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
             event.currentTarget.classList.add('active');
         }
 
         function render() {
-            const sTable = document.querySelector('#salesTable tbody');
-            sTable.innerHTML = products.map(p => `<tr class="item-row" onclick="addToCart(${p.id})"><td>${p.name}</td><td style="text-align:right">${p.price} ₽</td></tr>`).join('');
-            
-            const mTable = document.querySelector('#mgrTable tbody');
-            mTable.innerHTML = products.map(p => `<tr><td>${p.name}</td><td>${p.price} ₽</td><td style="text-align:right"><button class="btn-danger" onclick="del(${p.id})">Удалить</button></td></tr>`).join('');
+            const sBody = document.querySelector('#salesTable tbody');
+            const mBody = document.querySelector('#mgrTable tbody');
+            sBody.innerHTML = ''; mBody.innerHTML = '';
+
+            products.forEach(p => {
+                sBody.innerHTML += `<tr class="item-row" onclick="addToCart(${p.id})"><td>${p.name}</td><td style="text-align:right; color:var(--success);">${p.price.toFixed(2)} ₽</td></tr>`;
+                mBody.innerHTML += `<tr><td>${p.name}</td><td>${p.price.toFixed(2)} ₽</td><td style="text-align:right;"><button class="btn-danger" style="padding:5px 10px;" onclick="delProd(${p.id})">Удалить</button></td></tr>`;
+            });
         }
 
         function addToCart(id) {
-            cart.push(products.find(p => p.id === id));
+            const p = products.find(x => x.id === id);
+            cart.push(p);
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const cBody = document.querySelector('#cartTable tbody');
             let total = cart.reduce((s, p) => s + p.price, 0);
-            document.getElementById('cartTable').innerHTML = cart.map(p => `<tr><td>${p.name}</td><td>${p.price}</td></tr>`).join('');
+            cBody.innerHTML = cart.map(p => `<tr><td>${p.name}</td><td style="text-align:right;">${p.price.toFixed(2)}</td></tr>`).join('');
             document.getElementById('totalLabel').innerText = total.toFixed(2) + " ₽";
         }
 
@@ -157,24 +257,28 @@
 
         function bindTerminal() {
             terminalId = document.getElementById('terminalInput').value;
+            if(!terminalId) return;
             localStorage.setItem('terminalId', terminalId);
-            document.getElementById('statusDot').style.background = "#00d26a";
-            document.getElementById('statusLabel').innerText = "Терминал #" + terminalId;
+            document.getElementById('statusDot').classList.add('active');
+            document.getElementById('statusLabel').innerHTML = `<span class="status-dot active"></span> Терминал #${terminalId}`;
+            document.getElementById('statusLabel').style.color = "white";
         }
 
-        async function emulateNFC() {
-            const cardNum = document.getElementById('nfcCardNum').value.replace(/\s/g, '');
-            if(!terminalId) return alert("Подключи терминал!");
-            await fetch(`${DB_URL}/nfc_data/${terminalId}.json`, { method: 'PUT', body: JSON.stringify(cardNum) });
-            alert("Карта отправлена в терминал!");
+        async function sendNFC() {
+            const num = document.getElementById('nfcCardInput').value.replace(/\s/g, '');
+            if(!terminalId || !num) return alert("Проверьте ID терминала и номер карты!");
+            await fetch(`${DB_URL}/nfc_data/${terminalId}.json`, { method: 'PUT', body: JSON.stringify(num) });
+            alert("NFC сигнал отправлен!");
         }
 
-        async function payCard() {
+        async function payByCard() {
             const total = parseFloat(document.getElementById('totalLabel').innerText);
+            if(total <= 0) return alert("Чек пуст");
             await fetch(`${DB_URL}/commands/${terminalId}.json`, { method: 'PUT', body: JSON.stringify({command: "PAY", amount: total}) });
-            alert("Ждите оплаты на терминале...");
+            alert("Команда отправлена на терминал");
         }
 
+        if(terminalId) { document.getElementById('terminalInput').value = terminalId; bindTerminal(); }
         render();
     </script>
 </body>
