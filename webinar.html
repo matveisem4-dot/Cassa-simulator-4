@@ -2,207 +2,64 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AURA Connect | Сферы Общения</title>
+    <title>AURA Connect | Webinar</title>
     <style>
-        :root {
-            --accent: #00f2fe;
-            --accent-glow: rgba(0, 242, 254, 0.4);
-            --bg: #050a10;
-            --glass: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.1);
-        }
-
-        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
-
-        body {
-            margin: 0; padding: 0; height: 100vh;
-            background: var(--bg); color: #fff;
-            background-image: radial-gradient(circle at 50% 50%, #101a2b 0%, #050a10 100%);
-            display: flex; align-items: center; justify-content: center;
-            overflow: hidden;
-        }
-
-        /* --- ЛОББИ (ВХОД И СОЗДАНИЕ) --- */
-        .lobby-container {
-            width: 450px; padding: 40px; border-radius: 30px;
-            background: var(--glass); backdrop-filter: blur(25px);
-            border: 1px solid var(--border); text-align: center;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            animation: startAnim 0.8s ease;
-        }
-
-        @keyframes startAnim {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .tabs { display: flex; gap: 10px; margin-bottom: 30px; background: rgba(0,0,0,0.3); padding: 5px; border-radius: 15px; }
-        .tab { flex: 1; padding: 12px; border-radius: 10px; cursor: pointer; transition: 0.3s; font-weight: bold; opacity: 0.6; }
-        .tab.active { background: var(--accent); color: #000; opacity: 1; box-shadow: 0 0 15px var(--accent-glow); }
-
-        input {
-            width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 12px;
-            border: 1px solid var(--border); background: rgba(0,0,0,0.4);
-            color: #fff; font-size: 16px; transition: 0.3s;
-        }
-        input:focus { border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); outline: none; }
-
-        .btn-main {
-            width: 100%; padding: 18px; border-radius: 15px; border: none;
-            background: var(--accent); color: #000; font-size: 18px; font-weight: 800;
-            cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
-        }
-        .btn-main:hover { transform: scale(1.02); filter: brightness(1.1); }
-
-        /* --- ИНТЕРФЕЙС ВСТРЕЧИ --- */
-        #meeting-room {
-            display: none; width: 100vw; height: 100vh; flex-direction: column;
-            background: #000;
-        }
-
-        .top-bar {
-            height: 70px; background: rgba(10, 14, 23, 0.8); backdrop-filter: blur(10px);
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 30px; border-bottom: 1px solid var(--border); z-index: 10;
-        }
-
-        .video-wall {
-            flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 20px; padding: 25px; align-items: center; justify-content: center;
-        }
-
-        .video-box {
-            position: relative; width: 100%; height: 100%; max-height: 600px;
-            background: #111; border-radius: 25px; overflow: hidden;
-            border: 1px solid var(--border); box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-        }
-
-        video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-
-        .user-label {
-            position: absolute; bottom: 20px; left: 20px;
-            background: rgba(0,0,0,0.6); padding: 8px 15px;
-            border-radius: 10px; font-size: 14px; backdrop-filter: blur(5px);
-        }
-
-        /* ПАНЕЛЬ УПРАВЛЕНИЯ */
-        .controls {
-            height: 100px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-            position: absolute; bottom: 0; left: 0; right: 0;
-            display: flex; align-items: center; justify-content: center; gap: 20px;
-            z-index: 10;
-        }
-
-        .c-btn {
-            width: 60px; height: 60px; border-radius: 20px; border: 1px solid var(--border);
-            background: rgba(255,255,255,0.05); color: #fff; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; font-size: 24px;
-        }
-        .c-btn:hover { background: rgba(255,255,255,0.15); border-color: var(--accent); }
-        .c-btn.active { background: var(--accent); color: #000; }
-        .c-btn.end { background: #ff3860; border: none; width: 80px; border-radius: 30px; }
-
+        :root { --accent: #00f2fe; --bg: #050a10; }
+        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); padding: 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); width: 400px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .tabs { display: flex; margin-bottom: 20px; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 5px; }
+        .tab { flex: 1; padding: 10px; cursor: pointer; border-radius: 8px; font-weight: bold; opacity: 0.5; }
+        .tab.active { background: var(--accent); color: #000; opacity: 1; }
+        input { width: 100%; padding: 15px; margin: 8px 0; border-radius: 12px; border: 1px solid #333; background: #000; color: #fff; }
+        .btn { width: 100%; padding: 18px; background: var(--accent); color: #000; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; margin-top: 15px; text-transform: uppercase; }
+        #room { display: none; width: 100vw; height: 100vh; flex-direction: column; background: #000; }
+        .top-bar { padding: 20px; display: flex; justify-content: space-between; background: rgba(0,0,0,0.8); border-bottom: 1px solid #222; }
+        video { width: 100%; height: 80%; object-fit: cover; border-radius: 20px; }
     </style>
 </head>
 <body>
 
-    <div id="lobby" class="lobby-container">
-        <h1 style="font-size: 2.5rem; margin-top: 0;">AURA <span style="color:var(--accent); font-weight: 300;">Connect</span></h1>
-        
+    <div id="lobby" class="glass">
+        <h1 style="color: var(--accent); margin-bottom: 30px;">AURA <span style="font-weight: 300;">Connect</span></h1>
         <div class="tabs">
-            <div id="tab-join" class="tab active" onclick="setMode('join')">Войти</div>
-            <div id="tab-create" class="tab" onclick="setMode('create')">Создать</div>
+            <div id="t-join" class="tab active" onclick="switchMode('join')">Войти</div>
+            <div id="t-create" class="tab" onclick="switchMode('create')">Создать</div>
         </div>
-
-        <div id="form-join">
-            <input type="text" id="join-id" placeholder="ID Сферы">
-            <input type="password" id="join-key" placeholder="Ключ доступа">
-            <button class="btn-main" onclick="startMeeting('guest')">Подключиться</button>
-        </div>
-
-        <div id="form-create" style="display:none">
-            <input type="text" id="create-id" placeholder="Придумайте название Сферы">
-            <input type="password" id="create-key" placeholder="Придумайте ключ доступа">
-            <button class="btn-main" onclick="startMeeting('host')">Запустить трансляцию</button>
-        </div>
+        <input type="text" id="sphere-id" placeholder="ID Сферы">
+        <input type="password" id="sphere-key" placeholder="Ключ доступа">
+        <button class="btn" onclick="go()">Запустить</button>
     </div>
 
-    <div id="meeting-room">
+    <div id="room">
         <div class="top-bar">
-            <div style="display:flex; align-items:center; gap:15px;">
-                <div style="width:12px; height:12px; background:red; border-radius:50%; animation: pulse 1s infinite;"></div>
-                <span id="room-title" style="font-weight:bold; letter-spacing:1px;"></span>
-            </div>
-            <div id="status-text" style="color:var(--accent); font-size: 14px;">Статус: В эфире</div>
+            <span id="room-name">Сфера: ...</span>
+            <button onclick="location.reload()" style="background:red; border:none; color:#fff; border-radius: 5px; padding: 5px 15px;">ВЫЙТИ</button>
         </div>
-
-        <div class="video-wall">
-            <div class="video-box">
-                <video id="main-video" autoplay playsinline></video>
-                <div class="user-label" id="user-name-label">Вы</div>
-            </div>
-        </div>
-
-        <div class="controls">
-            <button class="c-btn active" id="mic-btn" onclick="toggleMic()">🎙️</button>
-            <button class="c-btn active" id="cam-btn" onclick="toggleCam()">📷</button>
-            <button class="c-btn">🖥️</button>
-            <button class="c-btn">💬</button>
-            <button class="c-btn end" onclick="exitMeeting()">📞</button>
-        </div>
+        <video id="v-local" autoplay playsinline></video>
     </div>
 
     <script>
-        let mode = 'join';
-        let stream = null;
-
-        function setMode(m) {
-            mode = m;
-            document.getElementById('tab-join').classList.toggle('active', m === 'join');
-            document.getElementById('tab-create').classList.toggle('active', m === 'create');
-            document.getElementById('form-join').style.display = m === 'join' ? 'block' : 'none';
-            document.getElementById('form-create').style.display = m === 'create' ? 'block' : 'none';
+        let currentMode = 'join';
+        function switchMode(m) {
+            currentMode = m;
+            document.getElementById('t-join').classList.toggle('active', m === 'join');
+            document.getElementById('t-create').classList.toggle('active', m === 'create');
         }
 
-        async function startMeeting(role) {
-            const id = role === 'host' ? document.getElementById('create-id').value : document.getElementById('join-id').value;
-            const key = role === 'host' ? document.getElementById('create-key').value : document.getElementById('join-key').value;
+        async function go() {
+            const id = document.getElementById('sphere-id').value;
+            const key = document.getElementById('sphere-key').value;
+            if(!id || !key) return alert("Заполни данные!");
 
-            if(!id || !key) {
-                alert("Пожалуйста, заполните все поля!");
-                return;
-            }
-
-            // Переходим в комнату
+            // Эмуляция проверки ключа (в реале тут запрос к БД)
             document.getElementById('lobby').style.display = 'none';
-            document.getElementById('meeting-room').style.display = 'flex';
-            document.getElementById('room-title').innerText = "СФЕРА: " + id.toUpperCase();
-            
+            document.getElementById('room').style.display = 'flex';
+            document.getElementById('room-name').innerText = "СФЕРА: " + id;
+
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                document.getElementById('main-video').srcObject = stream;
-            } catch (err) {
-                alert("Камера не найдена или доступ запрещен");
-                exitMeeting();
-            }
-        }
-
-        function toggleMic() {
-            const track = stream.getAudioTracks()[0];
-            track.enabled = !track.enabled;
-            document.getElementById('mic-btn').classList.toggle('active', track.enabled);
-        }
-
-        function toggleCam() {
-            const track = stream.getVideoTracks()[0];
-            track.enabled = !track.enabled;
-            document.getElementById('cam-btn').classList.toggle('active', track.enabled);
-        }
-
-        function exitMeeting() {
-            if(stream) stream.getTracks().forEach(t => t.stop());
-            location.reload();
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('v-local').srcObject = stream;
+            } catch (e) { alert("Ошибка камеры"); }
         }
     </script>
 </body>
