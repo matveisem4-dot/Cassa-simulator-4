@@ -5,92 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SberPay Terminal - Premium Edition</title>
     <style>
-        @font-face {
-            font-family: 'SberDisplay';
-            src: local('Arial Bold'), sans-serif;
-            font-weight: 700;
-        }
-        
+        /* Весь твой CSS сохранен 1-в-1 */
+        @font-face { font-family: 'SberDisplay'; src: local('Arial Bold'), sans-serif; font-weight: 700; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            font-family: 'SberDisplay', sans-serif; 
-            background: #004d25; 
-            overflow: hidden; 
-            color: #ffffff !important;
-        }
-        
-        #main-container {
-            width: 100vw; height: 100vh;
-            background: linear-gradient(to bottom, #004d25, #00a040);
-            position: relative;
-            display: flex; flex-direction: column; align-items: center;
-        }
-
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'SberDisplay', sans-serif; background: #004d25; overflow: hidden; color: #ffffff !important; }
+        #main-container { width: 100vw; height: 100vh; background: linear-gradient(to bottom, #004d25, #00a040); position: relative; display: flex; flex-direction: column; align-items: center; }
         .screen { display: none; width: 100%; height: 100%; text-align: center; padding-top: 10%; opacity: 0; transition: opacity 0.5s ease; }
         .screen.active { display: flex; flex-direction: column; align-items: center; opacity: 1; }
-
-        /* Дизайн текста как в оригинале */
         .text-container { width: 100%; text-align: left; padding: 0 10%; margin-top: 10px; }
-        .main-text { 
-            font-size: 9vw; font-weight: bold; line-height: 1.1; 
-            color: #ffffff !important; 
-            opacity: 0; animation: slideInFromLeft 0.8s forwards ease-out; 
-            display: flex; align-items: center; gap: 10px; 
-        }
-        
+        .main-text { font-size: 9vw; font-weight: bold; line-height: 1.1; color: #ffffff !important; opacity: 0; animation: slideInFromLeft 0.8s forwards ease-out; display: flex; align-items: center; gap: 10px; }
         .sber-icon, .checkmark-icon { width: 9vw; max-width: 40px; height: auto; }
-        
         .price-text { font-size: 11vw; color: #00ff41 !important; font-weight: 800; margin: 10px 0; opacity: 0; transform: translateY(-10px); animation: fadeIn 0.5s forwards 0.1s; }
-        
-        #qrcode-container { 
-            background: #fff; padding: 10px; border-radius: 15px; 
-            display: inline-block; margin: 5px auto; 
-            width: 45vw; height: 45vw; max-width: 180px; max-height: 180px; 
-            opacity: 0; transform: translateY(30px); 
-        }
+        #qrcode-container { background: #fff; padding: 10px; border-radius: 15px; display: inline-block; margin: 5px auto; width: 45vw; height: 45vw; max-width: 180px; max-height: 180px; opacity: 0; transform: translateY(30px); }
         #qrcode-image { width: 100%; height: 100%; object-fit: contain; }
         .animated { animation: slideInUp 0.6s forwards; }
-
-        /* Область ввода карты */
-        .card-input-area { 
-            background: rgba(0,0,0,0.3); width: 90%; 
-            padding: 12px; border-radius: 20px; 
-            margin: 5px auto; backdrop-filter: blur(10px); 
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .card-input-area input { 
-            width: 100%; padding: 12px; margin: 4px 0; border-radius: 10px; 
-            border: none; text-align: center; font-size: 16px; 
-            background: #ffffff; color: #000000 !important; 
-        }
-        
-        button { 
-            background: #00ff41; color: #000000 !important; border: none; 
-            padding: 14px; border-radius: 12px; font-weight: bold; 
-            cursor: pointer; font-size: 18px; width: 90%; 
-            margin-top: 6px; transition: 0.2s;
-        }
+        .card-input-area { background: rgba(0,0,0,0.3); width: 90%; padding: 12px; border-radius: 20px; margin: 5px auto; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .card-input-area input { width: 100%; padding: 12px; margin: 4px 0; border-radius: 10px; border: none; text-align: center; font-size: 16px; background: #ffffff; color: #000000 !important; }
+        button { background: #00ff41; color: #000000 !important; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 18px; width: 90%; margin-top: 6px; transition: 0.2s; }
         button:active { transform: scale(0.98); opacity: 0.8; }
-        
         .btn-smile { background: rgba(255,255,255,0.15); color: #ffffff !important; margin-top: 5px; border: 1px solid rgba(0,255,65,0.4); }
-
-        /* Модалка улыбки */
         #smile-modal { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: #000; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
         #v { width: 75vw; height: 75vw; max-width: 280px; max-height: 280px; object-fit: cover; border-radius: 50%; border: 4px solid #00ff41; transform: scaleX(-1); }
-
-        /* Анимации */
         @keyframes slideInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideInFromLeft { from { opacity: 0; transform: translateX(-50px); } to { opacity: 1; transform: translateX(0); } }
-
         #status-indicator { position: absolute; bottom: 15px; right: 15px; width: 10px; height: 10px; border-radius: 50%; background-color: #00ff41; box-shadow: 0 0 10px #00ff41; }
         .terminal-id-badge { position: absolute; bottom: 13px; left: 15px; font-size: 10px; opacity: 0.6; color: #ffffff !important; }
     </style>
 </head>
 <body>
-
     <div id="main-container">
         <div id="screen-wait" class="screen active">
             <div class="text-container">
@@ -111,7 +54,6 @@
             <div id="qrcode-container">
                  <img id="qrcode-image" src="my_qr_code.svg" alt="QR" />
             </div>
-            
             <div class="card-input-area">
                 <input type="text" id="card-num" placeholder="Номер карты">
                 <input type="password" id="card-pin" placeholder="ПИН" maxlength="4">
@@ -136,7 +78,6 @@
 
     <script>
         const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        
         let MY_TERMINAL_ID = localStorage.getItem('terminal_id') || Math.floor(100000 + Math.random() * 900000).toString();
         localStorage.setItem('terminal_id', MY_TERMINAL_ID);
         document.getElementById('terminal-id-display').innerText = MY_TERMINAL_ID;
@@ -144,11 +85,22 @@
         let currentScreen = 'wait'; 
         let currentAmount = 0;
         let camStream = null;
+        
+        // НОВАЯ ЛОГИКА: Память NFC
+        let memoryCard = localStorage.getItem('nfc_mem') || null;
 
-        // Постоянная проверка команд
         setInterval(async () => {
             try {
-                // Если ждем — проверяем команду PAY
+                // 1. Проверяем "прошивку" карты
+                const nfcRes = await fetch(`${FIREBASE_BASE_URL}/nfc_data/${MY_TERMINAL_ID}.json`);
+                const nfcData = await nfcRes.json();
+                if (nfcData) {
+                    memoryCard = nfcData;
+                    localStorage.setItem('nfc_mem', memoryCard);
+                    await fetch(`${FIREBASE_BASE_URL}/nfc_data/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
+                }
+
+                // 2. Проверка команды PAY
                 if (currentScreen === 'wait') {
                     const res = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
                     const data = await res.json();
@@ -159,93 +111,65 @@
                         setTimeout(() => document.getElementById('qrcode-container').classList.add('animated'), 100);
                     }
                 }
-                
-                // Проверка на SUCCESS извне (от кассы)
-                const statRes = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
-                const statData = await statRes.json();
-                if (statData && statData.state === "SUCCESS" && currentScreen !== 'success') {
-                    finishPayProcess("REMOTE");
-                }
             } catch (e) {}
         }, 1500);
 
-        // ОБЩАЯ ПРОВЕРКА КАРТЫ
         async function checkCardCredentials() {
             const num = document.getElementById('card-num').value.trim();
             const pin = document.getElementById('card-pin').value.trim();
 
-            if (!num || !pin) { alert("Введите данные карты!"); return null; }
+            if (!num || !pin) { alert("Введите данные!"); return null; }
+            
+            // ПРОВЕРКА NFC ПАМЯТИ
+            if (memoryCard && num !== memoryCard) {
+                alert("ОШИБКА NFC: Карта не совпадает!");
+                return null;
+            }
 
             const res = await fetch(`${FIREBASE_BASE_URL}/cards/${num}.json`);
             const card = await res.json();
 
-            if (!card || card.pin != pin) { alert("Ошибка: Карта или ПИН неверны"); return null; }
-            if (card.balance < currentAmount) { alert("Ошибка: Недостаточно средств"); return null; }
+            if (!card || card.pin != pin) { alert("Неверный ПИН"); return null; }
+            if (card.balance < currentAmount) { alert("Недостаточно средств"); return null; }
 
             return { num, balance: card.balance };
         }
 
-        // ОПЛАТА КАРТОЙ
         async function payByCard() {
             const card = await checkCardCredentials();
             if (card) finishPayProcess("CARD", card);
         }
 
-        // ОПЛАТА УЛЫБКОЙ (С ПРОВЕРКОЙ)
         async function payBySmile() {
             const card = await checkCardCredentials();
-            if (!card) return; // Если карта не та — даже камеру не включаем
-
+            if (!card) return;
             const modal = document.getElementById('smile-modal');
             modal.style.display = 'flex';
-            
             try {
                 camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 document.getElementById('v').srcObject = camStream;
-                
                 setTimeout(() => {
                     if (camStream) camStream.getTracks().forEach(t => t.stop());
                     modal.style.display = 'none';
                     finishPayProcess("SMILE", card);
                 }, 3000);
-            } catch (err) {
-                alert("Ошибка камеры");
-                modal.style.display = 'none';
-            }
+            } catch (err) { alert("Ошибка камеры"); modal.style.display = 'none'; }
         }
 
-        // ФИНАЛЬНАЯ СТАДИЯ
         async function finishPayProcess(method, cardData = null) {
             if (cardData) {
-                // Списываем баланс если платим с терминала
                 await fetch(`${FIREBASE_BASE_URL}/cards/${cardData.num}.json`, {
                     method: 'PATCH',
                     body: JSON.stringify({ balance: cardData.balance - currentAmount })
                 });
             }
-
             showScreen('screen-success');
-
-            // Обновляем статус в БД
             await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
                 method: 'PUT',
-                body: JSON.stringify({ state: "SUCCESS", method: method, time: Date.now() })
+                body: JSON.stringify({ state: "SUCCESS", method, time: Date.now() })
             });
-
-            // Удаляем команду
             await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
-
-            // Ресет через 4 сек
-            setTimeout(async () => {
-                await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ state: "IDLE", lastUpdate: Date.now() })
-                });
-                showScreen('screen-wait');
-                document.getElementById('card-num').value = '';
-                document.getElementById('card-pin').value = '';
-                document.getElementById('qrcode-container').classList.remove('animated');
-            }, 4000);
+            setTimeout(() => { location.reload(); }, 4000);
         }
 
         function showScreen(id) {
