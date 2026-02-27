@@ -2,64 +2,196 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>AURA Connect | Webinar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA Connect | PRO</title>
     <style>
-        :root { --accent: #00f2fe; --bg: #050a10; }
-        body { margin: 0; background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); padding: 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); width: 400px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .tabs { display: flex; margin-bottom: 20px; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 5px; }
-        .tab { flex: 1; padding: 10px; cursor: pointer; border-radius: 8px; font-weight: bold; opacity: 0.5; }
-        .tab.active { background: var(--accent); color: #000; opacity: 1; }
-        input { width: 100%; padding: 15px; margin: 8px 0; border-radius: 12px; border: 1px solid #333; background: #000; color: #fff; }
-        .btn { width: 100%; padding: 18px; background: var(--accent); color: #000; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; margin-top: 15px; text-transform: uppercase; }
-        #room { display: none; width: 100vw; height: 100vh; flex-direction: column; background: #000; }
-        .top-bar { padding: 20px; display: flex; justify-content: space-between; background: rgba(0,0,0,0.8); border-bottom: 1px solid #222; }
-        video { width: 100%; height: 80%; object-fit: cover; border-radius: 20px; }
+        :root {
+            --accent: #00f2fe;
+            --error: #ff3860;
+            --bg: #0a0e17;
+            --card: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            margin: 0; background: var(--bg); color: #fff;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            display: flex; align-items: center; justify-content: center; height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- ЛОББИ --- */
+        .aura-card {
+            background: var(--card); backdrop-filter: blur(20px);
+            padding: 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1);
+            width: 100%; max-width: 400px; text-align: center;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            transition: 0.5s;
+        }
+
+        h1 { font-weight: 300; letter-spacing: 5px; color: var(--accent); margin-bottom: 30px; }
+
+        .input-group { position: relative; margin-bottom: 15px; }
+        
+        input {
+            width: 100%; padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.4); color: #fff; font-size: 16px; transition: 0.3s;
+        }
+        input:focus { border-color: var(--accent); outline: none; background: rgba(0,0,0,0.6); }
+
+        .btn-join {
+            width: 100%; padding: 16px; border-radius: 12px; border: none;
+            background: var(--accent); color: #000; font-weight: bold;
+            font-size: 16px; cursor: pointer; transition: 0.3s;
+        }
+        .btn-join:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,242,254,0.3); }
+
+        /* Кастомный алерт внутри формы */
+        #aura-alert {
+            color: var(--error); font-size: 14px; margin-top: 15px;
+            display: none; animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* --- ИНТЕРФЕЙС ТРАНСЛЯЦИИ --- */
+        #stream-ui {
+            display: none; width: 100vw; height: 100vh; flex-direction: column;
+        }
+
+        .stream-header {
+            padding: 20px 40px; background: rgba(0,0,0,0.8);
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .live-tag {
+            background: var(--error); padding: 4px 12px; border-radius: 4px;
+            font-size: 12px; font-weight: bold; animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .main-stage {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            background: #000; position: relative;
+        }
+
+        video {
+            max-width: 90%; max-height: 85%; border-radius: 16px;
+            box-shadow: 0 0 100px rgba(0,242,254,0.1);
+            background: #111;
+        }
+
+        .controls-bar {
+            height: 80px; background: rgba(255,255,255,0.03);
+            display: flex; align-items: center; justify-content: center; gap: 20px;
+        }
+
+        .circle-btn {
+            width: 50px; height: 50px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1);
+            background: none; color: #fff; cursor: pointer; transition: 0.3s;
+        }
+        .circle-btn:hover { background: var(--accent); color: #000; }
+        .btn-exit { background: var(--error); border: none; }
     </style>
 </head>
 <body>
 
-    <div id="lobby" class="glass">
-        <h1 style="color: var(--accent); margin-bottom: 30px;">AURA <span style="font-weight: 300;">Connect</span></h1>
-        <div class="tabs">
-            <div id="t-join" class="tab active" onclick="switchMode('join')">Войти</div>
-            <div id="t-create" class="tab" onclick="switchMode('create')">Создать</div>
+    <div id="lobby-ui" class="aura-card">
+        <h1>AURA</h1>
+        <div class="input-group">
+            <input type="text" id="sphere-name" placeholder="ID Сферы (Название)">
         </div>
-        <input type="text" id="sphere-id" placeholder="ID Сферы">
-        <input type="password" id="sphere-key" placeholder="Ключ доступа">
-        <button class="btn" onclick="go()">Запустить</button>
+        <div class="input-group">
+            <input type="password" id="sphere-key" placeholder="Ключ доступа">
+        </div>
+        
+        <button class="btn-join" onclick="connectToSphere()">ПОДКЛЮЧИТЬСЯ</button>
+        
+        <div id="aura-alert">Ошибка: Неверный ключ доступа</div>
     </div>
 
-    <div id="room">
-        <div class="top-bar">
-            <span id="room-name">Сфера: ...</span>
-            <button onclick="location.reload()" style="background:red; border:none; color:#fff; border-radius: 5px; padding: 5px 15px;">ВЫЙТИ</button>
+    <div id="stream-ui">
+        <div class="stream-header">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <div class="live-tag">LIVE</div>
+                <span id="display-name" style="letter-spacing: 2px;">ПОТОК: ОЖИДАНИЕ</span>
+            </div>
+            <button class="circle-btn btn-exit" onclick="exitSphere()">✕</button>
         </div>
-        <video id="v-local" autoplay playsinline></video>
+
+        <div class="main-stage">
+            <video id="webcam" autoplay playsinline muted></video>
+        </div>
+
+        <div class="controls-bar">
+            <button class="circle-btn" onclick="toggleCam()">📷</button>
+            <button class="circle-btn" onclick="toggleMic()">🎙️</button>
+            <button class="circle-btn">💬</button>
+        </div>
     </div>
 
     <script>
-        let currentMode = 'join';
-        function switchMode(m) {
-            currentMode = m;
-            document.getElementById('t-join').classList.toggle('active', m === 'join');
-            document.getElementById('t-create').classList.toggle('active', m === 'create');
+        let localStream = null;
+
+        // Вместо алертов — внутренняя функция уведомлений
+        function showAuraError(text) {
+            const el = document.getElementById('aura-alert');
+            el.innerText = text;
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 3000);
         }
 
-        async function go() {
-            const id = document.getElementById('sphere-id').value;
-            const key = document.getElementById('sphere-key').value;
-            if(!id || !key) return alert("Заполни данные!");
+        async function connectToSphere() {
+            const id = document.getElementById('sphere-name').value.trim();
+            const key = document.getElementById('sphere-key').value.trim();
 
-            // Эмуляция проверки ключа (в реале тут запрос к БД)
-            document.getElementById('lobby').style.display = 'none';
-            document.getElementById('room').style.display = 'flex';
-            document.getElementById('room-name').innerText = "СФЕРА: " + id;
+            if(!id || !key) {
+                showAuraError("Введите ID и Ключ");
+                return;
+            }
+
+            // Имитация проверки доступа (можно привязать к Firebase)
+            // Допустим, создаем встречу, если поля заполнены
+            enterRoom(id);
+        }
+
+        async function enterRoom(name) {
+            document.getElementById('lobby-ui').style.display = 'none';
+            document.getElementById('stream-ui').style.display = 'flex';
+            document.getElementById('display-name').innerText = "СФЕРА: " + name.toUpperCase();
 
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                document.getElementById('v-local').srcObject = stream;
-            } catch (e) { alert("Ошибка камеры"); }
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('webcam').srcObject = localStream;
+            } catch (e) {
+                showAuraError("Доступ к камере отклонен");
+            }
+        }
+
+        function toggleCam() {
+            if(localStream) {
+                const videoTrack = localStream.getVideoTracks()[0];
+                videoTrack.enabled = !videoTrack.enabled;
+            }
+        }
+
+        function toggleMic() {
+            if(localStream) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                audioTrack.enabled = !audioTrack.enabled;
+            }
+        }
+
+        function exitSphere() {
+            if(localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+            location.reload();
         }
     </script>
 </body>
