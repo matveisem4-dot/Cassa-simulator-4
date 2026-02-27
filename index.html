@@ -3,350 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SberPay Terminal Premium</title>
+    <title>SberPay Terminal - Premium Edition</title>
     <style>
-        /* --- ФУНДАМЕНТАЛЬНЫЕ СТИЛИ (3 ГОДА РАБОТЫ) --- */
         @font-face {
             font-family: 'SberDisplay';
-            src: local('Arial Bold'), local('Roboto-Bold'), sans-serif;
+            src: local('Arial Bold'), sans-serif;
             font-weight: 700;
         }
-
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            font-family: 'SberDisplay', sans-serif; 
+            background: #004d25; 
+            overflow: hidden; 
+            color: #ffffff !important;
         }
-
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            font-family: 'SberDisplay', sans-serif;
-            background: #004d25;
-            overflow: hidden;
-            color: #ffffff;
-        }
-
+        
         #main-container {
-            width: 100vw;
-            height: 100vh;
-            background: radial-gradient(circle at center, #00a040 0%, #004d25 100%);
+            width: 100vw; height: 100vh;
+            background: linear-gradient(to bottom, #004d25, #00a040);
             position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
+            display: flex; flex-direction: column; align-items: center;
         }
 
-        /* --- ЭКРАНЫ И АНИМАЦИИ --- */
-        .screen {
-            display: none;
-            width: 100%;
-            height: 100%;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 20px;
-            position: absolute;
-            top: 0;
-            left: 0;
-            animation: fadeIn 0.6s ease-out forwards;
-        }
+        .screen { display: none; width: 100%; height: 100%; text-align: center; padding-top: 10%; opacity: 0; transition: opacity 0.5s ease; }
+        .screen.active { display: flex; flex-direction: column; align-items: center; opacity: 1; }
 
-        .screen.active {
-            display: flex;
+        /* Дизайн текста как в оригинале */
+        .text-container { width: 100%; text-align: left; padding: 0 10%; margin-top: 10px; }
+        .main-text { 
+            font-size: 9vw; font-weight: bold; line-height: 1.1; 
+            color: #ffffff !important; 
+            opacity: 0; animation: slideInFromLeft 0.8s forwards ease-out; 
+            display: flex; align-items: center; gap: 10px; 
         }
+        
+        .sber-icon, .checkmark-icon { width: 9vw; max-width: 40px; height: auto; }
+        
+        .price-text { font-size: 11vw; color: #00ff41 !important; font-weight: 800; margin: 10px 0; opacity: 0; transform: translateY(-10px); animation: fadeIn 0.5s forwards 0.1s; }
+        
+        #qrcode-container { 
+            background: #fff; padding: 10px; border-radius: 15px; 
+            display: inline-block; margin: 5px auto; 
+            width: 45vw; height: 45vw; max-width: 180px; max-height: 180px; 
+            opacity: 0; transform: translateY(30px); 
+        }
+        #qrcode-image { width: 100%; height: 100%; object-fit: contain; }
+        .animated { animation: slideInUp 0.6s forwards; }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
+        /* Область ввода карты */
+        .card-input-area { 
+            background: rgba(0,0,0,0.3); width: 90%; 
+            padding: 12px; border-radius: 20px; 
+            margin: 5px auto; backdrop-filter: blur(10px); 
+            border: 1px solid rgba(255,255,255,0.1);
         }
+        .card-input-area input { 
+            width: 100%; padding: 12px; margin: 4px 0; border-radius: 10px; 
+            border: none; text-align: center; font-size: 16px; 
+            background: #ffffff; color: #000000 !important; 
+        }
+        
+        button { 
+            background: #00ff41; color: #000000 !important; border: none; 
+            padding: 14px; border-radius: 12px; font-weight: bold; 
+            cursor: pointer; font-size: 18px; width: 90%; 
+            margin-top: 6px; transition: 0.2s;
+        }
+        button:active { transform: scale(0.98); opacity: 0.8; }
+        
+        .btn-smile { background: rgba(255,255,255,0.15); color: #ffffff !important; margin-top: 5px; border: 1px solid rgba(0,255,65,0.4); }
 
-        @keyframes slideUp {
-            from { transform: translateY(50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
+        /* Модалка улыбки */
+        #smile-modal { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: #000; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
+        #v { width: 75vw; height: 75vw; max-width: 280px; max-height: 280px; object-fit: cover; border-radius: 50%; border: 4px solid #00ff41; transform: scaleX(-1); }
 
-        /* --- ТЕКСТОВЫЕ БЛОКИ --- */
-        .header-group {
-            margin-bottom: 40px;
-            animation: slideUp 0.8s ease-out;
-        }
+        /* Анимации */
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInFromLeft { from { opacity: 0; transform: translateX(-50px); } to { opacity: 1; transform: translateX(0); } }
 
-        .main-text {
-            font-size: 10vw;
-            font-weight: 900;
-            line-height: 1;
-            letter-spacing: -1px;
-            text-transform: uppercase;
-            margin: 0;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-
-        .sub-text {
-            font-size: 4.5vw;
-            opacity: 0.9;
-            margin-top: 15px;
-            font-weight: 400;
-        }
-
-        .price-display {
-            font-size: 14vw;
-            color: #00ff41;
-            font-weight: 800;
-            margin: 25px 0;
-            filter: drop-shadow(0 0 15px rgba(0, 255, 65, 0.4));
-        }
-
-        /* --- ПОЛЯ ВВОДА (ИНТЕРФЕЙС) --- */
-        .input-card-container {
-            width: 90%;
-            max-width: 450px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            padding: 30px;
-            border-radius: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            margin-bottom: 20px;
-        }
-
-        input {
-            width: 100%;
-            height: 65px;
-            background: #ffffff;
-            border: none;
-            border-radius: 18px;
-            margin-bottom: 15px;
-            font-size: 22px;
-            font-weight: bold;
-            text-align: center;
-            color: #000;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        input::placeholder {
-            color: #ccc;
-            font-weight: normal;
-        }
-
-        /* --- КНОПКИ --- */
-        .sber-button {
-            width: 90%;
-            max-width: 450px;
-            height: 75px;
-            background: #00ff41;
-            color: #000000;
-            border: none;
-            border-radius: 20px;
-            font-size: 24px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 10px 25px rgba(0, 255, 65, 0.3);
-        }
-
-        .sber-button:active {
-            transform: scale(0.95);
-            background: #00e63a;
-        }
-
-        /* --- ИКОНКИ И ИНДИКАТОРЫ --- */
-        .success-icon {
-            width: 120px;
-            height: 120px;
-            background: #00ff41;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 60px;
-            color: #000;
-            margin-bottom: 30px;
-            box-shadow: 0 0 40px rgba(0, 255, 65, 0.5);
-        }
-
-        .nfc-hint {
-            position: absolute;
-            bottom: 40px;
-            font-size: 14px;
-            opacity: 0.6;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .nfc-dot {
-            width: 8px;
-            height: 8px;
-            background: #00ff41;
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.5); opacity: 0.5; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        /* --- ТЕХНИЧЕСКИЙ СЛОЙ --- */
-        #debug-info {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            font-size: 10px;
-            opacity: 0.4;
-            text-align: left;
-        }
+        #status-indicator { position: absolute; bottom: 15px; right: 15px; width: 10px; height: 10px; border-radius: 50%; background-color: #00ff41; box-shadow: 0 0 10px #00ff41; }
+        .terminal-id-badge { position: absolute; bottom: 13px; left: 15px; font-size: 10px; opacity: 0.6; color: #ffffff !important; }
     </style>
 </head>
 <body>
 
     <div id="main-container">
-        <div id="debug-info">
-            TID: <span id="tid-val">654321</span><br>
-            NFC_MEM: <span id="nfc-mem-status">Empty</span>
-        </div>
-
         <div id="screen-wait" class="screen active">
-            <div class="header-group">
+            <div class="text-container">
                 <div class="main-text">ПЛАТИТЕ</div>
-                <div class="main-text" style="color: #00ff41;">КАК ВАМ</div>
-                <div class="main-text">УДОБНО</div>
-            </div>
-            <div class="sub-text">Приложите карту, телефон или QR</div>
-            <div class="nfc-hint">
-                <div class="nfc-dot"></div>
-                Ожидание сигнала...
+                <div class="main-text">
+                    <img src="https://www.sberbank.ru/common/img/uploaded/files/oplata_ulybkoy/images/blindssmile_howto.webp" class="sber-icon">
+                    КАК ВАМ
+                </div>
+                <div class="main-text">
+                    УДОБНО
+                    <img src="https://esa-res.online.sberbank.ru/ESA/sbol/r-91.0.0/legacy/images/hNnvG9ma72GAw3xUBlI9bA==.png" class="checkmark-icon">
+                </div>
             </div>
         </div>
 
         <div id="screen-pay" class="screen">
-            <div class="sub-text">СУММА К ОПЛАТЕ</div>
-            <div id="price-val" class="price-display">0.00 ₽</div>
-            
-            <div class="input-card-container">
-                <input type="text" id="card-input" placeholder="0000 0000 0000 0000" maxlength="19">
-                <input type="password" id="pin-input" placeholder="ПИН-КОД" maxlength="4">
+            <div id="amount-val" class="price-text">0.00 ₽</div>
+            <div id="qrcode-container">
+                 <img id="qrcode-image" src="my_qr_code.svg" alt="QR" />
             </div>
             
-            <button class="sber-button" onclick="validateAndPay()">ОПЛАТИТЬ</button>
-            <p style="margin-top: 15px; opacity: 0.6; font-size: 12px;">Безопасная оплата SberPay</p>
+            <div class="card-input-area">
+                <input type="text" id="card-num" placeholder="Номер карты">
+                <input type="password" id="card-pin" placeholder="ПИН" maxlength="4">
+                <button onclick="payByCard()">ОПЛАТИТЬ</button>
+            </div>
+            <button class="btn-smile" onclick="payBySmile()">🙂 Оплата улыбкой</button>
         </div>
 
         <div id="screen-success" class="screen">
-            <div class="success-icon">✓</div>
-            <div class="main-text">ОПЛАЧЕНО</div>
-            <div class="sub-text">Чек отправлен в СберБанк Онлайн</div>
-            <div id="final-amount" style="margin-top: 20px; font-weight: bold; opacity: 0.8;"></div>
+            <div style="font-size: 80px; margin-top: 80px;">✅</div>
+            <h1 style="color: #00ff41 !important; font-size: 32px;">ОПЛАЧЕНО</h1>
+        </div>
+
+        <div class="terminal-id-badge">ID: <span id="terminal-id-display">...</span></div>
+        <div id="status-indicator"></div>
+
+        <div id="smile-modal">
+            <video id="v" autoplay playsinline></video>
+            <h2 style="color: #00ff41 !important; margin-top: 20px; font-size: 20px;">УЛЫБНИТЕСЬ</h2>
         </div>
     </div>
 
     <script>
-        /* --- КОНФИГУРАЦИЯ --- */
-        const FIREBASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        const TERMINAL_ID = localStorage.getItem('sber_tid') || "654321";
-        document.getElementById('tid-val').innerText = TERMINAL_ID;
-
-        let memoryNfc = localStorage.getItem('nfc_storage') || null;
-        let activePrice = 0;
-
-        if(memoryNfc) document.getElementById('nfc-mem-status').innerText = "Loaded: " + memoryNfc.slice(-4);
-
-        /* --- ЯДРО СИСТЕМЫ (NFC + ОПЛАТА) --- */
+        const FIREBASE_BASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
         
-        // Фоновый процесс: слушаем команды от кассы
+        let MY_TERMINAL_ID = localStorage.getItem('terminal_id') || Math.floor(100000 + Math.random() * 900000).toString();
+        localStorage.setItem('terminal_id', MY_TERMINAL_ID);
+        document.getElementById('terminal-id-display').innerText = MY_TERMINAL_ID;
+
+        let currentScreen = 'wait'; 
+        let currentAmount = 0;
+        let camStream = null;
+
+        // Постоянная проверка команд
         setInterval(async () => {
             try {
-                // 1. Проверяем, не прислала ли касса новую карту для записи (NFC Flash)
-                const nfcResponse = await fetch(`${FIREBASE_URL}/nfc_data/${TERMINAL_ID}.json`);
-                const nfcData = await nfcResponse.json();
-                
-                if (nfcData) {
-                    memoryNfc = nfcData;
-                    localStorage.setItem('nfc_storage', memoryNfc);
-                    document.getElementById('nfc-mem-status').innerText = "Stored: " + memoryNfc;
-                    // Удаляем метку из БД после записи в память терминала
-                    await fetch(`${FIREBASE_URL}/nfc_data/${TERMINAL_ID}.json`, { method: 'DELETE' });
-                    console.log("NFC карта успешно записана в память терминала");
+                // Если ждем — проверяем команду PAY
+                if (currentScreen === 'wait') {
+                    const res = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
+                    const data = await res.json();
+                    if (data && data.command === "PAY") {
+                        currentAmount = parseFloat(data.amount);
+                        document.getElementById('amount-val').innerText = currentAmount.toFixed(2) + " ₽";
+                        showScreen('screen-pay');
+                        setTimeout(() => document.getElementById('qrcode-container').classList.add('animated'), 100);
+                    }
                 }
-
-                // 2. Проверяем, нет ли команды на оплату
-                const payResponse = await fetch(`${FIREBASE_URL}/commands/${TERMINAL_ID}.json`);
-                const payData = await payResponse.json();
                 
-                if (payData && payData.command === "PAY") {
-                    activePrice = payData.amount;
-                    document.getElementById('price-val').innerText = activePrice.toFixed(2) + " ₽";
-                    document.getElementById('final-amount').innerText = "Сумма: " + activePrice.toFixed(2) + " ₽";
-                    changeScreen('screen-pay');
+                // Проверка на SUCCESS извне (от кассы)
+                const statRes = await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`);
+                const statData = await statRes.json();
+                if (statData && statData.state === "SUCCESS" && currentScreen !== 'success') {
+                    finishPayProcess("REMOTE");
                 }
-            } catch (err) {
-                console.error("Ошибка связи с сервером:", err);
-            }
-        }, 2000);
+            } catch (e) {}
+        }, 1500);
 
-        // Функция валидации и списания
-        async function validateAndPay() {
-            const enteredCard = document.getElementById('card-input').value.replace(/\s/g, '');
-            const enteredPin = document.getElementById('pin-input').value;
+        // ОБЩАЯ ПРОВЕРКА КАРТЫ
+        async function checkCardCredentials() {
+            const num = document.getElementById('card-num').value.trim();
+            const pin = document.getElementById('card-pin').value.trim();
 
-            // ГЛАВНОЕ УСЛОВИЕ: Если в памяти есть "прошитая" карта, принимаем только её
-            if (memoryNfc && enteredCard !== memoryNfc) {
-                alert("ОШИБКА NFC: Карта не распознана терминалом.");
-                return;
-            }
+            if (!num || !pin) { alert("Введите данные карты!"); return null; }
 
-            // Проверка по базе данных карт
+            const res = await fetch(`${FIREBASE_BASE_URL}/cards/${num}.json`);
+            const card = await res.json();
+
+            if (!card || card.pin != pin) { alert("Ошибка: Карта или ПИН неверны"); return null; }
+            if (card.balance < currentAmount) { alert("Ошибка: Недостаточно средств"); return null; }
+
+            return { num, balance: card.balance };
+        }
+
+        // ОПЛАТА КАРТОЙ
+        async function payByCard() {
+            const card = await checkCardCredentials();
+            if (card) finishPayProcess("CARD", card);
+        }
+
+        // ОПЛАТА УЛЫБКОЙ (С ПРОВЕРКОЙ)
+        async function payBySmile() {
+            const card = await checkCardCredentials();
+            if (!card) return; // Если карта не та — даже камеру не включаем
+
+            const modal = document.getElementById('smile-modal');
+            modal.style.display = 'flex';
+            
             try {
-                const res = await fetch(`${FIREBASE_URL}/cards/${enteredCard}.json`);
-                const cardDb = await res.json();
-
-                if (!cardDb || cardDb.pin != enteredPin) {
-                    alert("ОШИБКА: Неверная карта или ПИН-код");
-                    return;
-                }
-
-                if (cardDb.balance < activePrice) {
-                    alert("ОШИБКА: Недостаточно средств на балансе");
-                    return;
-                }
-
-                // Списание средств
-                const newBalance = cardDb.balance - activePrice;
-                await fetch(`${FIREBASE_URL}/cards/${enteredCard}.json`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ balance: newBalance })
-                });
-
-                // Удаляем команду оплаты из БД
-                await fetch(`${FIREBASE_URL}/commands/${TERMINAL_ID}.json`, { method: 'DELETE' });
-
-                // Финал
-                changeScreen('screen-success');
+                camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                document.getElementById('v').srcObject = camStream;
+                
                 setTimeout(() => {
-                    location.reload(); // Сброс терминала в ожидание через 5 сек
-                }, 5000);
-
-            } catch (e) {
-                alert("Ошибка транзакции. Попробуйте снова.");
+                    if (camStream) camStream.getTracks().forEach(t => t.stop());
+                    modal.style.display = 'none';
+                    finishPayProcess("SMILE", card);
+                }, 3000);
+            } catch (err) {
+                alert("Ошибка камеры");
+                modal.style.display = 'none';
             }
         }
 
-        function changeScreen(id) {
+        // ФИНАЛЬНАЯ СТАДИЯ
+        async function finishPayProcess(method, cardData = null) {
+            if (cardData) {
+                // Списываем баланс если платим с терминала
+                await fetch(`${FIREBASE_BASE_URL}/cards/${cardData.num}.json`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ balance: cardData.balance - currentAmount })
+                });
+            }
+
+            showScreen('screen-success');
+
+            // Обновляем статус в БД
+            await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
+                method: 'PUT',
+                body: JSON.stringify({ state: "SUCCESS", method: method, time: Date.now() })
+            });
+
+            // Удаляем команду
+            await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
+
+            // Ресет через 4 сек
+            setTimeout(async () => {
+                await fetch(`${FIREBASE_BASE_URL}/status/${MY_TERMINAL_ID}.json`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ state: "IDLE", lastUpdate: Date.now() })
+                });
+                showScreen('screen-wait');
+                document.getElementById('card-num').value = '';
+                document.getElementById('card-pin').value = '';
+                document.getElementById('qrcode-container').classList.remove('animated');
+            }, 4000);
+        }
+
+        function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
+            currentScreen = id.replace('screen-', '');
         }
-
-        // Авто-пробелы для номера карты
-        document.getElementById('card-input').addEventListener('input', function (e) {
-            e.target.value = e.target.value.replace(/[^\d]/g, '').replace(/(.{4})/g, '$1 ').trim();
-        });
     </script>
 </body>
 </html>
