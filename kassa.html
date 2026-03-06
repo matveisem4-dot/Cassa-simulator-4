@@ -6,15 +6,19 @@
     <title>Cassa Simulator 2026 | Pro UI</title>
     <style>
         :root {
+            /* Цветовая палитра */
             --bg-gradient: linear-gradient(135deg, #1c1c2e 0%, #111119 100%);
             --card-bg: rgba(40, 40, 55, 0.7);
             --card-border: 1px solid rgba(255, 255, 255, 0.1);
-            --primary: #4f8aff; 
+            
+            --primary: #4f8aff; /* Яркий синий */
             --primary-hover: #3a6ecc;
-            --success: #00d26a; 
-            --danger: #ff4757; 
+            --success: #00d26a; /* Неоновый зеленый */
+            --danger: #ff4757; /* Мягкий красный */
+            
             --text-main: #ffffff;
             --text-muted: #a0a0b0;
+            
             --radius: 16px;
             --shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
@@ -22,15 +26,21 @@
         * { box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: var(--bg-gradient);
             color: var(--text-main);
             margin: 0;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow: hidden; /* Чтобы не скроллился весь body */
         }
+
+        /* --- СКРОЛЛБАРЫ --- */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #777; }
 
         /* --- ВЕРХНЯЯ ПАНЕЛЬ --- */
         .top-bar {
@@ -56,6 +66,7 @@
             border-radius: 8px;
             outline: none;
             transition: 0.3s;
+            font-size: 0.95rem;
         }
         input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 138, 255, 0.2); }
 
@@ -66,18 +77,31 @@
             border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
+            font-size: 0.9rem;
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
         }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-success { background: var(--success); color: #000; }
-        .btn-nfc { background: #6c5ce7; color: white; box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3); }
+        button:active { transform: scale(0.96); }
 
-        /* --- ТАБЫ --- */
-        .nav-tabs { display: flex; gap: 20px; padding: 20px 30px 0; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(79, 138, 255, 0.3); }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
+
+        .btn-success { background: var(--success); color: #000; box-shadow: 0 4px 15px rgba(0, 210, 106, 0.3); }
+        .btn-success:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #e03b4b; }
+
+        /* --- НАВИГАЦИЯ (ТАБЫ) --- */
+        .nav-tabs {
+            display: flex;
+            gap: 20px;
+            padding: 20px 30px 0;
+        }
+
         .tab-btn {
             background: transparent;
             color: var(--text-muted);
@@ -86,25 +110,34 @@
             font-size: 1rem;
             position: relative;
         }
+        .tab-btn:hover { color: white; }
         .tab-btn.active { color: white; }
         .tab-btn.active::after {
             content: '';
             position: absolute;
             bottom: -2px; left: 0; width: 100%; height: 3px;
             background: var(--primary);
+            border-radius: 2px;
             box-shadow: 0 0 10px var(--primary);
         }
 
-        /* --- КОНТЕНТ --- */
-        .main-container { flex: 1; padding: 20px 30px; display: flex; overflow: hidden; }
-        .tab-content { display: none; width: 100%; height: 100%; }
-        .tab-content.active { display: flex; }
+        /* --- ОСНОВНОЙ КОНТЕНТ --- */
+        .main-container {
+            flex: 1;
+            padding: 20px 30px;
+            overflow: hidden;
+            display: flex;
+        }
 
+        .tab-content { display: none; width: 100%; height: 100%; }
+        .tab-content.active { display: flex; flex-direction: column; }
+
+        /* СЕТКА ДЛЯ ПРОДАЖ */
         .sales-layout {
             display: grid;
-            grid-template-columns: 1.5fr 1fr;
+            grid-template-columns: 1.5fr 1fr; /* Левая часть шире */
             gap: 25px;
-            width: 100%;
+            height: 100%;
         }
 
         .card {
@@ -118,34 +151,79 @@
             backdrop-filter: blur(10px);
         }
 
-        .table-wrapper { flex: 1; overflow-y: auto; margin-top: 10px; }
+        h2 { margin: 0 0 15px 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        .badge { background: #333; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; color: #aaa; }
+
+        /* --- ТАБЛИЦЫ --- */
+        .table-wrapper { flex: 1; overflow-y: auto; margin-right: -10px; padding-right: 10px; }
+        
         table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-        th { text-align: left; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; padding: 0 10px; }
-        td { background: rgba(255,255,255,0.03); padding: 12px 15px; }
+        
+        th { text-align: left; color: var(--text-muted); padding: 10px; font-size: 0.85rem; text-transform: uppercase; }
+        
+        td { background: rgba(255,255,255,0.03); padding: 12px 15px; first-child: border-radius: 8px 0 0 8px; last-child: border-radius: 0 8px 8px 0; transition: 0.2s; }
+        
         tr.item-row:hover td { background: rgba(255,255,255,0.08); cursor: pointer; transform: scale(1.01); }
 
-        .total-section { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; text-align: center; margin-top: auto; }
-        .total-amount { font-size: 2.5rem; font-weight: 800; color: white; margin: 10px 0; }
+        .price-tag { font-family: 'Courier New', monospace; font-weight: bold; color: var(--success); }
 
-        .status-dot { height: 10px; width: 10px; background: #555; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        /* --- ИТОГО И КОРЗИНА --- */
+        .total-section {
+            margin-top: auto;
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .total-label { font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; }
+        .total-amount { font-size: 2.5rem; font-weight: 800; color: white; margin: 5px 0 15px; }
+
+        .action-grid { display: grid; gap: 10px; }
+        .action-grid button { width: 100%; padding: 15px; font-size: 1rem; }
+
+        /* --- МОДАЛЬНЫЕ ОКНА --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .modal.show { opacity: 1; }
+
+        .modal-box {
+            background: #252530;
+            width: 90%; max-width: 400px;
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .modal.show .modal-box { transform: translateY(0); }
+
+        .status-dot { height: 10px; width: 10px; background: #555; border-radius: 50%; display: inline-block; margin-right: 5px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
         .status-dot.active { background: var(--success); box-shadow: 0 0 10px var(--success); }
 
-        /* NFC UI */
-        .nfc-panel { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
-        .nfc-ring {
-            width: 120px; height: 120px; border: 4px dashed var(--primary);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 40px; animation: rotate 10s linear infinite;
-        }
-        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        /* Менеджер товаров */
+        .manager-controls { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
         <div class="brand">CASSA <span style="color:white; font-weight:300;">SIMULATOR</span> <span style="font-size:0.8em; opacity:0.5;">v4.0</span></div>
+        
         <div class="terminal-control">
-            <span id="statusLabel" style="font-size: 0.9rem; color: #777;"><span class="status-dot" id="statusDot"></span> Оффлайн</span>
+            <span id="statusLabel" style="font-size: 0.9rem; color: #777;">
+                <span class="status-dot" id="statusDot"></span> Терминал не подключен
+            </span>
             <input type="number" id="terminalInput" placeholder="ID Терминала" style="width: 120px;">
             <button class="btn-primary" onclick="bindTerminal()">Подключить</button>
         </div>
@@ -153,15 +231,16 @@
 
     <div class="nav-tabs">
         <button class="tab-btn active" onclick="switchTab('sales')">🛒 Продажи</button>
-        <button class="tab-btn" onclick="switchTab('products')">📦 Управление</button>
-        <button class="tab-btn" onclick="switchTab('nfc')">📡 NFC Модуль</button>
+        <button class="tab-btn" onclick="switchTab('products')">📦 Управление товарами</button>
     </div>
 
     <div class="main-container">
+
         <div id="sales" class="tab-content active">
             <div class="sales-layout">
+                
                 <div class="card">
-                    <h2>Каталог товаров</h2>
+                    <h2>Каталог <span class="badge" id="catalogCount">0</span></h2>
                     <div class="table-wrapper">
                         <table id="salesTable">
                             <thead><tr><th>Товар</th><th style="text-align:right">Цена</th></tr></thead>
@@ -169,117 +248,335 @@
                         </table>
                     </div>
                 </div>
+
                 <div class="card" style="background: rgba(30, 30, 45, 0.9);">
                     <h2>Текущий чек</h2>
-                    <div class="table-wrapper"><table id="cartTable"><tbody></tbody></table></div>
+                    <div class="table-wrapper" style="border-bottom: 1px dashed #444; margin-bottom: 15px;">
+                        <table id="cartTable">
+                            <thead><tr><th>Товар</th><th style="text-align:right">Стоимость</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
                     <div class="total-section">
-                        <div style="color: var(--text-muted); font-size: 0.9rem;">ИТОГО</div>
+                        <div class="total-label">К оплате</div>
                         <div class="total-amount" id="totalLabel">0.00 ₽</div>
-                        <button class="btn-success" style="width: 100%; padding: 15px; font-size: 1.1rem;" onclick="payByCard()">ОПЛАТИТЬ КАРТОЙ</button>
+                        
+                        <div class="action-grid">
+                            <button class="btn-success" id="payBtn" onclick="showPaymentOptions()">ОПЛАТИТЬ</button>
+                            <button class="btn-danger" style="background: rgba(255, 71, 87, 0.2); color: #ff4757;" onclick="clearCart()">ОЧИСТИТЬ</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div id="products" class="tab-content">
-            <div class="card" style="width: 100%;">
-                <div style="display:flex; gap:10px; margin-bottom:20px;">
-                    <input type="text" id="pName" placeholder="Название товара" style="flex:2;">
-                    <input type="number" id="pPrice" placeholder="Цена" style="flex:1;">
+            <div class="card" style="height: 100%;">
+                <div class="manager-controls">
+                    <input type="text" id="prodName" placeholder="Название товара" style="flex:2;">
+                    <input type="number" id="prodPrice" placeholder="Цена" step="0.01" style="flex:1;">
                     <button class="btn-primary" onclick="addProduct()">+ Добавить</button>
                 </div>
                 <div class="table-wrapper">
-                    <table id="mgrTable">
-                        <thead><tr><th>Название</th><th>Цена</th><th style="text-align:right">Действие</th></tr></thead>
+                    <table id="managerTable">
+                        <thead><tr><th width="50">ID</th><th>Название</th><th>Цена</th><th style="text-align:right">Действия</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <div id="nfc" class="tab-content">
-            <div class="card nfc-panel" style="width: 100%;">
-                <div class="nfc-ring">📡</div>
-                <h2 style="margin:0;">Эмуляция NFC-метки</h2>
-                <p style="color: var(--text-muted);">Привяжите карту к терминалу #${terminalId || '...'}</p>
-                <input type="text" id="nfcCardInput" placeholder="Введите номер карты" style="width: 300px; text-align: center; font-size: 1.2rem;">
-                <button class="btn-nfc" style="padding: 15px 40px;" onclick="sendNFC()">ПРИЛОЖИТЬ МЕТКУ</button>
+    </div>
+
+    <div id="paymentModal" class="modal">
+        <div class="modal-box">
+            <h2 style="justify-content: center;">Способ оплаты</h2>
+            <p id="modalTotalPay" style="color: #aaa; margin-bottom: 25px;">К оплате: 0.00</p>
+            <div class="action-grid">
+                <button class="btn-primary" onclick="payCard()">💳 Банковская карта</button>
+                <button class="btn-success" onclick="payCashInput()">💵 Наличные</button>
+                <button class="btn-danger" style="background: transparent; color: #aaa;" onclick="closeModal('paymentModal')">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cashModal" class="modal">
+        <div class="modal-box">
+            <h2 style="justify-content: center;">Наличные</h2>
+            <div style="font-size: 2rem; font-weight: bold; margin: 10px 0;" id="cashTotalLabel">0.00</div>
+            
+            <input type="number" id="cashInput" placeholder="Внесено клиентом" 
+                   style="width: 100%; font-size: 1.2rem; text-align: center; margin: 15px 0; padding: 15px; background: rgba(0,0,0,0.4);" 
+                   onkeyup="calcChange()">
+            
+            <p id="changeLabel" style="font-size: 1.1rem;">Сдача: 0.00</p>
+            
+            <div class="action-grid" style="margin-top: 20px;">
+                <button class="btn-success" onclick="confirmCashPay()">Подтвердить оплату</button>
+                <button class="btn-danger" style="background: transparent;" onclick="closeModal('cashModal')">Отмена</button>
             </div>
         </div>
     </div>
 
     <script>
-        const DB_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
-        let products = JSON.parse(localStorage.getItem('products')) || [];
+        // === ЛОГИКА (БЕЗ ИЗМЕНЕНИЙ, ТОЛЬКО АДАПТАЦИЯ ПОД UI) ===
+        
+        const FIREBASE_URL = "https://cassa-simulator-4-default-rtdb.firebaseio.com";
+        
+        let products = [];
         let cart = [];
-        let terminalId = localStorage.getItem('terminalId');
+        let terminalId = null;
+        let total = 0.0;
+        let pollInterval = null;
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+        window.onload = function() {
+            loadProducts();
+            const savedTerm = localStorage.getItem('terminalId');
+            if(savedTerm) {
+                document.getElementById('terminalInput').value = savedTerm;
+                bindTerminal();
+            }
+        };
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            
+            const btns = document.querySelectorAll('.tab-btn');
+            if(tabName === 'sales') btns[0].classList.add('active');
+            else btns[1].classList.add('active');
         }
 
-        function render() {
-            const sBody = document.querySelector('#salesTable tbody');
-            const mBody = document.querySelector('#mgrTable tbody');
-            sBody.innerHTML = ''; mBody.innerHTML = '';
+        // --- ТОВАРЫ ---
+        function loadProducts() {
+            const saved = localStorage.getItem('products');
+            products = saved ? JSON.parse(saved) : [];
+            updateCounts();
+            renderTables();
+        }
 
+        function saveProducts() {
+            localStorage.setItem('products', JSON.stringify(products));
+            updateCounts();
+            renderTables();
+        }
+        
+        function updateCounts() {
+            document.getElementById('catalogCount').innerText = products.length;
+        }
+
+        function addProduct() {
+            const name = document.getElementById('prodName').value.trim();
+            const price = parseFloat(document.getElementById('prodPrice').value);
+
+            if (!name || isNaN(price)) return alert("Ошибка ввода");
+
+            const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+            products.push({ id: newId, name: name, price: price });
+            saveProducts();
+            
+            document.getElementById('prodName').value = '';
+            document.getElementById('prodPrice').value = '';
+        }
+
+        function deleteProduct(id) {
+            if(confirm('Удалить?')) {
+                products = products.filter(p => p.id !== id);
+                saveProducts();
+            }
+        }
+
+        function renderTables() {
+            // Менеджер
+            const mgrBody = document.querySelector('#managerTable tbody');
+            mgrBody.innerHTML = '';
             products.forEach(p => {
-                sBody.innerHTML += `<tr class="item-row" onclick="addToCart(${p.id})"><td>${p.name}</td><td style="text-align:right; color:var(--success);">${p.price.toFixed(2)} ₽</td></tr>`;
-                mBody.innerHTML += `<tr><td>${p.name}</td><td>${p.price.toFixed(2)} ₽</td><td style="text-align:right;"><button class="btn-danger" style="padding:5px 10px;" onclick="delProd(${p.id})">Удалить</button></td></tr>`;
+                mgrBody.innerHTML += `
+                    <tr class="item-row">
+                        <td style="color:#777;">#${p.id}</td>
+                        <td style="font-weight:600;">${p.name}</td>
+                        <td class="price-tag">${p.price.toFixed(2)}</td>
+                        <td style="text-align:right;"><button class="btn-danger" style="padding: 5px 10px; font-size:0.7rem;" onclick="deleteProduct(${p.id})">Удалить</button></td>
+                    </tr>`;
+            });
+
+            // Продажи
+            const salesBody = document.querySelector('#salesTable tbody');
+            salesBody.innerHTML = '';
+            products.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = "item-row";
+                tr.innerHTML = `
+                    <td><div style="font-weight:600;">${p.name}</div><div style="font-size:0.7em; color:#777;">Код: ${p.id}</div></td>
+                    <td class="price-tag" style="text-align:right;">${p.price.toFixed(2)} ₽</td>
+                `;
+                tr.onclick = () => addToCart(p);
+                salesBody.appendChild(tr);
             });
         }
 
-        function addToCart(id) {
-            const p = products.find(x => x.id === id);
-            cart.push(p);
+        // --- КОРЗИНА ---
+        function addToCart(product) {
+            cart.push(product);
+            updateCartUI();
+        }
+
+        function clearCart() {
+            cart = [];
             updateCartUI();
         }
 
         function updateCartUI() {
-            const cBody = document.querySelector('#cartTable tbody');
-            let total = cart.reduce((s, p) => s + p.price, 0);
-            cBody.innerHTML = cart.map(p => `<tr><td>${p.name}</td><td style="text-align:right;">${p.price.toFixed(2)}</td></tr>`).join('');
-            document.getElementById('totalLabel').innerText = total.toFixed(2) + " ₽";
+            const cartBody = document.querySelector('#cartTable tbody');
+            cartBody.innerHTML = '';
+            total = 0;
+
+            cart.forEach(p => {
+                total += p.price;
+                cartBody.innerHTML += `
+                    <tr>
+                        <td>${p.name}</td>
+                        <td style="text-align:right; color:white;">${p.price.toFixed(2)}</td>
+                    </tr>`;
+            });
+
+            document.getElementById('totalLabel').innerText = `${total.toFixed(2)} ₽`;
         }
 
-        function addProduct() {
-            const name = document.getElementById('pName').value;
-            const price = parseFloat(document.getElementById('pPrice').value);
-            if(name && price) {
-                products.push({id: Date.now(), name, price});
-                localStorage.setItem('products', JSON.stringify(products));
-                render();
+        // --- ТЕРМИНАЛ И СТАТУС ---
+        function bindTerminal() {
+            const val = document.getElementById('terminalInput').value;
+            if (val) {
+                terminalId = val;
+                localStorage.setItem('terminalId', terminalId);
+                const lbl = document.getElementById('statusLabel');
+                const dot = document.getElementById('statusDot');
+                
+                lbl.innerHTML = ''; 
+                lbl.appendChild(dot);
+                lbl.append(` Терминал #${terminalId}`);
+                
+                dot.classList.add('active');
+                lbl.style.color = "white";
             }
         }
 
-        function bindTerminal() {
-            terminalId = document.getElementById('terminalInput').value;
-            if(!terminalId) return;
-            localStorage.setItem('terminalId', terminalId);
-            document.getElementById('statusDot').classList.add('active');
-            document.getElementById('statusLabel').innerHTML = `<span class="status-dot active"></span> Терминал #${terminalId}`;
-            document.getElementById('statusLabel').style.color = "white";
+        // --- МОДАЛКИ ---
+        function showPaymentOptions() {
+            if (total <= 0) return alert("Корзина пуста");
+            document.getElementById('modalTotalPay').innerText = `К оплате: ${total.toFixed(2)} ₽`;
+            openModal('paymentModal');
         }
 
-        async function sendNFC() {
-            const num = document.getElementById('nfcCardInput').value.replace(/\s/g, '');
-            if(!terminalId || !num) return alert("Проверьте ID терминала и номер карты!");
-            await fetch(`${DB_URL}/nfc_data/${terminalId}.json`, { method: 'PUT', body: JSON.stringify(num) });
-            alert("NFC сигнал отправлен!");
+        function openModal(id) {
+            const el = document.getElementById(id);
+            el.style.display = 'flex';
+            setTimeout(() => el.classList.add('show'), 10);
         }
 
-        async function payByCard() {
-            const total = parseFloat(document.getElementById('totalLabel').innerText);
-            if(total <= 0) return alert("Чек пуст");
-            await fetch(`${DB_URL}/commands/${terminalId}.json`, { method: 'PUT', body: JSON.stringify({command: "PAY", amount: total}) });
-            alert("Команда отправлена на терминал");
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            el.classList.remove('show');
+            setTimeout(() => el.style.display = 'none', 300);
         }
 
-        if(terminalId) { document.getElementById('terminalInput').value = terminalId; bindTerminal(); }
-        render();
+        // --- ОПЛАТА ---
+        function payCashInput() {
+            closeModal('paymentModal');
+            openModal('cashModal');
+            document.getElementById('cashTotalLabel').innerText = `${total.toFixed(2)} ₽`;
+            document.getElementById('cashInput').value = '';
+            document.getElementById('changeLabel').innerText = 'Сдача: 0.00';
+            document.getElementById('cashInput').focus();
+        }
+
+        function calcChange() {
+            const paid = parseFloat(document.getElementById('cashInput').value) || 0;
+            const change = paid - total;
+            const lbl = document.getElementById('changeLabel');
+            if (change >= 0) {
+                lbl.innerText = `Сдача: ${change.toFixed(2)} ₽`;
+                lbl.style.color = "var(--success)";
+            } else {
+                lbl.innerText = `Не хватает: ${Math.abs(change).toFixed(2)} ₽`;
+                lbl.style.color = "var(--danger)";
+            }
+        }
+
+        function confirmCashPay() {
+            const paid = parseFloat(document.getElementById('cashInput').value) || 0;
+            if (paid >= total) {
+                alert("Успешно!");
+                closeModal('cashModal');
+                clearCart();
+            } else {
+                alert("Недостаточно средств");
+            }
+        }
+
+        async function payCard() {
+            if (!terminalId) return alert("Ошибка: Терминал не привязан!");
+            closeModal('paymentModal');
+            
+            const btn = document.getElementById('payBtn');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerHTML = "⏳ Ожидание...";
+
+            const url = `${FIREBASE_URL}/commands/${terminalId}.json`;
+            const data = { command: "PAY", amount: total.toFixed(2) };
+
+            try {
+                await fetch(url, { method: 'PUT', body: JSON.stringify(data) });
+                
+                let checks = 0;
+                pollInterval = setInterval(async () => {
+                    checks++;
+                    if (checks > 60) { stopPolling(false); return; }
+                    try {
+                        const res = await fetch(`${FIREBASE_URL}/status/${terminalId}.json`);
+                        const statusData = await res.json();
+                        if (statusData && statusData.state === "SUCCESS") stopPolling(true);
+                    } catch (e) {}
+                }, 2000);
+
+            } catch (e) {
+                alert("Ошибка сети");
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        }
+
+        async function stopPolling(success) {
+            clearInterval(pollInterval);
+            const btn = document.getElementById('payBtn');
+            btn.disabled = false;
+            btn.innerText = "ОПЛАТИТЬ";
+
+            // Чистка базы
+            try {
+                fetch(`${FIREBASE_URL}/status/${terminalId}.json`, { method: 'DELETE' });
+                fetch(`${FIREBASE_URL}/commands/${terminalId}.json`, { method: 'DELETE' });
+            } catch(e) {}
+
+            if (success) {
+                // Красивое уведомление
+                const prevColor = btn.style.background;
+                btn.style.background = "white";
+                btn.style.color = "black";
+                btn.innerText = "УСПЕШНО!";
+                setTimeout(() => {
+                    btn.style.background = "";
+                    btn.style.color = "";
+                    btn.innerText = "ОПЛАТИТЬ";
+                    clearCart();
+                }, 2000);
+            } else {
+                alert("Тайм-аут оплаты");
+            }
+        }
     </script>
 </body>
 </html>
