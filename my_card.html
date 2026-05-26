@@ -6,13 +6,31 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <style>
-        body { background: #121212; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; }
-        .card { width: 340px; height: 210px; background: linear-gradient(45deg, #008a3c, #005a28); border-radius: 18px; padding: 25px; position: relative; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        body { background: #121212; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; }
+        .card { width: 340px; height: 210px; background: linear-gradient(45deg, #008a3c, #005a28); border-radius: 18px; padding: 25px; position: relative; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); box-sizing: border-box; }
         .chip { width: 50px; height: 40px; background: #d4af37; border-radius: 8px; margin-bottom: 20px; }
         .number { font-size: 22px; letter-spacing: 3px; margin-bottom: 10px; font-family: monospace; }
         .balance { font-size: 28px; font-weight: bold; margin-top: 15px; }
         .label { font-size: 10px; opacity: 0.7; text-transform: uppercase; }
         .pin-display { position: absolute; right: 25px; bottom: 25px; font-size: 14px; background: rgba(0,0,0,0.2); padding: 5px 10px; border-radius: 5px; }
+        
+        /* Кнопка записи NFC, органично вписанная под дизайн карты */
+        .nfc-btn {
+            margin-top: 25px;
+            width: 340px;
+            padding: 14px;
+            background: linear-gradient(45deg, #008a3c, #005a28);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.2s, filter 0.2s;
+        }
+        .nfc-btn:active { transform: scale(0.98); }
+        .nfc-btn:hover { filter: brightness(1.1); }
     </style>
 </head>
 <body>
@@ -25,13 +43,13 @@
         <div class="pin-display">PIN: <span id="pin">****</span></div>
     </div>
 
+    <button class="nfc-btn" onclick="writeToNfcTag()">Записать на NFC / Симулировать Tap</button>
+
 <script>
-    // Настройка базы
     const firebaseConfig = { databaseURL: "https://cassa-simulator-4-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Генерация или загрузка карты
     let myNum = localStorage.getItem('sber_sim_num');
     if (!myNum) {
         myNum = '4400' + Math.floor(100000000000 + Math.random() * 899999999999);
@@ -40,7 +58,6 @@
         db.ref('cards/' + myNum).set({ balance: 5000, pin: myPin });
     }
 
-    // Слушатель обновлений баланса
     db.ref('cards/' + myNum).on('value', (snapshot) => {
         const data = snapshot.val();
         if(data) {
@@ -49,6 +66,35 @@
             document.getElementById('pin').innerText = data.pin;
         }
     });
+
+    // Метод записи на физическую метку или симуляция передачи данных на терминал
+    async function writeToNfcTag() {
+        if ('NDEFReader' in window) {
+            try {
+                const ndef = new NDEFReader();
+                alert("Приложите вашу NFC-метку к задней панели смартфона для записи...");
+                await ndef.write(myNum);
+                alert("Успешно записано на физический NFC!");
+                return;
+            } catch (error) {
+                console.log("Локальный NFC недоступен, переключаемся на эмуляцию.");
+            }
+        }
+
+        // Альтернативный / Кросс-платформенный вариант симуляции через базу данных
+        const targetTerminalId = prompt("Физический NFC недоступен.\nВведите ID Терминала для удаленного NFC-Тапа по воздуху:");
+        if (targetTerminalId) {
+            try {
+                await fetch(`https://cassa-simulator-4-default-rtdb.firebaseio.com/nfc_data/${targetTerminalId}.json`, {
+                    method: 'PUT',
+                    body: JSON.stringify(myNum)
+                });
+                alert("Виртуальная NFC-метка успешно считана терминалом #" + targetTerminalId);
+            } catch (e) {
+                alert("Ошибка отправки данных: " + e.message);
+            }
+        }
+    }
 </script>
 </body>
 </html>
