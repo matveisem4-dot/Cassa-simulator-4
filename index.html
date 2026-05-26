@@ -50,7 +50,7 @@
             width: 14px; 
             height: 14px; 
             border-radius: 50%; 
-            background-color: #555; /* Изначально серый, загорится зеленым при активации */
+            background-color: #555; 
             box-shadow: 0 0 12px rgba(0,0,0,0.5); 
             z-index: 100; 
             transition: transform 0.2s, background-color 0.3s, box-shadow 0.3s;
@@ -126,49 +126,41 @@
         let camStream = null;
         let nfcActive = false;
 
-        // Инициализация аппаратного чтения NFC (по клику пользователя)
-// Инициализация NFC
-async function initWebNFC() {
-    if (!('NDEFReader' in window)) {
-        alert("NFC не поддерживается на этом устройстве/браузере.");
-        return;
-    }
-
-    try {
-        const ndef = new NDEFReader();
-        
-        // ВАЖНО: scan() активирует захват NFC браузером
-        await ndef.scan();
-        
-        // Визуальное подтверждение, что мы слушаем
-        document.getElementById('nfc-start-btn').innerText = "Терминал готов к считыванию...";
-        document.getElementById('nfc-start-btn').style.background = "#008800";
-
-        ndef.onreading = event => {
-            const decoder = new TextDecoder();
-            for (const record of event.message.records) {
-                if (record.recordType === "text") {
-                    const nfcData = decoder.decode(record.data).trim();
-                    // Твой парсинг карты
-                    handleNfcTap(nfcData); 
-                }
+        // Отладочная инициализация NFC
+        async function initWebNFC() {
+            if (!('NDEFReader' in window)) {
+                alert("КРИТИЧЕСКАЯ ОШИБКА: Web NFC не поддерживается!\n\nПричины:\n1. Вы открыли файл напрямую (file://) вместо https://\n2. Вы используете APK/WebView, где NFC заблокирован.\n\nРешение: Откройте сайт в Chrome и нажмите 'Добавить на главный экран'.");
+                return;
             }
-        };
-    } catch (error) {
-        // Если ошибка здесь, значит пользователь либо запретил, 
-        // либо не поднес метку правильно после старта
-        alert("Ошибка активации NFC: " + error);
-    }
-}
+            
+            try {
+                const ndef = new NDEFReader();
+                await ndef.scan();
+                
+                nfcActive = true;
+                const btn = document.getElementById('nfc-start-btn');
+                btn.innerText = "NFC Активен (Готов к оплате)";
+                btn.classList.add('active');
+                
+                const indicator = document.getElementById('status-indicator');
+                indicator.style.backgroundColor = '#00ff41';
+                indicator.style.boxShadow = '0 0 12px #00ff41';
+
+                ndef.onreading = event => {
+                    const decoder = new TextDecoder();
+                    for (const record of event.message.records) {
+                        if (record.recordType === "text") {
+                            const nfcData = decoder.decode(record.data).trim();
+                            handleNfcTap(nfcData);
+                        }
+                    }
                 };
             } catch (error) {
-                alert("Ошибка NFC. Возможно, вы не дали разрешение: " + error);
+                alert("Ошибка запуска сканера NFC!\nПодробности: " + error.message + "\n\nВозможно, вы отклонили запрос на доступ или ваш браузер блокирует функцию.");
             }
         }
 
-        // Парсинг строки и авто-оплата
         function handleNfcTap(nfcString) {
-            // Разделяем строку по длинному тире "—" или дефису "-"
             const parts = nfcString.split(/—|-/);
             const cardInput = document.getElementById('card-num');
             const pinInput = document.getElementById('card-pin');
@@ -180,22 +172,18 @@ async function initWebNFC() {
                     pinInput.value = parts[1].trim(); 
                 }
                 
-                // Анимация индикатора
                 const indicator = document.getElementById('status-indicator');
                 indicator.style.transform = 'scale(2)';
                 setTimeout(() => indicator.style.transform = 'scale(1)', 300);
 
-                // Если терминал в режиме оплаты и мы считали и карту и ПИН — сразу оплачиваем
                 if (currentScreen === 'pay' && parts.length > 1) {
                     payByCard();
                 }
             }
         }
 
-        // Потоковый опрос Firebase
         setInterval(async () => {
             try {
-                // Эмуляция NFC по воздуху (виртуальная метка)
                 const nfcRes = await fetch(`${FIREBASE_BASE_URL}/nfc_data/${MY_TERMINAL_ID}.json`);
                 const nfcData = await nfcRes.json();
                 if (nfcData) {
@@ -203,7 +191,6 @@ async function initWebNFC() {
                     await fetch(`${FIREBASE_BASE_URL}/nfc_data/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
                 }
 
-                // Проверка входящей команды PAY от кассы
                 if (currentScreen === 'wait') {
                     const res = await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`);
                     const data = await res.json();
@@ -239,7 +226,6 @@ async function initWebNFC() {
         }
 
         async function payBySmile() {
-            // Оплата улыбкой тут остается для тестов
             const card = await checkCardCredentials();
             if (!card) return;
             const modal = document.getElementById('smile-modal');
@@ -269,7 +255,6 @@ async function initWebNFC() {
             });
             await fetch(`${FIREBASE_BASE_URL}/commands/${MY_TERMINAL_ID}.json`, { method: 'DELETE' });
             
-            // Перезагрузка через 4 секунды
             setTimeout(() => { location.reload(); }, 4000);
         }
 
@@ -278,7 +263,6 @@ async function initWebNFC() {
             document.getElementById(id).classList.add('active');
             currentScreen = id.replace('screen-', '');
             
-            // Прячем кнопку инициализации NFC на экране оплаты
             if(id !== 'screen-wait') {
                 const btn = document.getElementById('nfc-start-btn');
                 if(btn) btn.style.display = 'none';
