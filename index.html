@@ -127,34 +127,39 @@
         let nfcActive = false;
 
         // Инициализация аппаратного чтения NFC (по клику пользователя)
-        async function initWebNFC() {
-            if (!('NDEFReader' in window)) {
-                alert("Ваш браузер или устройство не поддерживает Web NFC.");
-                return;
-            }
-            
-            try {
-                const ndef = new NDEFReader();
-                await ndef.scan();
-                
-                // Меняем UI после успешного старта
-                nfcActive = true;
-                const btn = document.getElementById('nfc-start-btn');
-                btn.innerText = "NFC Активен (Готов к оплате)";
-                btn.classList.add('active');
-                
-                const indicator = document.getElementById('status-indicator');
-                indicator.style.backgroundColor = '#00ff41';
-                indicator.style.boxShadow = '0 0 12px #00ff41';
+// Инициализация NFC
+async function initWebNFC() {
+    if (!('NDEFReader' in window)) {
+        alert("NFC не поддерживается на этом устройстве/браузере.");
+        return;
+    }
 
-                ndef.onreading = event => {
-                    const decoder = new TextDecoder();
-                    for (const record of event.message.records) {
-                        if (record.recordType === "text") {
-                            const nfcData = decoder.decode(record.data).trim();
-                            handleNfcTap(nfcData);
-                        }
-                    }
+    try {
+        const ndef = new NDEFReader();
+        
+        // ВАЖНО: scan() активирует захват NFC браузером
+        await ndef.scan();
+        
+        // Визуальное подтверждение, что мы слушаем
+        document.getElementById('nfc-start-btn').innerText = "Терминал готов к считыванию...";
+        document.getElementById('nfc-start-btn').style.background = "#008800";
+
+        ndef.onreading = event => {
+            const decoder = new TextDecoder();
+            for (const record of event.message.records) {
+                if (record.recordType === "text") {
+                    const nfcData = decoder.decode(record.data).trim();
+                    // Твой парсинг карты
+                    handleNfcTap(nfcData); 
+                }
+            }
+        };
+    } catch (error) {
+        // Если ошибка здесь, значит пользователь либо запретил, 
+        // либо не поднес метку правильно после старта
+        alert("Ошибка активации NFC: " + error);
+    }
+}
                 };
             } catch (error) {
                 alert("Ошибка NFC. Возможно, вы не дали разрешение: " + error);
