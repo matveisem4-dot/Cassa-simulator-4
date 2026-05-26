@@ -62,6 +62,8 @@
             margin-top: 40px;
             width: 80%;
             font-size: 16px;
+            padding: 15px;
+            border-radius: 12px;
         }
         .nfc-init-btn.active {
             background: rgba(0, 255, 65, 0.2);
@@ -88,7 +90,7 @@
                 </div>
             </div>
             
-            <button id="nfc-start-btn" class="nfc-init-btn" onclick="initWebNFC()">Активировать терминал</button>
+            <button id="nfc-start-btn" class="nfc-init-btn" onclick="initWebNFC()">Включить бесконтакт (NFC)</button>
         </div>
 
         <div id="screen-pay" class="screen">
@@ -126,20 +128,21 @@
         let camStream = null;
         let nfcActive = false;
 
-        // Отладочная инициализация NFC
+        // Расширенная отладка инициализации NFC
         async function initWebNFC() {
             if (!('NDEFReader' in window)) {
-                alert("КРИТИЧЕСКАЯ ОШИБКА: Web NFC не поддерживается!\n\nПричины:\n1. Вы открыли файл напрямую (file://) вместо https://\n2. Вы используете APK/WebView, где NFC заблокирован.\n\nРешение: Откройте сайт в Chrome и нажмите 'Добавить на главный экран'.");
+                alert("ОШИБКА: Web NFC не поддерживается этим устройством или браузером.\n\nУбедитесь, что:\n1. У вас Android (на iPhone работать не будет).\n2. Вы открыли сайт в Chrome, а не внутри Telegram/VK.");
                 return;
             }
             
             try {
                 const ndef = new NDEFReader();
+                // Запуск сканирования (заставляет Chrome перехватить датчик)
                 await ndef.scan();
                 
                 nfcActive = true;
                 const btn = document.getElementById('nfc-start-btn');
-                btn.innerText = "NFC Активен (Готов к оплате)";
+                btn.innerText = "NFC Готов. Приложите карту";
                 btn.classList.add('active');
                 
                 const indicator = document.getElementById('status-indicator');
@@ -156,10 +159,15 @@
                     }
                 };
             } catch (error) {
-                alert("Ошибка запуска сканера NFC!\nПодробности: " + error.message + "\n\nВозможно, вы отклонили запрос на доступ или ваш браузер блокирует функцию.");
+                if (error.name === "NotAllowedError") {
+                    alert("ОШИБКА: Доступ к NFC заблокирован в настройках браузера!\n\nКак исправить:\n1. В Chrome нажмите на 3 точки сверху справа.\n2. Перейдите в 'Настройки' -> 'Настройки сайтов' -> 'NFC'.\n3. Разрешите доступ или удалите этот сайт из списка заблокированных.");
+                } else {
+                    alert("Техническая ошибка NFC: " + error.name + "\nТекст: " + error.message);
+                }
             }
         }
 
+        // Парсинг строки и моментальный вызов оплаты
         function handleNfcTap(nfcString) {
             const parts = nfcString.split(/—|-/);
             const cardInput = document.getElementById('card-num');
@@ -176,12 +184,14 @@
                 indicator.style.transform = 'scale(2)';
                 setTimeout(() => indicator.style.transform = 'scale(1)', 300);
 
+                // Если терминал в режиме ожидания оплаты и считались оба параметра — сразу платим
                 if (currentScreen === 'pay' && parts.length > 1) {
                     payByCard();
                 }
             }
         }
 
+        // Потоковый опрос базы данных
         setInterval(async () => {
             try {
                 const nfcRes = await fetch(`${FIREBASE_BASE_URL}/nfc_data/${MY_TERMINAL_ID}.json`);
@@ -208,14 +218,14 @@
             const num = document.getElementById('card-num').value.trim();
             const pin = document.getElementById('card-pin').value.trim();
 
-            if (!num || !pin) { alert("Неполные данные карты с NFC!"); return null; }
+            if (!num || !pin) { alert("Неполные данные карты на NFC-метке!"); return null; }
 
             const res = await fetch(`${FIREBASE_BASE_URL}/cards/${num}.json`);
             const card = await res.json();
 
-            if (!card) { alert("Карта не найдена в базе!"); return null; }
-            if (card.pin != pin) { alert("Неверный ПИН-код на NFC метке!"); return null; }
-            if (card.balance < currentAmount) { alert("Недостаточно средств на карте!"); return null; }
+            if (!card) { alert("Карта " + num + " не зарегистрирована в Firebase!"); return null; }
+            if (card.pin != pin) { alert("Неверный ПИН-код на NFC-метке!"); return null; }
+            if (card.balance < currentAmount) { alert("Недостаточно средств!"); return null; }
 
             return { num, balance: card.balance };
         }
